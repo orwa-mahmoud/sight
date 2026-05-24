@@ -1,0 +1,87 @@
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual env / package manager state
+.venv/
+venv/
+ENV/
+env/
+.uv/
+
+# ── Node ──────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+dist/
+.parcel-cache/
+.turbo/
+
+# ── Env / secrets ─────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# ── Testing / coverage / type cache ───────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+coverage/
+coverage.xml
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.nyc_output/
+
+# ── Build outputs ─────────────────────────────────────────────────
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# ── IDE / OS ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Private working context (per global instructions) ─────────────
+ai_docs/
+
+# ── Claude harness state ──────────────────────────────────────────
+.claude/
+
+# ── App-specific uploads / runtime artefacts ──────────────────────
+uploads/
+tmp/
+media_tmp/
+logs/
+
+# ── Playwright / test artefacts ───────────────────────────────────
+playwright-report/
+test-results/
