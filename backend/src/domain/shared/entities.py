@@ -3,6 +3,9 @@
 Provides identity, equality semantics, and per-aggregate pending event collection.
 Use cases drain `pending_events` after a successful commit and dispatch via the
 event bus; repositories detect insert vs. update via `is_new` / `mark_persisted`.
+
+`kw_only=True` lets subclasses add required fields without dataclass ordering
+gymnastics around the parent's default-valued private fields.
 """
 
 from __future__ import annotations
@@ -13,7 +16,7 @@ from uuid import UUID
 from src.domain.shared.events import DomainEvent
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, kw_only=True)
 class BaseEntity:
     id: UUID
     _events: list[DomainEvent] = field(default_factory=list, init=False, repr=False)
