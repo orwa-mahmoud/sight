@@ -183,6 +183,18 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
             )
         )
 
+    # ── 8. Maybe create checkpoint (structured summary) ─────────
+    from src.ai.context.checkpoint import maybe_create_checkpoint  # noqa: PLC0415
+
+    await maybe_create_checkpoint(
+        thread_id=thread_id,
+        tenant_id=inp.tenant_id,
+        channel=inp.channel,
+        llm=llm,
+        uow=uow,
+        request_id=request_id,
+    )
+
     escalated = any(tc.tool_name == "escalate_question" for tc in result.tool_calls)
 
     return ChatResult(
