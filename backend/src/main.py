@@ -10,6 +10,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config.settings import get_settings
+from src.domain.shared.exceptions import DomainError
+from src.drivers.api.responses import domain_error_handler
+from src.drivers.api.v1.router import v1_router
 
 logger = structlog.get_logger()
 
@@ -41,6 +44,10 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.add_exception_handler(DomainError, domain_error_handler)  # type: ignore[arg-type]
+
+    app.include_router(v1_router)
 
     @app.get("/health", tags=["health"])
     async def health() -> dict[str, str]:
