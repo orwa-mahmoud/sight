@@ -16,6 +16,9 @@ from src.infrastructure.persistence.postgres.repositories.conversation_repo impo
 from src.infrastructure.persistence.postgres.repositories.document_repo import PostgresDocumentRepository
 from src.infrastructure.persistence.postgres.repositories.message_repo import PostgresMessageRepository
 from src.infrastructure.persistence.postgres.repositories.question_repo import PostgresQuestionRepository
+from src.infrastructure.persistence.postgres.repositories.tenant_config_repo import (
+    PostgresTenantConfigRepository,
+)
 from src.infrastructure.persistence.postgres.repositories.tenant_repo import PostgresTenantRepository
 from src.infrastructure.persistence.postgres.repositories.token_usage_repo import (
     PostgresTokenUsageRepository,
@@ -38,6 +41,7 @@ class UnitOfWork:
         self.documents = PostgresDocumentRepository(session)
         self.chunks = PostgresChunkRepository(session)
         self.questions = PostgresQuestionRepository(session)
+        self.tenant_configs = PostgresTenantConfigRepository(session)
 
     async def flush(self) -> None:
         """Push pending inserts/updates to the DB without committing — useful

@@ -9,6 +9,7 @@ from src.application.auth.dtos import AuthResult
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.auth.ports import PasswordHasher
 from src.domain.shared.exceptions import AlreadyExistsError, InvalidOperationError
+from src.domain.tenant_config.entities import TenantConfig
 from src.domain.tenants.entities import Tenant
 from src.domain.users.entities import User, UserTenant
 from src.domain.users.value_objects import UserTenantRole
@@ -65,6 +66,11 @@ class RegisterOwnerUseCase:
             role=UserTenantRole.OWNER,
         )
         await self._uow.user_tenants.save(link)
+
+        # Create default tenant config (owner updates LLM keys via settings later).
+        config = TenantConfig.create_default(tenant_id=tenant.id)
+        config._is_new = True
+        await self._uow.tenant_configs.save(config)
 
         token = self._jwt_service.issue_access_token(user_id=user.id, tenant_id=tenant.id)
         return AuthResult(user_id=user.id, tenant_id=tenant.id, access_token=token)
