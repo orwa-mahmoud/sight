@@ -18,6 +18,7 @@ from src.infrastructure.persistence.postgres.models.chunk import ChunkModel  # n
 from src.infrastructure.persistence.postgres.models.conversation import ConversationModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.document import DocumentModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.message import MessageModel  # noqa: E402
+from src.infrastructure.persistence.postgres.models.question import QuestionModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.tenant import TenantModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.token_usage import TokenUsageModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.user import UserModel  # noqa: E402
@@ -29,6 +30,7 @@ __all__ = [
     "ConversationModel",
     "DocumentModel",
     "MessageModel",
+    "QuestionModel",
     "TenantModel",
     "TokenUsageModel",
     "UserModel",
