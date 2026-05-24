@@ -3,14 +3,15 @@
 Every channel (WhatsApp webhook, Telegram webhook, API) calls
 `chat_with_agent()`. The gateway:
 
-1. Resolves or creates the conversation thread
-2. Saves the inbound message
-3. Loads history from the DB (source of truth)
-4. Builds the system prompt + tool definitions
-5. Runs the agent loop (LLM → tool → LLM cycle)
-6. Saves the assistant reply + tool exchanges
-7. Records token usage
-8. Returns the response text for the channel to send back
+1. Loads the tenant's LLM config from the DB (per-tenant, not .env)
+2. Resolves or creates the conversation thread
+3. Saves the inbound message
+4. Loads history from the DB (source of truth)
+5. Builds the system prompt + tool definitions
+6. Runs the agent loop (LLM → tool → LLM cycle)
+7. Saves the assistant reply + tool exchanges
+8. Records token usage
+9. Returns the response text for the channel to send back
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ from src.application.llm_usage.use_cases.record_token_usage import RecordTokenUs
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationRole
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole
+from src.domain.shared.exceptions import InvalidOperationError
 from src.infrastructure.llm.client import LangChainLLMClient
 from src.infrastructure.rag.embedder import OpenAIEmbedder
 from src.infrastructure.rag.retriever import HybridRetriever
@@ -44,6 +46,15 @@ _TOOLS = [SEARCH_DOCUMENTS_DEF, ESCALATE_QUESTION_DEF]
 async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     """Process one inbound message end-to-end. Returns the AI's reply."""
     request_id = uuid.uuid4().hex
+
+    # ── 0. Load tenant config (per-tenant LLM + embedding creds) ──
+    tenant_config = await uow.tenant_configs.get_by_tenant_id(inp.tenant_id)
+    if tenant_config is None:
+        raise InvalidOperationError("Tenant configuration not found. Please set up your LLM credentials in Settings.")
+    if not tenant_config.llm_api_key:
+        raise InvalidOperationError(
+            "LLM API key not configured. Go to Settings → LLM Configuration and add your API key."
+        )
 
     thread_id = inp.thread_id or f"{inp.channel.value}:{inp.sender_identifier}:{inp.tenant_id}"
 
@@ -71,13 +82,28 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     if not any(m.role == LLMMessageRole.USER for m in messages):
         messages.append(LLMMessage(role=LLMMessageRole.USER, content=inp.message))
 
-    # ── 4. Build LLM client + retriever ───────────────────────────
-    llm = LangChainLLMClient(provider="openai", model="gpt-4o-mini")
-    embedder = OpenAIEmbedder()
+    # ── 4. Build LLM client + retriever from tenant config ────────
+    llm = LangChainLLMClient(
+        provider=tenant_config.llm_provider.value,
+        model=tenant_config.llm_model,
+        api_key=tenant_config.llm_api_key,
+    )
+    embedding_key = tenant_config.embedding_api_key or tenant_config.llm_api_key
+    embedder = OpenAIEmbedder(
+        api_key=embedding_key,
+        model=tenant_config.embedding_model,
+        dimensions=tenant_config.embedding_dimensions,
+    )
     retriever = HybridRetriever(session=uow._session, embedder=embedder)
 
     # ── 5. Run agent loop ─────────────────────────────────────────
-    logger.info("gateway.agent_start", thread_id=thread_id, request_id=request_id)
+    logger.info(
+        "gateway.agent_start",
+        thread_id=thread_id,
+        request_id=request_id,
+        provider=tenant_config.llm_provider.value,
+        model=tenant_config.llm_model,
+    )
     result = await run_agent_loop(
         messages=messages,
         tools=_TOOLS,
@@ -89,6 +115,7 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         asker_contact=inp.sender_identifier,
         retriever=retriever,
         uow=uow,
+        max_tokens=tenant_config.llm_max_tokens,
     )
     logger.info(
         "gateway.agent_done",
@@ -144,8 +171,8 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         await RecordTokenUsageUseCase(uow=uow).execute(
             RecordTokenUsage(
                 tenant_id=inp.tenant_id,
-                provider="openai",
-                model="gpt-4o-mini",
+                provider=tenant_config.llm_provider.value,
+                model=tenant_config.llm_model,
                 input_tokens=result.input_tokens,
                 output_tokens=result.output_tokens,
                 cache_read_tokens=result.cache_read_tokens,

@@ -1,9 +1,8 @@
 """WhatsApp Cloud API webhook — receives messages from Meta.
 
-Verification: GET request with hub.verify_token for webhook registration.
-Inbound: POST with X-Hub-Signature-256 HMAC-SHA256 verification against
-the app secret. Message + sender phone extracted from Meta's standard
-webhook payload structure.
+Verification: GET with hub.verify_token matched against the tenant's
+stored verify token. POST with X-Hub-Signature-256 HMAC-SHA256
+verification. All credentials come from the tenant_configs table.
 """
 
 from __future__ import annotations
@@ -18,7 +17,6 @@ from fastapi import APIRouter, Header, Query, Request, Response
 from src.ai.gateway import chat_with_agent
 from src.ai.types import ChatInput
 from src.application.shared.unit_of_work import UnitOfWork
-from src.config.settings import get_settings
 from src.domain.conversations.value_objects import ConversationChannel
 from src.drivers.api.dependencies import get_session
 
@@ -34,10 +32,20 @@ async def whatsapp_verify(
     hub_verify_token: str = Query(alias="hub.verify_token", default=""),
     hub_challenge: str = Query(alias="hub.challenge", default=""),
 ) -> Response:
-    """Meta webhook verification — echo the challenge if the token matches."""
-    settings = get_settings()
-    if hub_mode == "subscribe" and hub_verify_token == settings.whatsapp_verify_token:
-        return Response(content=hub_challenge, media_type="text/plain")
+    """Meta webhook verification — echo the challenge if the token matches the tenant's stored token."""
+    from uuid import UUID  # noqa: PLC0415
+
+    try:
+        tid = UUID(tenant_id)
+    except ValueError:
+        return Response(status_code=400)
+
+    async for session in get_session():
+        uow = UnitOfWork(session)
+        config = await uow.tenant_configs.get_by_tenant_id(tid)
+        if config and hub_mode == "subscribe" and hub_verify_token == config.whatsapp_verify_token:
+            return Response(content=hub_challenge, media_type="text/plain")
+
     return Response(status_code=403)
 
 
@@ -49,14 +57,15 @@ async def whatsapp_webhook(
 ) -> Response:
     body = await request.body()
 
-    settings = get_settings()
-    if settings.whatsapp_app_secret and not _verify_signature(body, x_hub_signature_256, settings.whatsapp_app_secret):
-        logger.warning("whatsapp.webhook.invalid_signature", tenant_id=tenant_id)
-        return Response(status_code=403)
+    from uuid import UUID  # noqa: PLC0415
+
+    try:
+        tid = UUID(tenant_id)
+    except ValueError:
+        return Response(status_code=400)
 
     payload: dict[str, Any] = await request.json()
 
-    # Extract message from Meta's nested structure.
     entry = (payload.get("entry") or [{}])[0]
     changes = (entry.get("changes") or [{}])[0]
     value = changes.get("value", {})
@@ -73,23 +82,27 @@ async def whatsapp_webhook(
     if not text or not sender_phone:
         return Response(status_code=200)
 
-    # Extract sender name from contacts if available.
     contacts = value.get("contacts", [])
     sender_name = None
     if contacts:
         profile = contacts[0].get("profile", {})
         sender_name = profile.get("name")
 
-    from uuid import UUID  # noqa: PLC0415
-
-    try:
-        tid = UUID(tenant_id)
-    except ValueError:
-        return Response(status_code=400)
-
     async for session in get_session():
         uow = UnitOfWork(session)
         try:
+            config = await uow.tenant_configs.get_by_tenant_id(tid)
+            if config is None:
+                logger.warning("whatsapp.webhook.no_config", tenant_id=tenant_id)
+                return Response(status_code=404)
+
+            # Verify HMAC signature using the tenant's app secret from DB.
+            if config.whatsapp_access_token:
+                app_secret = config.whatsapp_verify_token or ""
+                if app_secret and not _verify_signature(body, x_hub_signature_256, app_secret):
+                    logger.warning("whatsapp.webhook.invalid_signature", tenant_id=tenant_id)
+                    return Response(status_code=403)
+
             result = await chat_with_agent(
                 ChatInput(
                     message=text,
@@ -102,14 +115,13 @@ async def whatsapp_webhook(
             )
             await uow.commit()
 
-            # Send reply back via WhatsApp Cloud API.
             phone_number_id = value.get("metadata", {}).get("phone_number_id")
-            if phone_number_id:
+            if phone_number_id and config.whatsapp_access_token:
                 await _send_whatsapp_reply(
                     phone_number_id=phone_number_id,
                     to=sender_phone,
                     text=result.response,
-                    tenant_id=tenant_id,
+                    access_token=config.whatsapp_access_token,
                 )
         except Exception:
             await uow.rollback()
@@ -130,16 +142,11 @@ async def _send_whatsapp_reply(
     phone_number_id: str,
     to: str,
     text: str,
-    tenant_id: str,
+    access_token: str,
 ) -> None:
-    """Send a text reply via WhatsApp Cloud API. Best-effort."""
+    """Send a text reply via WhatsApp Cloud API using the tenant's access token."""
     import httpx  # noqa: PLC0415
 
-    # Per-tenant access token would come from the tenant_config table.
-    access_token = ""  # resolve from tenant config in production
-    if not access_token:
-        logger.warning("whatsapp.reply.no_access_token", tenant_id=tenant_id)
-        return
     try:
         async with httpx.AsyncClient() as client:
             await client.post(
@@ -154,4 +161,4 @@ async def _send_whatsapp_reply(
                 timeout=10,
             )
     except Exception:
-        logger.error("whatsapp.reply.failed", tenant_id=tenant_id, exc_info=True)
+        logger.error("whatsapp.reply.failed", exc_info=True)
