@@ -1,27 +1,112 @@
 # frontdesk
 
-Multi-tenant AI front desk that answers on your behalf. Routine questions get grounded answers from your documents and facts; anything outside its knowledge is forwarded to you as a pending question, with the asker notified once you reply.
+Multi-tenant AI front desk that answers on its owner's behalf. Routine
+questions get RAG-grounded answers from the tenant's documents; anything
+the AI doesn't know is escalated to the owner as a pending question,
+and the asker is notified once the owner replies.
 
-> **Status:** under active construction. Not deployed yet.
+> **Status:** active development. Backend is feature-complete for v1
+> (auth, RAG, escalation, usage ledger). Frontend has auth + the
+> escalation inbox + document upload + usage dashboard. WhatsApp /
+> Telegram channels and the agent loop land in the next phase — see
+> [docs/](docs/) for the design.
 
 ## What it does
 
-- **Asker side** — reaches your AI via Telegram or WhatsApp. Gets an answer grounded in your tenant's documents and facts. If the AI doesn't know, the question is escalated and the asker is told someone will follow up.
-- **Owner side** — web dashboard with an inbox of escalated questions, document upload, conversation history, and token/cost usage. Reply from the dashboard or from your own preferred channel (Telegram / WhatsApp).
-- **Owner-AI chat** — talk to your own assistant for end-of-day summaries, pending question lists, and analytics over your tenant's traffic.
+- **Owner side** — web dashboard with an inbox of escalated questions,
+  document upload (PDF / DOCX / Markdown / plain text), and a token /
+  cost ledger. The asker contact + the AI's failed answer attempt are
+  shown so the owner knows exactly why an escalation happened.
+- **Knowledge base** — uploaded files are chunked (~512 token windows,
+  15% overlap), embedded with `text-embedding-3-large` (truncated to
+  1536 dims), and indexed with pgvector HNSW + a Postgres `tsvector`
+  GIN index. Retrieval is hybrid (vector + BM25) fused via Reciprocal
+  Rank Fusion.
+- **Escalation flow** — when the AI escalates, a `Question` row is
+  created with full state-machine semantics
+  (`SUBMITTED → RESOLVED | CLOSED`). The owner replies from the
+  dashboard; an event will relay the reply back to the asker's channel
+  once the channels phase ships.
+- **Cost accountability** — every LLM call is written to a
+  `token_usages` row with provider, model, tenant, thread, request ID,
+  and per-segment cost in `Decimal(18, 8)`. Aggregation happens in SQL.
+
+## Architectural highlights
+
+- **Strict hexagonal DDD.** Domain layer has zero imports from
+  application, infrastructure, drivers, or the AI layer. Application
+  layer has zero infrastructure imports. LangChain lives in **one
+  file** behind `LLMClientPort`.
+- **DB-as-truth conversation persistence.** LangGraph orchestrates a
+  single turn; the messages table is the cross-turn source of truth.
+  Avoids the opaque LangGraph checkpoint blob and keeps admin UI +
+  audit queries clean.
+- **Tiered tool compression.** Recent tool exchanges stay verbatim
+  (`tool_use` / `tool_result` blocks the LLM was trained on); older
+  exchanges compress to a summary while `tool_args` + `tool_result`
+  are retained in JSONB for UUID-driven recovery. Fixes the gap in
+  naive "paraphrase tool result" patterns where the LLM loses
+  awareness of what it previously asked.
+- **Tenant isolation enforced at every query.** Routes resolve
+  `tenant_id` from the authenticated user's `user_tenants` row;
+  callers never get to specify it. Repositories filter at the SQL
+  level. RAG retrieval includes `WHERE tenant_id = :tenant_id` in
+  both the vector and BM25 stages.
 
 ## Stack
 
-- **Backend** — Python 3.13 · FastAPI · LangGraph · PostgreSQL 17 + pgvector
-- **Frontend** — React 19 · Mantine 8 · TypeScript · Vite
-- **Architecture** — strict hexagonal DDD. The LLM client and LangGraph orchestrator are isolated behind domain ports — the agent layer never sees `langchain_core` or `langgraph` symbols.
-- **Retrieval** — hybrid (vector + BM25) over pgvector with HNSW indexing, cross-encoder reranking, contextual chunking (256-512 tokens, 15% overlap).
+- **Backend** — Python 3.13 · FastAPI 0.128 · LangGraph 1.0 ·
+  PostgreSQL 17 + pgvector 0.4 · SQLAlchemy 2.0 async · Alembic ·
+  pytest with real-database integration tests
+- **Frontend** — React 19 · Mantine 9 · TypeScript 6 · Vite 8 ·
+  TanStack Query · React Router v7
+- **Observability (wired, runtime-optional)** — OpenTelemetry +
+  Prometheus + Sentry · structlog
 
 ## Repo layout
 
-- `backend/` — FastAPI + LangGraph backend (DDD layers)
-- `frontend/` — React + Mantine owner dashboard
-- `docs/` — architecture and design notes
+- [backend/](backend/) — FastAPI + DDD layers
+- [frontend/](frontend/) — React + Mantine owner dashboard
+- [docs/](docs/) — architecture, RAG, escalation, conversations
+- [CLAUDE.md](CLAUDE.md) — guidance for AI-assisted work on the repo
+
+## Quick start
+
+Requirements: PostgreSQL 17 with pgvector, Python 3.13 with `uv`,
+Node 22+ with `npm`.
+
+```bash
+# Backend
+cd backend
+cp .env.example .env                    # add OPENAI_API_KEY for ingestion
+uv sync --extra dev
+createdb frontdesk_db && psql frontdesk_db -c 'CREATE EXTENSION vector;'
+uv run alembic upgrade head
+uv run uvicorn src.main:app --reload --port 8000
+
+# Frontend (new shell)
+cd frontend
+cp .env.example .env
+npm install
+npm run dev                             # http://localhost:5173
+```
+
+## Verification
+
+```bash
+# Backend
+cd backend
+uv run ruff check src/ tests/
+uv run ruff format --check src/ tests/
+uv run mypy src/                        # strict, 0 errors across 150+ files
+uv run pytest tests/ -q                 # 29 tests pass
+
+# Frontend
+cd frontend
+npm run lint
+npm run typecheck
+npm run build
+```
 
 ## License
 
