@@ -46,6 +46,7 @@ class IngestDocumentUseCase:
             size_bytes=len(cmd.content),
         )
         await self._uow.documents.save(doc)
+        await self._uow.flush()  # flush INSERT so the row exists for the UPDATE
         doc.mark_ingesting()
         await self._uow.documents.save(doc)
         await self._uow.flush()

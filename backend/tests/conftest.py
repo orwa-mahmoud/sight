@@ -43,7 +43,13 @@ async def _clean_db() -> AsyncIterator[None]:
     from src.infrastructure.persistence.postgres.database import async_session_factory  # noqa: PLC0415
 
     async with async_session_factory() as session:
-        await session.execute(text("TRUNCATE TABLE user_tenants, users, tenants RESTART IDENTITY CASCADE"))
+        await session.execute(
+            text(
+                "TRUNCATE TABLE questions, token_usages, messages, conversations, "
+                "chunks, documents, user_tenants, tenant_configs, users, tenants "
+                "RESTART IDENTITY CASCADE"
+            )
+        )
         await session.commit()
     yield
 
@@ -55,3 +61,23 @@ async def client(_clean_db: None) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+
+async def register_and_token(client: AsyncClient) -> tuple[str, str, str]:
+    """Helper: register a fresh owner, return (token, user_id, tenant_id)."""
+    import uuid  # noqa: PLC0415
+
+    slug = f"t-{uuid.uuid4().hex[:8]}"
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": f"{slug}@test.com",
+            "password": "supersecure123",
+            "full_name": "Test Owner",
+            "tenant_name": f"Tenant {slug}",
+            "tenant_slug": slug,
+        },
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    return body["access_token"], body["user_id"], body["tenant_id"]
