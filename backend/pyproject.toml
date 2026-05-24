@@ -9,8 +9,6 @@ readme = "../README.md"
 
 dependencies = [
     # ── LLM orchestration ─────────────────────────────────────────
-    # LangChain for init_chat_model + tool primitives; isolated to
-    # infrastructure/llm per DDD discipline.
     "langchain>=1.2.0",
     "langchain-openai>=1.1.0",
     "langchain-anthropic>=1.4.0",
@@ -28,6 +26,10 @@ dependencies = [
     "pypdf>=5.0.0",
     "python-docx>=1.1.0",
     "tiktoken>=0.12.0",
+    # ── Redis (thread locking, message queue) ─────────────────────
+    "redis[hiredis]>=6.0.0",
+    # ── Channels ──────────────────────────────────────────────────
+    "python-telegram-bot>=22.6",
     # ── Auth + utilities ──────────────────────────────────────────
     "pydantic[email]>=2.12.0",
     "pydantic-settings>=2.12.0",
@@ -36,6 +38,7 @@ dependencies = [
     "python-jose[cryptography]>=3.5.0",
     "passlib[bcrypt]>=1.7.4",
     "bcrypt>=4.0.0",
+    "jinja2>=3.1.6",
 ]
 
 [project.optional-dependencies]
