@@ -129,6 +129,10 @@ disallow_incomplete_defs = true
 plugins = ["pydantic.mypy"]
 exclude = ["alembic/versions"]
 
+[[tool.mypy.overrides]]
+module = ["pgvector.*", "docx.*"]
+ignore_missing_imports = true
+
 # ── pytest ────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

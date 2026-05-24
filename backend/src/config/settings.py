@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # ── Embeddings (RAG ingestion pipeline) ────────────────────────
     default_embedding_provider: str = "openai"
     default_embedding_model: str = "text-embedding-3-large"
-    default_embedding_dimensions: int = 3072
+    default_embedding_dimensions: int = 1536
 
     # ── Channels ───────────────────────────────────────────────────
     whatsapp_verify_token: str | None = None
