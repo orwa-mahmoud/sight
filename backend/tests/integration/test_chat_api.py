@@ -1,4 +1,5 @@
 """Integration tests for the /chat test endpoint."""
+
 from __future__ import annotations
 
 import pytest
@@ -12,6 +13,7 @@ from tests.conftest import register_and_token
 async def test_chat_requires_auth(client: AsyncClient) -> None:
     resp = await client.post("/api/v1/chat", json={"message": "hi"})
     assert resp.status_code == 401
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
