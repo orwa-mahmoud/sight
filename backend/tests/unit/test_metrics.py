@@ -32,7 +32,7 @@ def test_all_metrics_importable() -> None:
     ]
     assert len(metrics) == 10
     for m in metrics:
-        assert m._name  # noqa: SLF001
+        assert m._name
 
 
 def test_counter_can_increment() -> None:
