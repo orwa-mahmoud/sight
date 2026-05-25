@@ -383,8 +383,7 @@ class TestAgentLoopMaxIterations:
             tenant_id=uuid4(),
             channel=ConversationChannel.WEB,
             conversation_id=None,
-            asker_name=None,
-            asker_contact=None,
+            contact_id=None,
             retriever=mock_retriever,
             uow=MagicMock(),
         )
@@ -402,8 +401,7 @@ class TestAgentUnknownTool:
             tenant_id=uuid4(),
             channel=ConversationChannel.WEB,
             conversation_id=None,
-            asker_name=None,
-            asker_contact=None,
+            contact_id=None,
             retriever=AsyncMock(),
             uow=MagicMock(),
         )
@@ -425,8 +423,7 @@ class TestAgentUnknownTool:
                 tenant_id=uuid4(),
                 channel=ConversationChannel.WEB,
                 conversation_id=uuid4(),
-                asker_name="Sara",
-                asker_contact="sara@test.com",
+                contact_id=uuid4(),
                 retriever=AsyncMock(),
                 uow=mock_uow,
             )
@@ -642,8 +639,7 @@ class TestGraphDispatchEdges:
             "tenant_id": str(uuid4()),
             "channel": "web",
             "conversation_id": None,
-            "asker_name": None,
-            "asker_contact": None,
+            "contact_id": None,
         }
         result = await execute_tools_fn(state)
         # Should return state unchanged since last message is not AIMessage
@@ -661,8 +657,7 @@ class TestGraphDispatchEdges:
                 tenant_id=uuid4(),
                 channel=ConversationChannel.WEB,
                 conversation_id=uuid4(),
-                asker_name="Test",
-                asker_contact="test@test.com",
+                contact_id=uuid4(),
                 retriever=AsyncMock(),
                 uow=MagicMock(),
             )
@@ -680,8 +675,7 @@ class TestGraphDispatchEdges:
                 tenant_id=uuid4(),
                 channel=ConversationChannel.WEB,
                 conversation_id=None,
-                asker_name=None,
-                asker_contact="alice@test.com",
+                contact_id=uuid4(),
                 retriever=AsyncMock(),
                 uow=MagicMock(),
             )

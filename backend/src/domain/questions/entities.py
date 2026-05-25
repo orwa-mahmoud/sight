@@ -18,8 +18,7 @@ class Question(BaseEntity):
     tenant_id: UUID
     conversation_id: UUID | None  # set when escalation arose from a chat
     channel: ConversationChannel
-    asker_name: str | None
-    asker_contact: str | None  # phone / email / telegram handle — channel-specific
+    contact_id: UUID | None  # resolved Contact; None for anonymous / pre-resolution
     question_text: str
     ai_answer_attempt: str | None  # what the AI tried before giving up
     status: QuestionStatus
@@ -37,8 +36,7 @@ class Question(BaseEntity):
         channel: ConversationChannel,
         question_text: str,
         conversation_id: UUID | None = None,
-        asker_name: str | None = None,
-        asker_contact: str | None = None,
+        contact_id: UUID | None = None,
         ai_answer_attempt: str | None = None,
     ) -> Question:
         cleaned = question_text.strip()
@@ -51,8 +49,7 @@ class Question(BaseEntity):
             tenant_id=tenant_id,
             conversation_id=conversation_id,
             channel=channel,
-            asker_name=asker_name.strip() if asker_name else None,
-            asker_contact=asker_contact.strip() if asker_contact else None,
+            contact_id=contact_id,
             question_text=cleaned,
             ai_answer_attempt=ai_answer_attempt,
             status=QuestionStatus.SUBMITTED,
@@ -65,7 +62,7 @@ class Question(BaseEntity):
                 question_id=q.id,
                 tenant_id=tenant_id,
                 channel=channel.value,
-                asker_contact=q.asker_contact,
+                contact_id=q.contact_id,
             )
         )
         return q

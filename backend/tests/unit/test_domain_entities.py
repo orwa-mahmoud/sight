@@ -173,7 +173,7 @@ def test_question_submit_and_resolve() -> None:
         tenant_id=uuid4(),
         channel=ConversationChannel.WHATSAPP,
         question_text="Office hours?",
-        asker_name="Sara",
+        contact_id=uuid4(),
     )
     assert q.status == QuestionStatus.SUBMITTED
     q.resolve(reply="9-5 Sun-Thu", replied_by_user_id=uuid4())

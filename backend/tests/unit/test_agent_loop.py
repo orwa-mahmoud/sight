@@ -30,8 +30,7 @@ async def test_agent_returns_text_when_no_tool_calls() -> None:
         tenant_id=uuid4(),
         channel=ConversationChannel.WEB,
         conversation_id=None,
-        asker_name=None,
-        asker_contact=None,
+        contact_id=None,
         retriever=AsyncMock(),
         uow=MagicMock(),
     )
@@ -67,8 +66,7 @@ async def test_agent_calls_search_then_responds() -> None:
         tenant_id=uuid4(),
         channel=ConversationChannel.WEB,
         conversation_id=None,
-        asker_name=None,
-        asker_contact=None,
+        contact_id=None,
         retriever=mock_retriever,
         uow=MagicMock(),
     )

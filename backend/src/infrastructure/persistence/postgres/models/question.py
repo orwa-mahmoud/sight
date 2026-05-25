@@ -30,8 +30,12 @@ class QuestionModel(Base):
         index=True,
     )
     channel: Mapped[str] = mapped_column(String(32), nullable=False)
-    asker_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    asker_contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contact_id: Mapped[UUID | None] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("contacts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
     ai_answer_attempt: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="submitted", index=True)

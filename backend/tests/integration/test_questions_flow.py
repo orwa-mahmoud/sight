@@ -32,8 +32,6 @@ async def test_submit_then_list_then_reply(client: AsyncClient) -> None:
         json={
             "channel": "whatsapp",
             "question_text": "Are you open on Saturdays?",
-            "asker_name": "Sara",
-            "asker_contact": "+971500000000",
             "ai_answer_attempt": "I'm not sure about weekend hours.",
         },
         headers=headers,

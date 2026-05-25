@@ -30,8 +30,7 @@ async def test_escalate_creates_question(client: None) -> None:
             tenant_id=t.id,
             channel=ConversationChannel.WHATSAPP,
             conversation_id=None,
-            asker_name="Sara",
-            asker_contact="+971500000000",
+            contact_id=None,
             uow=uow,
         )
         await uow.commit()

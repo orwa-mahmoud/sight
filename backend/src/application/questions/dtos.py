@@ -13,8 +13,7 @@ class QuestionDTO:
     tenant_id: UUID
     conversation_id: UUID | None
     channel: str
-    asker_name: str | None
-    asker_contact: str | None
+    contact_id: UUID | None
     question_text: str
     ai_answer_attempt: str | None
     status: str
