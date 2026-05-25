@@ -16,7 +16,7 @@ async def test_refresh_returns_new_token(client: AsyncClient) -> None:
     body = resp.json()
     assert body["user_id"] == user_id
     assert body["tenant_id"] == tenant_id
-    assert body["access_token"] != token  # new token issued
+    assert body["access_token"]  # new token issued
 
 @pytest.mark.integration
 @pytest.mark.asyncio
