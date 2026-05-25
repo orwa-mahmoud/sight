@@ -5,10 +5,11 @@ questions get RAG-grounded answers from the tenant's documents; anything
 the AI doesn't know is escalated to the owner as a pending question,
 and the asker is notified once the owner replies.
 
-> **Status:** v0.1.0 — functional. 35 commits, 243 backend tests (90%+
-> coverage), SonarQube 0/0/0 on both projects. LangGraph agent loop,
-> per-tenant LLM config from DB, WhatsApp + Telegram webhooks,
-> RAG with hybrid retrieval, escalation inbox, settings dashboard.
+> **Status:** v0.1.0 — 109 commits, 711 tests (531 backend + 180
+> frontend), 99.4% coverage on both SonarQube dashboards (0/0/0).
+> LangGraph agent loop, per-tenant LLM config, WhatsApp + Telegram
+> webhooks, hybrid RAG, escalation inbox, settings dashboard,
+> circuit breaker, event bus, key facts memory, Prometheus metrics.
 
 ## What it does
 
@@ -59,8 +60,8 @@ and the asker is notified once the owner replies.
   pytest with real-database integration tests
 - **Frontend** — React 19 · Mantine 9 · TypeScript 6 · Vite 8 ·
   TanStack Query · React Router v7
-- **Observability (wired, runtime-optional)** — OpenTelemetry +
-  Prometheus + Sentry · structlog
+- **Observability** — Prometheus `/metrics` endpoint · structlog ·
+  request ID middleware
 
 ## Repo layout
 
@@ -97,13 +98,14 @@ npm run dev                             # http://localhost:5173
 cd backend
 uv run ruff check src/ tests/
 uv run ruff format --check src/ tests/
-uv run mypy src/                        # strict, 0 errors across 180+ files
-uv run pytest tests/ -q                 # 243 tests, 90%+ coverage
+uv run mypy src/                        # strict, 0 errors across 217 files
+uv run pytest tests/ -q                 # 531 tests, 99%+ coverage
 
 # Frontend
 cd frontend
 npm run lint
 npm run typecheck
+npm test                                # 180 tests, 99%+ coverage
 npm run build
 ```
 
