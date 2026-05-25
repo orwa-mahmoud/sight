@@ -19,6 +19,7 @@ from src.infrastructure.persistence.postgres.models.conversation import Conversa
 from src.infrastructure.persistence.postgres.models.document import DocumentModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.key_fact import KeyFactModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.message import MessageModel  # noqa: E402
+from src.infrastructure.persistence.postgres.models.outbox import OutboxEventModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.question import QuestionModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.tenant import TenantModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.tenant_config import TenantConfigModel  # noqa: E402
@@ -33,6 +34,7 @@ __all__ = [
     "DocumentModel",
     "KeyFactModel",
     "MessageModel",
+    "OutboxEventModel",
     "QuestionModel",
     "TenantConfigModel",
     "TenantModel",
