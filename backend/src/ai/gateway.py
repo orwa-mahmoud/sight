@@ -17,15 +17,20 @@ Every channel (WhatsApp webhook, Telegram webhook, API) calls
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.ai.concurrency import ThreadLock
 
 import structlog
 
 from src.ai.context.history import load_history
 from src.ai.context.prompts import build_asker_system_prompt
 from src.ai.tools.escalate_question import ESCALATE_QUESTION_DEF
+from src.ai.tools.remove_key_fact import REMOVE_KEY_FACT_DEF
 from src.ai.tools.save_key_fact import SAVE_KEY_FACT_DEF
 from src.ai.tools.search_documents import SEARCH_DOCUMENTS_DEF
-from src.ai.types import ChatInput, ChatResult
+from src.ai.types import AgentLoopResult, ChatInput, ChatResult
 from src.application.conversations.commands import SaveThreadMessage
 from src.application.conversations.use_cases.save_thread_message import SaveThreadMessageUseCase
 from src.application.llm_usage.commands import RecordTokenUsage
@@ -40,7 +45,7 @@ from src.infrastructure.rag.retriever import HybridRetriever
 
 logger = structlog.get_logger()
 
-_TOOLS = [SEARCH_DOCUMENTS_DEF, ESCALATE_QUESTION_DEF, SAVE_KEY_FACT_DEF]
+_TOOLS = [SEARCH_DOCUMENTS_DEF, ESCALATE_QUESTION_DEF, SAVE_KEY_FACT_DEF, REMOVE_KEY_FACT_DEF]
 
 
 async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
@@ -123,79 +128,48 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     )
     retriever = HybridRetriever(session=uow._session, embedder=embedder)
 
-    # ── 5. Run LangGraph agent ────────────────────────────────────
+    # ── 5. Acquire thread lock + run LangGraph agent ───────────────
     from src.infrastructure.ai.graph import build_agent_graph, run_graph  # noqa: PLC0415
 
-    logger.info(
-        "gateway.agent_start",
-        thread_id=thread_id,
-        request_id=request_id,
-        provider=tenant_config.llm_provider.value,
-        model=tenant_config.llm_model,
-    )
-    graph = build_agent_graph(
-        llm=llm,
-        tools=_TOOLS,
-        retriever=retriever,
-        uow=uow,
-        max_tokens=tenant_config.llm_max_tokens,
-    )
-    result = await run_graph(
-        graph,
-        messages=messages,
-        tenant_id=inp.tenant_id,
-        channel=inp.channel,
-        conversation_id=conversation_id,
-        contact_id=contact_id,
-    )
-    logger.info(
-        "gateway.agent_done",
-        thread_id=thread_id,
-        request_id=request_id,
-        tools_used=len(result.tool_calls),
-        input_tokens=result.input_tokens,
-        output_tokens=result.output_tokens,
-    )
+    lock = await _acquire_thread_lock(thread_id)
+
+    try:
+        logger.info(
+            "gateway.agent_start",
+            thread_id=thread_id,
+            request_id=request_id,
+            provider=tenant_config.llm_provider.value,
+            model=tenant_config.llm_model,
+        )
+        graph = build_agent_graph(
+            llm=llm,
+            tools=_TOOLS,
+            retriever=retriever,
+            uow=uow,
+            max_tokens=tenant_config.llm_max_tokens,
+        )
+        result = await run_graph(
+            graph,
+            messages=messages,
+            tenant_id=inp.tenant_id,
+            channel=inp.channel,
+            conversation_id=conversation_id,
+            contact_id=contact_id,
+        )
+        logger.info(
+            "gateway.agent_done",
+            thread_id=thread_id,
+            request_id=request_id,
+            tools_used=len(result.tool_calls),
+            input_tokens=result.input_tokens,
+            output_tokens=result.output_tokens,
+        )
+    finally:
+        if lock:
+            await lock.release()
 
     # ── 6. Save tool exchanges + assistant reply ──────────────────
-    for tc in result.tool_calls:
-        await save_uc.execute(
-            SaveThreadMessage(
-                tenant_id=inp.tenant_id,
-                thread_id=thread_id,
-                channel=inp.channel,
-                role=ConversationRole.ASSISTANT,
-                content="",
-                hidden=True,
-                tool_call_id=tc.tool_name,
-                tool_args=tc.arguments,
-                request_id=request_id,
-            )
-        )
-        await save_uc.execute(
-            SaveThreadMessage(
-                tenant_id=inp.tenant_id,
-                thread_id=thread_id,
-                channel=inp.channel,
-                role=ConversationRole.TOOL,
-                content=tc.summary,
-                hidden=True,
-                tool_result=tc.result if isinstance(tc.result, dict) else {"data": tc.result},
-                tool_call_id=tc.tool_name,
-                request_id=request_id,
-            )
-        )
-
-    await save_uc.execute(
-        SaveThreadMessage(
-            tenant_id=inp.tenant_id,
-            thread_id=thread_id,
-            channel=inp.channel,
-            role=ConversationRole.ASSISTANT,
-            content=result.text,
-            request_id=request_id,
-        )
-    )
+    await _save_agent_messages(save_uc, inp, thread_id, result, request_id)
 
     # ── 7. Record token usage ─────────────────────────────────────
     if result.input_tokens > 0 or result.output_tokens > 0:
@@ -234,3 +208,68 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         escalated=escalated,
         request_id=request_id,
     )
+
+
+async def _save_agent_messages(
+    save_uc: SaveThreadMessageUseCase,
+    inp: ChatInput,
+    thread_id: str,
+    result: AgentLoopResult,
+    request_id: str,
+) -> None:
+    """Persist tool exchanges and the final assistant reply."""
+    for tc in result.tool_calls:
+        await save_uc.execute(
+            SaveThreadMessage(
+                tenant_id=inp.tenant_id,
+                thread_id=thread_id,
+                channel=inp.channel,
+                role=ConversationRole.ASSISTANT,
+                content="",
+                hidden=True,
+                tool_call_id=tc.tool_name,
+                tool_args=tc.arguments,
+                request_id=request_id,
+            )
+        )
+        await save_uc.execute(
+            SaveThreadMessage(
+                tenant_id=inp.tenant_id,
+                thread_id=thread_id,
+                channel=inp.channel,
+                role=ConversationRole.TOOL,
+                content=tc.summary,
+                hidden=True,
+                tool_result=tc.result if isinstance(tc.result, dict) else {"data": tc.result},
+                tool_call_id=tc.tool_name,
+                request_id=request_id,
+            )
+        )
+    await save_uc.execute(
+        SaveThreadMessage(
+            tenant_id=inp.tenant_id,
+            thread_id=thread_id,
+            channel=inp.channel,
+            role=ConversationRole.ASSISTANT,
+            content=result.text,
+            request_id=request_id,
+        )
+    )
+
+
+async def _acquire_thread_lock(thread_id: str) -> ThreadLock | None:
+    """Try to acquire a Redis-based thread lock. Returns the lock or None."""
+    from src.ai.concurrency import ThreadLock  # noqa: PLC0415
+
+    try:
+        import redis.asyncio as aioredis  # noqa: PLC0415
+
+        from src.config.settings import get_settings  # noqa: PLC0415
+
+        client = aioredis.from_url(get_settings().redis_url)
+        lock = ThreadLock(client, thread_id)
+        await lock.acquire()
+        return lock
+    except Exception:
+        logger.warning("gateway.thread_lock.unavailable", thread_id=thread_id)
+        return None

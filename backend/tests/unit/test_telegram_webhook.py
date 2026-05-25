@@ -3,29 +3,28 @@
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
 from src.ai.types import ChatResult
 from src.domain.tenant_config.entities import TenantConfig
-from src.drivers.api.webhooks.telegram import _send_telegram_reply, telegram_webhook
+from src.drivers.api.webhooks.telegram import telegram_webhook
 
 
 def _make_config(
     *,
-    tenant_id=None,
+    tenant_id: UUID | None = None,
     bot_token: str | None = "bot123",
     webhook_secret: str | None = "secret-abc",
 ) -> TenantConfig:
-    """Build a minimal TenantConfig for testing."""
     cfg = TenantConfig.create_default(tenant_id=tenant_id or uuid4())
     cfg.telegram_bot_token = bot_token
     cfg.telegram_webhook_secret = webhook_secret
     return cfg
 
 
-def _telegram_body(text: str = "hello", user_id: int = 42, chat_id: int = 99) -> dict:
+def _telegram_body(text: str = "hello", user_id: int = 42, chat_id: int = 99) -> dict[str, object]:
     return {
         "message": {
             "from": {"id": user_id, "first_name": "Ali"},
@@ -65,7 +64,6 @@ async def test_telegram_webhook_empty_text() -> None:
 @pytest.mark.asyncio
 async def test_telegram_webhook_no_config_returns_404() -> None:
     tid = uuid4()
-    mock_session = AsyncMock()
     mock_uow = MagicMock()
     mock_uow.tenant_configs = MagicMock()
     mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=None)
@@ -75,8 +73,8 @@ async def test_telegram_webhook_no_config_returns_404() -> None:
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body())
 
-    async def fake_get_session():
-        yield mock_session
+    async def fake_get_session():  # type: ignore[no-untyped-def]
+        yield AsyncMock()
 
     with (
         patch("src.drivers.api.webhooks.telegram.get_session", fake_get_session),
@@ -104,7 +102,7 @@ async def test_telegram_webhook_invalid_secret_returns_403() -> None:
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body())
 
-    async def fake_get_session():
+    async def fake_get_session():  # type: ignore[no-untyped-def]
         yield AsyncMock()
 
     with (
@@ -135,7 +133,7 @@ async def test_telegram_webhook_happy_path_with_reply() -> None:
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body(chat_id=99))
 
-    async def fake_get_session():
+    async def fake_get_session():  # type: ignore[no-untyped-def]
         yield AsyncMock()
 
     with (
@@ -147,7 +145,7 @@ async def test_telegram_webhook_happy_path_with_reply() -> None:
             return_value=chat_result,
         ),
         patch(
-            "src.drivers.api.webhooks.telegram._send_telegram_reply",
+            "src.infrastructure.channels.telegram.TelegramAdapter.send_text",
             new_callable=AsyncMock,
         ) as mock_send,
     ):
@@ -157,7 +155,7 @@ async def test_telegram_webhook_happy_path_with_reply() -> None:
             x_telegram_bot_api_secret_token="sec",
         )
     assert resp.status_code == 200
-    mock_send.assert_awaited_once_with(chat_id=99, text="Hi there!", bot_token="bot-tok-123")
+    mock_send.assert_awaited_once_with("99", "Hi there!")
 
 
 @pytest.mark.asyncio
@@ -174,7 +172,7 @@ async def test_telegram_webhook_exception_rolls_back() -> None:
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body())
 
-    async def fake_get_session():
+    async def fake_get_session():  # type: ignore[no-untyped-def]
         yield AsyncMock()
 
     with (
@@ -195,24 +193,9 @@ async def test_telegram_webhook_exception_rolls_back() -> None:
 
 
 @pytest.mark.asyncio
-async def test_send_telegram_reply_success() -> None:
-    with patch("httpx.AsyncClient") as mock_cls:
-        mock_client = AsyncMock()
-        mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
-        mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-        await _send_telegram_reply(chat_id=42, text="hi", bot_token="tok123")
-        mock_client.post.assert_awaited_once()
-        call_args = mock_client.post.call_args
-        assert "tok123" in call_args[0][0]
-        assert call_args[1]["json"]["chat_id"] == 42
+async def test_telegram_adapter_send_text_no_token() -> None:
+    from src.infrastructure.channels.telegram import TelegramAdapter
 
-
-@pytest.mark.asyncio
-async def test_send_telegram_reply_handles_error() -> None:
-    with patch("httpx.AsyncClient") as mock_cls:
-        mock_client = AsyncMock()
-        mock_client.post.side_effect = RuntimeError("network error")
-        mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
-        mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-        # Should not raise
-        await _send_telegram_reply(chat_id=42, text="hi", bot_token="tok")
+    adapter = TelegramAdapter()
+    result = await adapter.send_text("123", "hello")
+    assert result is None

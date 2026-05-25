@@ -39,6 +39,7 @@ class TenantConfigModel(Base):
     whatsapp_phone_number_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     whatsapp_access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     whatsapp_verify_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    whatsapp_app_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # Telegram
     telegram_bot_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     telegram_webhook_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)

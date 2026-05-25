@@ -23,13 +23,13 @@ from src.ai.context.checkpoint import maybe_create_checkpoint
 from src.ai.tools.search_documents import SEARCH_DOCUMENTS_DEF
 from src.domain.conversations.value_objects import ConversationChannel
 from src.domain.llm.value_objects import LLMCallResult, LLMMessage, LLMMessageRole, LLMToolCall, TokenUsage
-from src.drivers.api.webhooks.whatsapp import _check_signature
+from src.infrastructure.channels.whatsapp import WhatsAppAdapter
 
 # ── WhatsApp webhook ──────────────────────────────────────────────
 
 
 class TestWhatsAppVerifyInvalidUUID:
-    """Cover line 39-40: verify endpoint with invalid UUID returns 400."""
+    """Verify endpoint with invalid UUID returns 400."""
 
     async def test_verify_bad_uuid_returns_400(self) -> None:
         from httpx import ASGITransport, AsyncClient
@@ -45,25 +45,16 @@ class TestWhatsAppVerifyInvalidUUID:
         assert resp.status_code == 400
 
 
-class TestWhatsAppCheckSignatureWithVerifyToken:
-    """Cover line 131: _check_signature when verify token present -> calls _verify_signature."""
+class TestWhatsAppAdapterVerifySignature:
+    """Verify WhatsAppAdapter.verify_signature with per-tenant app_secret."""
 
-    def test_check_signature_delegates_to_verify(self) -> None:
-        config = MagicMock()
-        config.whatsapp_access_token = "some-token"
-        config.whatsapp_verify_token = "app-secret"
-
+    def test_verify_signature_valid(self) -> None:
         body = b'{"test": "data"}'
         sig = "sha256=" + hmac_mod.new(b"app-secret", body, hashlib.sha256).hexdigest()
+        assert WhatsAppAdapter.verify_signature(body, sig, "app-secret") is True
 
-        assert _check_signature(body, sig, config) is True
-
-    def test_check_signature_rejects_bad_sig(self) -> None:
-        config = MagicMock()
-        config.whatsapp_access_token = "some-token"
-        config.whatsapp_verify_token = "app-secret"
-
-        assert _check_signature(b"body", "sha256=bad", config) is False
+    def test_verify_signature_invalid(self) -> None:
+        assert WhatsAppAdapter.verify_signature(b"body", "sha256=bad", "app-secret") is False
 
 
 class TestWhatsAppWebhookPostFlow:
@@ -97,7 +88,7 @@ class TestWhatsAppWebhookPostFlow:
         # Config doesn't exist for random UUID -> 404
         assert resp.status_code == 404
 
-    @patch("src.drivers.api.webhooks.whatsapp._send_reply", new_callable=AsyncMock)
+    @patch("src.infrastructure.channels.whatsapp.WhatsAppAdapter.send_text", new_callable=AsyncMock)
     @patch("src.drivers.api.webhooks.whatsapp.chat_with_agent", new_callable=AsyncMock)
     async def test_webhook_post_success_with_reply(self, mock_chat: AsyncMock, mock_send: AsyncMock) -> None:
         """Full success flow: config found, signature passes, agent called, reply sent."""
@@ -108,7 +99,7 @@ class TestWhatsAppWebhookPostFlow:
         from src.domain.users.value_objects import UserTenantRole
         from src.infrastructure.persistence.postgres.database import async_session_factory
 
-        # Setup: create tenant + config with WA tokens
+        # Setup: create tenant + config with WA tokens + app_secret
         async with async_session_factory() as session:
             uow = UnitOfWork(session)
             tenant = Tenant.create(name="WA Test", slug=f"wa-{uuid4().hex[:8]}")
@@ -123,7 +114,8 @@ class TestWhatsAppWebhookPostFlow:
             config.update_whatsapp(
                 phone_number_id="pn123",
                 access_token="EAA-secret",
-                verify_token="",  # empty verify token = skip sig check
+                verify_token="",
+                app_secret="test-app-secret",
             )
             await uow.tenant_configs.save(config)
             await uow.commit()
@@ -136,6 +128,8 @@ class TestWhatsAppWebhookPostFlow:
             response="Hello from bot!",
             thread_id="test-thread",
         )
+
+        import json
 
         from httpx import ASGITransport, AsyncClient
 
@@ -156,14 +150,19 @@ class TestWhatsAppWebhookPostFlow:
                 }
             ]
         }
+        body = json.dumps(payload).encode()
+        sig = "sha256=" + hmac_mod.new(b"test-app-secret", body, hashlib.sha256).hexdigest()
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.post(f"/webhooks/{tid}/whatsapp", json=payload)
+            resp = await client.post(
+                f"/webhooks/{tid}/whatsapp",
+                content=body,
+                headers={"Content-Type": "application/json", "X-Hub-Signature-256": sig},
+            )
 
         assert resp.status_code == 200
         mock_chat.assert_called_once()
-        # _send_reply should have been called since phone_number_id and access_token are present
         mock_send.assert_called_once()
 
     @patch("src.drivers.api.webhooks.whatsapp.chat_with_agent", new_callable=AsyncMock)
@@ -187,11 +186,14 @@ class TestWhatsAppWebhookPostFlow:
             await uow.user_tenants.save(link)
             config = TenantConfig.create_default(tenant_id=tenant.id)
             config._is_new = True
+            config.update_whatsapp(app_secret="err-secret")
             await uow.tenant_configs.save(config)
             await uow.commit()
             tid = tenant.id
 
         mock_chat.side_effect = RuntimeError("boom")
+
+        import json
 
         from httpx import ASGITransport, AsyncClient
 
@@ -212,12 +214,17 @@ class TestWhatsAppWebhookPostFlow:
                 }
             ]
         }
+        body = json.dumps(payload).encode()
+        sig = "sha256=" + hmac_mod.new(b"err-secret", body, hashlib.sha256).hexdigest()
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            resp = await client.post(f"/webhooks/{tid}/whatsapp", json=payload)
+            resp = await client.post(
+                f"/webhooks/{tid}/whatsapp",
+                content=body,
+                headers={"Content-Type": "application/json", "X-Hub-Signature-256": sig},
+            )
 
-        # Exception is caught, returns 200
         assert resp.status_code == 200
 
 
@@ -267,34 +274,13 @@ class TestWhatsAppVerifySuccess:
         assert resp.text == "challenge-string-123"
 
 
-class TestWhatsAppSendReply:
-    """Cover lines 143-154: _send_reply function."""
+class TestWhatsAppAdapterSendText:
+    """WhatsAppAdapter.send_text — success and error paths."""
 
-    async def test_send_reply_success(self) -> None:
-        from src.drivers.api.webhooks.whatsapp import _send_reply
-
-        mock_client = AsyncMock()
-        mock_client.post = AsyncMock()
-
-        with patch("httpx.AsyncClient") as mock_cls:
-            mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
-            mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-
-            await _send_reply("pn123", "+123", "Hello!", "token123")
-            mock_client.post.assert_called_once()
-
-    async def test_send_reply_exception_is_caught(self) -> None:
-        from src.drivers.api.webhooks.whatsapp import _send_reply
-
-        mock_client = AsyncMock()
-        mock_client.post.side_effect = RuntimeError("network error")
-
-        with patch("httpx.AsyncClient") as mock_cls:
-            mock_cls.return_value.__aenter__ = AsyncMock(return_value=mock_client)
-            mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-
-            # Should not raise
-            await _send_reply("pn123", "+123", "Hello!", "token123")
+    async def test_send_text_no_credentials(self) -> None:
+        adapter = WhatsAppAdapter(phone_number_id="", access_token="")
+        result = await adapter.send_text("+123", "Hello!")
+        assert result is None
 
 
 class TestWhatsAppWebhookSignatureCheck:
@@ -322,7 +308,7 @@ class TestWhatsAppWebhookSignatureCheck:
             config._is_new = True
             config.update_whatsapp(
                 access_token="EAA-token",
-                verify_token="app-secret",
+                app_secret="sig-test-secret",
             )
             await uow.tenant_configs.save(config)
             await uow.commit()

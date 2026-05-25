@@ -23,6 +23,7 @@ from langgraph.constants import END
 from langgraph.graph import StateGraph
 
 from src.ai.tools.escalate_question import run_escalate_question
+from src.ai.tools.remove_key_fact import run_remove_key_fact
 from src.ai.tools.save_key_fact import run_save_key_fact
 from src.ai.tools.search_documents import run_search_documents
 from src.ai.types import AgentLoopResult, ToolCallResult, ToolDef
@@ -201,29 +202,31 @@ async def _dispatch_tool(
     retriever: RetrieverPort,
     uow: UnitOfWork,
 ) -> Any:
-    match tool_name:
-        case "search_documents":
-            return await run_search_documents(arguments=arguments, tenant_id=tenant_id, retriever=retriever)
-        case "escalate_question":
-            return await run_escalate_question(
-                arguments=arguments,
-                tenant_id=tenant_id,
-                channel=channel,
-                conversation_id=conversation_id,
-                contact_id=contact_id,
-                uow=uow,
-            )
-        case "save_key_fact":
-            if contact_id is None:
-                return {"error": "Cannot save key fact without a resolved contact"}
-            return await run_save_key_fact(
-                arguments=arguments,
-                tenant_id=tenant_id,
-                contact_id=contact_id,
-                session=uow._session,
-            )
-        case _:
-            return {"error": f"Unknown tool: {tool_name}"}
+    if tool_name == "search_documents":
+        return await run_search_documents(arguments=arguments, tenant_id=tenant_id, retriever=retriever)
+
+    if tool_name == "escalate_question":
+        return await run_escalate_question(
+            arguments=arguments,
+            tenant_id=tenant_id,
+            channel=channel,
+            conversation_id=conversation_id,
+            contact_id=contact_id,
+            uow=uow,
+        )
+
+    if tool_name in ("save_key_fact", "remove_key_fact"):
+        if contact_id is None:
+            return {"error": f"Cannot {tool_name} without a resolved contact"}
+        runner = run_save_key_fact if tool_name == "save_key_fact" else run_remove_key_fact
+        return await runner(
+            arguments=arguments,
+            tenant_id=tenant_id,
+            contact_id=contact_id,
+            session=uow._session,
+        )
+
+    return {"error": f"Unknown tool: {tool_name}"}
 
 
 def _to_lc_messages(msgs: list[LLMMessage]) -> list[BaseMessage]:

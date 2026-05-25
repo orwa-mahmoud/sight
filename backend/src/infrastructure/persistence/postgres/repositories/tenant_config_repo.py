@@ -37,6 +37,7 @@ class PostgresTenantConfigRepository:
         model.whatsapp_phone_number_id = config.whatsapp_phone_number_id
         model.whatsapp_access_token = config.whatsapp_access_token
         model.whatsapp_verify_token = config.whatsapp_verify_token
+        model.whatsapp_app_secret = config.whatsapp_app_secret
         model.telegram_bot_token = config.telegram_bot_token
         model.telegram_webhook_secret = config.telegram_webhook_secret
         model.bot_name = config.bot_name
@@ -67,6 +68,7 @@ class PostgresTenantConfigRepository:
             whatsapp_phone_number_id=c.whatsapp_phone_number_id,
             whatsapp_access_token=c.whatsapp_access_token,
             whatsapp_verify_token=c.whatsapp_verify_token,
+            whatsapp_app_secret=c.whatsapp_app_secret,
             telegram_bot_token=c.telegram_bot_token,
             telegram_webhook_secret=c.telegram_webhook_secret,
             bot_name=c.bot_name,
@@ -93,6 +95,7 @@ class PostgresTenantConfigRepository:
             whatsapp_phone_number_id=m.whatsapp_phone_number_id,
             whatsapp_access_token=m.whatsapp_access_token,
             whatsapp_verify_token=m.whatsapp_verify_token,
+            whatsapp_app_secret=m.whatsapp_app_secret,
             telegram_bot_token=m.telegram_bot_token,
             telegram_webhook_secret=m.telegram_webhook_secret,
             bot_name=m.bot_name,

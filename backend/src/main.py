@@ -8,9 +8,12 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from src.config.settings import get_settings
 from src.domain.shared.exceptions import DomainError
+from src.drivers.api.middleware.rate_limit import limiter
 from src.drivers.api.middleware.request_id import RequestIDMiddleware
 from src.drivers.api.responses import domain_error_handler
 from src.drivers.api.v1.health.routes import router as health_router
@@ -50,11 +53,13 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
     )
 
+    app.state.limiter = limiter
     app.add_exception_handler(DomainError, domain_error_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest  # noqa: PLC0415
     from starlette.responses import Response  # noqa: PLC0415

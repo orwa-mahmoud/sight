@@ -47,6 +47,7 @@ def _to_response(config: TenantConfig) -> TenantConfigResponse:
         whatsapp_phone_number_id=config.whatsapp_phone_number_id,
         whatsapp_access_token_masked=mask(config.whatsapp_access_token),
         whatsapp_verify_token_masked=mask(config.whatsapp_verify_token),
+        whatsapp_app_secret_masked=mask(config.whatsapp_app_secret),
         telegram_bot_token_masked=mask(config.telegram_bot_token),
         telegram_webhook_secret_masked=mask(config.telegram_webhook_secret),
         bot_name=config.bot_name,
@@ -107,6 +108,7 @@ async def update_whatsapp(
         phone_number_id=req.phone_number_id,
         access_token=req.access_token,
         verify_token=req.verify_token,
+        app_secret=req.app_secret,
     )
     await uow.tenant_configs.save(config)
     return _to_response(config)

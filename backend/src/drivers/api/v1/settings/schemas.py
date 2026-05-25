@@ -25,6 +25,7 @@ class TenantConfigResponse(BaseModel):
     whatsapp_phone_number_id: str | None
     whatsapp_access_token_masked: str | None
     whatsapp_verify_token_masked: str | None
+    whatsapp_app_secret_masked: str | None
     # Telegram
     telegram_bot_token_masked: str | None
     telegram_webhook_secret_masked: str | None
@@ -53,6 +54,7 @@ class UpdateWhatsAppConfig(BaseModel):
     phone_number_id: str | None = Field(default=None, max_length=64)
     access_token: str | None = Field(default=None, max_length=512)
     verify_token: str | None = Field(default=None, max_length=255)
+    app_secret: str | None = Field(default=None, max_length=255)
 
 
 class UpdateTelegramConfig(BaseModel):

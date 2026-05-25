@@ -39,6 +39,7 @@ class TenantConfig(BaseEntity):
     whatsapp_phone_number_id: str | None
     whatsapp_access_token: str | None
     whatsapp_verify_token: str | None
+    whatsapp_app_secret: str | None
 
     # ── Telegram Bot API ───────────────────────────────────────────
     telegram_bot_token: str | None
@@ -70,6 +71,7 @@ class TenantConfig(BaseEntity):
             whatsapp_phone_number_id=None,
             whatsapp_access_token=None,
             whatsapp_verify_token=None,
+            whatsapp_app_secret=None,
             telegram_bot_token=None,
             telegram_webhook_secret=None,
             bot_name="Front Desk Assistant",
@@ -125,6 +127,7 @@ class TenantConfig(BaseEntity):
         phone_number_id: str | None = None,
         access_token: str | None = None,
         verify_token: str | None = None,
+        app_secret: str | None = None,
     ) -> None:
         if phone_number_id is not None:
             self.whatsapp_phone_number_id = phone_number_id
@@ -132,6 +135,8 @@ class TenantConfig(BaseEntity):
             self.whatsapp_access_token = access_token
         if verify_token is not None:
             self.whatsapp_verify_token = verify_token
+        if app_secret is not None:
+            self.whatsapp_app_secret = app_secret
         self.updated_at = datetime.now(UTC)
 
     def update_telegram(
