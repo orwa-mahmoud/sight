@@ -17,7 +17,7 @@ class PaginationParams:
 
 @dataclass(frozen=True, kw_only=True)
 class PaginatedResult:
-    items: list
+    items: list[object]
     total: int
     page: int
     page_size: int
