@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 60
     jwt_refresh_token_expire_days: int = 30
 
+    # ── Encryption (Fernet key for tenant secrets at rest) ─────────
+    encryption_key: str | None = None
+
     # ── Observability ──────────────────────────────────────────────
     otel_exporter_otlp_endpoint: str | None = None
     otel_service_name: str = "frontdesk-backend"

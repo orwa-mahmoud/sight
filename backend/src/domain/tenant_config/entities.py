@@ -1,8 +1,8 @@
 """TenantConfig aggregate — per-tenant LLM + channel credentials.
 
 Stores everything the gateway needs to build an LLM client and send
-replies through the right channel. API keys are stored as-is in v1;
-production should encrypt at rest (PropertyBot uses Fernet — add in v2).
+replies through the right channel. API keys are encrypted at rest via
+Fernet when ENCRYPTION_KEY is configured.
 
 One TenantConfig per Tenant. Created atomically during registration
 with safe defaults; the owner updates via the settings API.
@@ -25,7 +25,7 @@ class TenantConfig(BaseEntity):
     # ── LLM ────────────────────────────────────────────────────────
     llm_provider: LLMProvider
     llm_model: str
-    llm_api_key: str  # encrypt at rest in production
+    llm_api_key: str
     llm_max_tokens: int
     llm_temperature: float
 
