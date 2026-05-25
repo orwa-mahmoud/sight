@@ -34,9 +34,7 @@ class OpenAIEmbedder:
     def _get_client(self) -> AsyncOpenAI:
         if self._client is None:
             if not self._api_key:
-                raise InvalidOperationError(
-                    "Embedding API key not configured. Set it in Settings → Embedding."
-                )
+                raise InvalidOperationError("Embedding API key not configured. Set it in Settings → Embedding.")
             self._client = AsyncOpenAI(api_key=self._api_key)
         return self._client
 

@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse
 from src.domain.shared.exceptions import DomainError
 
 
-async def domain_error_handler(_request: Request, exc: DomainError) -> JSONResponse:
+def domain_error_handler(_request: Request, exc: DomainError) -> JSONResponse:
     return JSONResponse(
         status_code=exc.http_status,
         content={"detail": str(exc) or exc.__class__.__name__},

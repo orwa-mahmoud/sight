@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-from typing import Any
+from typing import Annotated, Any
+from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Header, Query, Request, Response
@@ -28,13 +29,11 @@ router = APIRouter(tags=["webhooks"])
 @router.get("/webhooks/{tenant_id}/whatsapp")
 async def whatsapp_verify(
     tenant_id: str,
-    hub_mode: str = Query(alias="hub.mode", default=""),
-    hub_verify_token: str = Query(alias="hub.verify_token", default=""),
-    hub_challenge: str = Query(alias="hub.challenge", default=""),
+    hub_mode: Annotated[str, Query(alias="hub.mode")] = "",
+    hub_verify_token: Annotated[str, Query(alias="hub.verify_token")] = "",
+    hub_challenge: Annotated[str, Query(alias="hub.challenge")] = "",
 ) -> Response:
-    """Meta webhook verification — echo the challenge if the token matches the tenant's stored token."""
-    from uuid import UUID  # noqa: PLC0415
-
+    """Meta webhook verification."""
     try:
         tid = UUID(tenant_id)
     except ValueError:
@@ -53,55 +52,27 @@ async def whatsapp_verify(
 async def whatsapp_webhook(
     tenant_id: str,
     request: Request,
-    x_hub_signature_256: str | None = Header(default=None),
+    x_hub_signature_256: Annotated[str | None, Header()] = None,
 ) -> Response:
     body = await request.body()
-
-    from uuid import UUID  # noqa: PLC0415
-
-    try:
-        tid = UUID(tenant_id)
-    except ValueError:
+    tid = _parse_tenant_id(tenant_id)
+    if tid is None:
         return Response(status_code=400)
 
     payload: dict[str, Any] = await request.json()
-
-    entry = (payload.get("entry") or [{}])[0]
-    changes = (entry.get("changes") or [{}])[0]
-    value = changes.get("value", {})
-    messages = value.get("messages", [])
-    if not messages:
-        return Response(status_code=200)
-
-    msg = messages[0]
-    sender_phone = msg.get("from", "")
-    text = ""
-    if msg.get("type") == "text":
-        text = (msg.get("text") or {}).get("body", "")
-
+    text, sender_phone, sender_name, phone_number_id = _extract_message(payload)
     if not text or not sender_phone:
         return Response(status_code=200)
-
-    contacts = value.get("contacts", [])
-    sender_name = None
-    if contacts:
-        profile = contacts[0].get("profile", {})
-        sender_name = profile.get("name")
 
     async for session in get_session():
         uow = UnitOfWork(session)
         try:
             config = await uow.tenant_configs.get_by_tenant_id(tid)
             if config is None:
-                logger.warning("whatsapp.webhook.no_config", tenant_id=tenant_id)
                 return Response(status_code=404)
 
-            # Verify HMAC signature using the tenant's app secret from DB.
-            if config.whatsapp_access_token:
-                app_secret = config.whatsapp_verify_token or ""
-                if app_secret and not _verify_signature(body, x_hub_signature_256, app_secret):
-                    logger.warning("whatsapp.webhook.invalid_signature", tenant_id=tenant_id)
-                    return Response(status_code=403)
+            if not _check_signature(body, x_hub_signature_256, config):
+                return Response(status_code=403)
 
             result = await chat_with_agent(
                 ChatInput(
@@ -115,19 +86,49 @@ async def whatsapp_webhook(
             )
             await uow.commit()
 
-            phone_number_id = value.get("metadata", {}).get("phone_number_id")
             if phone_number_id and config.whatsapp_access_token:
-                await _send_whatsapp_reply(
-                    phone_number_id=phone_number_id,
-                    to=sender_phone,
-                    text=result.response,
-                    access_token=config.whatsapp_access_token,
-                )
+                await _send_reply(phone_number_id, sender_phone, result.response, config.whatsapp_access_token)
         except Exception:
             await uow.rollback()
             logger.error("whatsapp.webhook.failed", tenant_id=tenant_id, exc_info=True)
 
     return Response(status_code=200)
+
+
+def _parse_tenant_id(raw: str) -> UUID | None:
+    try:
+        return UUID(raw)
+    except ValueError:
+        return None
+
+
+def _extract_message(payload: dict[str, Any]) -> tuple[str, str, str | None, str | None]:
+    """Extract text, sender_phone, sender_name, phone_number_id from Meta payload."""
+    entry = (payload.get("entry") or [{}])[0]
+    changes = (entry.get("changes") or [{}])[0]
+    value = changes.get("value", {})
+    messages = value.get("messages", [])
+    if not messages:
+        return "", "", None, None
+    msg = messages[0]
+    sender_phone = msg.get("from", "")
+    text = ""
+    if msg.get("type") == "text":
+        text = (msg.get("text") or {}).get("body", "")
+    contacts = value.get("contacts", [])
+    sender_name = contacts[0].get("profile", {}).get("name") if contacts else None
+    phone_number_id = value.get("metadata", {}).get("phone_number_id")
+    return text, sender_phone, sender_name, phone_number_id
+
+
+def _check_signature(body: bytes, sig_header: str | None, config: Any) -> bool:
+    """Verify HMAC if the tenant has a verify token configured."""
+    if not config.whatsapp_access_token:
+        return True
+    app_secret = config.whatsapp_verify_token or ""
+    if not app_secret:
+        return True
+    return _verify_signature(body, sig_header, app_secret)
 
 
 def _verify_signature(body: bytes, signature_header: str | None, app_secret: str) -> bool:
@@ -137,14 +138,8 @@ def _verify_signature(body: bytes, signature_header: str | None, app_secret: str
     return hmac.compare_digest(expected, signature_header)
 
 
-async def _send_whatsapp_reply(
-    *,
-    phone_number_id: str,
-    to: str,
-    text: str,
-    access_token: str,
-) -> None:
-    """Send a text reply via WhatsApp Cloud API using the tenant's access token."""
+async def _send_reply(phone_number_id: str, to: str, text: str, access_token: str) -> None:
+    """Send a text reply via WhatsApp Cloud API."""
     import httpx  # noqa: PLC0415
 
     try:
@@ -152,12 +147,7 @@ async def _send_whatsapp_reply(
             await client.post(
                 f"https://graph.facebook.com/v21.0/{phone_number_id}/messages",
                 headers={"Authorization": f"Bearer {access_token}"},
-                json={
-                    "messaging_product": "whatsapp",
-                    "to": to,
-                    "type": "text",
-                    "text": {"body": text},
-                },
+                json={"messaging_product": "whatsapp", "to": to, "type": "text", "text": {"body": text}},
                 timeout=10,
             )
     except Exception:

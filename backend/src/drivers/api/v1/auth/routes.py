@@ -22,7 +22,7 @@ from src.drivers.api.v1.auth.schemas import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(req: RegisterRequest, uow: UnitOfWorkDep) -> TokenResponse:
     cmd = RegisterOwner(
         email=req.email,
@@ -39,7 +39,7 @@ async def register(req: RegisterRequest, uow: UnitOfWorkDep) -> TokenResponse:
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login")
 async def login(req: LoginRequest, uow: UnitOfWorkDep) -> TokenResponse:
     cmd = AuthenticateUser(email=req.email, password=req.password)
     result = await authenticate_user_use_case(uow).execute(cmd)
@@ -50,7 +50,7 @@ async def login(req: LoginRequest, uow: UnitOfWorkDep) -> TokenResponse:
     )
 
 
-@router.get("/me", response_model=MeResponse)
+@router.get("/me")
 async def me(current_user: CurrentUser, uow: UnitOfWorkDep) -> MeResponse:
     dto = await get_user_by_id_use_case(uow).execute(current_user.id)
     return MeResponse(

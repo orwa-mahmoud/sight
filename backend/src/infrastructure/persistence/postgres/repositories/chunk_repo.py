@@ -15,7 +15,7 @@ class PostgresChunkRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def save_many(self, chunks: list[Chunk]) -> None:
+    def save_many(self, chunks: list[Chunk]) -> None:
         models = [self._to_model(c) for c in chunks]
         self._session.add_all(models)
         for c in chunks:

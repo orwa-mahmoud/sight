@@ -12,7 +12,7 @@ from src.drivers.api.v1.llm_usage.schemas import UsageStatsResponse
 router = APIRouter(prefix="/llm-usage", tags=["llm-usage"])
 
 
-@router.get("/stats", response_model=UsageStatsResponse)
+@router.get("/stats")
 async def stats(current_user: CurrentUser, uow: UnitOfWorkDep) -> UsageStatsResponse:
     """Aggregated usage for the caller's tenant.
 
