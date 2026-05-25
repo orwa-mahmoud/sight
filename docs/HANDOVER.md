@@ -22,8 +22,8 @@ npm run build                            # succeeds
 
 ### SonarQube (BOTH projects must be 0/0/0)
 ```bash
-export SONAR_TOKEN=sqa_80bd8293d35c97f09bdf0191c07a12edf7025802
-export SONAR_USER_TOKEN=squ_9e20af7ff1860f81760307c8edf4970b51cace63
+export SONAR_TOKEN=$SONAR_TOKEN
+export SONAR_USER_TOKEN=$SONAR_USER_TOKEN
 
 # Backend scan
 cd backend
