@@ -9,6 +9,7 @@ import pytest
 from src.application.auth.use_cases.change_password import ChangePassword, ChangePasswordUseCase
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.shared.exceptions import AuthenticationError
+from src.domain.tenants.entities import Tenant
 from src.domain.users.entities import User
 from src.infrastructure.auth.bcrypt_hasher import BcryptPasswordHasher
 from src.infrastructure.persistence.postgres.database import async_session_factory
@@ -21,7 +22,6 @@ _HASHER = BcryptPasswordHasher(rounds=4)
 async def test_change_password_success(client=None):
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        from src.domain.tenants.entities import Tenant
 
         t = Tenant.create(name="CP", slug=f"cp-{uuid4().hex[:8]}")
         await uow.tenants.save(t)
@@ -46,7 +46,6 @@ async def test_change_password_success(client=None):
 async def test_change_password_wrong_old(client=None):
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        from src.domain.tenants.entities import Tenant
 
         t = Tenant.create(name="CPW", slug=f"cpw-{uuid4().hex[:8]}")
         await uow.tenants.save(t)
