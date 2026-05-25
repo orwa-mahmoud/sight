@@ -78,7 +78,14 @@ export function SettingsPage() {
     return <Alert color="red">Could not load settings.</Alert>;
   }
 
-  const config = settingsQuery.data!;
+  const config = settingsQuery.data ?? {
+    llm_provider: "", llm_model: "", llm_api_key_masked: "", llm_max_tokens: 1024,
+    llm_temperature: 0.3, embedding_provider: "", embedding_model: "",
+    embedding_api_key_masked: "", embedding_dimensions: 1536,
+    whatsapp_phone_number_id: null, whatsapp_access_token_masked: null,
+    whatsapp_verify_token_masked: null, telegram_bot_token_masked: null,
+    telegram_webhook_secret_masked: null, bot_name: "", bot_welcome_message: "", bot_language: "",
+  };
 
   return (
     <Stack>

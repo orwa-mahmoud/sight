@@ -2,5 +2,5 @@ projectKey=frontdesk-backend
 serverUrl=http://localhost:9000
 serverVersion=26.4.0.121862
 dashboardUrl=http://localhost:9000/dashboard?id=frontdesk-backend
-ceTaskId=995ce263-b454-4a80-8249-326e1e15bd8f
-ceTaskUrl=http://localhost:9000/api/ce/task?id=995ce263-b454-4a80-8249-326e1e15bd8f
+ceTaskId=aeebd93e-ee4d-445a-b3c0-070752bcb1a0
+ceTaskUrl=http://localhost:9000/api/ce/task?id=aeebd93e-ee4d-445a-b3c0-070752bcb1a0
