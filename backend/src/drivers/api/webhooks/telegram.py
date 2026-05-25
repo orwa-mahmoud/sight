@@ -6,7 +6,7 @@ the tenant's configured secret from the DB.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Header, Request, Response
@@ -26,7 +26,7 @@ router = APIRouter(tags=["webhooks"])
 async def telegram_webhook(
     tenant_id: str,
     request: Request,
-    x_telegram_bot_api_secret_token: str | None = Header(default=None),
+    x_telegram_bot_api_secret_token: Annotated[str | None, Header()] = None,
 ) -> Response:
     from uuid import UUID  # noqa: PLC0415
 

@@ -36,7 +36,11 @@ async def _resolve_tenant_id(current_user: CurrentUser, uow: UnitOfWorkDep) -> U
     return links[0].tenant_id
 
 
-@router.post("", response_model=DocumentSummary, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    responses={400: {"description": "Unsupported file type"}, 413: {"description": "File too large (25 MB max)"}},
+)
 async def upload_document(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
@@ -77,7 +81,7 @@ async def upload_document(
     )
 
 
-@router.get("", response_model=list[DocumentSummary])
+@router.get("")
 async def list_documents(current_user: CurrentUser, uow: UnitOfWorkDep) -> list[DocumentSummary]:
     tenant_id = await _resolve_tenant_id(current_user, uow)
     dtos = await ListDocumentsUseCase(uow=uow).execute(ListDocuments(tenant_id=tenant_id))
@@ -107,7 +111,7 @@ async def delete_document(
     await DeleteDocumentUseCase(uow=uow).execute(tenant_id=tenant_id, document_id=document_id)
 
 
-@router.post("/retrieve", response_model=RetrieveResponse)
+@router.post("/retrieve")
 async def retrieve(
     req: RetrieveRequest,
     current_user: CurrentUser,

@@ -30,7 +30,7 @@ async def get_session() -> AsyncIterator[AsyncSession]:
             raise
 
 
-async def get_uow(session: Annotated[AsyncSession, Depends(get_session)]) -> UnitOfWork:
+def get_uow(session: Annotated[AsyncSession, Depends(get_session)]) -> UnitOfWork:
     return UnitOfWork(session)
 
 

@@ -55,13 +55,13 @@ def _to_response(config: TenantConfig) -> TenantConfigResponse:
     )
 
 
-@router.get("", response_model=TenantConfigResponse)
+@router.get("")
 async def get_settings(current_user: CurrentUser, uow: UnitOfWorkDep) -> TenantConfigResponse:
     _, config = await _resolve_config(current_user, uow)
     return _to_response(config)
 
 
-@router.put("/llm", response_model=TenantConfigResponse)
+@router.put("/llm")
 async def update_llm(
     req: UpdateLLMConfig,
     current_user: CurrentUser,
@@ -79,7 +79,7 @@ async def update_llm(
     return _to_response(config)
 
 
-@router.put("/embedding", response_model=TenantConfigResponse)
+@router.put("/embedding")
 async def update_embedding(
     req: UpdateEmbeddingConfig,
     current_user: CurrentUser,
@@ -96,7 +96,7 @@ async def update_embedding(
     return _to_response(config)
 
 
-@router.put("/whatsapp", response_model=TenantConfigResponse)
+@router.put("/whatsapp")
 async def update_whatsapp(
     req: UpdateWhatsAppConfig,
     current_user: CurrentUser,
@@ -112,7 +112,7 @@ async def update_whatsapp(
     return _to_response(config)
 
 
-@router.put("/telegram", response_model=TenantConfigResponse)
+@router.put("/telegram")
 async def update_telegram(
     req: UpdateTelegramConfig,
     current_user: CurrentUser,
@@ -127,7 +127,7 @@ async def update_telegram(
     return _to_response(config)
 
 
-@router.put("/bot", response_model=TenantConfigResponse)
+@router.put("/bot")
 async def update_bot(
     req: UpdateBotConfig,
     current_user: CurrentUser,

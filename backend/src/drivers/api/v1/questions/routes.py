@@ -62,7 +62,7 @@ def _to_response(dto: object) -> QuestionResponse:
     )
 
 
-@router.post("", response_model=QuestionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def submit(
     req: SubmitQuestionRequest,
     current_user: CurrentUser,
@@ -83,7 +83,7 @@ async def submit(
     return _to_response(dto)
 
 
-@router.get("", response_model=list[QuestionResponse])
+@router.get("")
 async def list_questions(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
@@ -97,7 +97,7 @@ async def list_questions(
     return [_to_response(d) for d in dtos]
 
 
-@router.get("/{question_id}", response_model=QuestionResponse)
+@router.get("/{question_id}")
 async def get_question(
     question_id: UUID,
     current_user: CurrentUser,
@@ -108,7 +108,7 @@ async def get_question(
     return _to_response(dto)
 
 
-@router.post("/{question_id}/reply", response_model=QuestionResponse)
+@router.post("/{question_id}/reply")
 async def reply(
     question_id: UUID,
     req: ReplyRequest,
@@ -127,7 +127,7 @@ async def reply(
     return _to_response(dto)
 
 
-@router.post("/{question_id}/close", response_model=QuestionResponse)
+@router.post("/{question_id}/close")
 async def close_question(
     question_id: UUID,
     current_user: CurrentUser,

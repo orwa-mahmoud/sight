@@ -30,7 +30,7 @@ class ChatResponse(BaseModel):
     request_id: str
 
 
-@router.post("", response_model=ChatResponse)
+@router.post("")
 async def chat(req: ChatRequest, current_user: CurrentUser, uow: UnitOfWorkDep) -> ChatResponse:
     """Send a test message through the full agent pipeline."""
     links = await uow.user_tenants.list_for_user(current_user.id)
