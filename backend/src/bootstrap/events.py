@@ -53,5 +53,5 @@ def publish(events: list[DomainEvent]) -> None:
 
 def clear_all() -> None:
     """Remove all subscriptions. Used in tests."""
-    for name in list(_signals):
+    for name in _signals:
         _signals.signal(name).receivers.clear()
