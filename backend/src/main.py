@@ -22,6 +22,9 @@ logger = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application startup / shutdown lifecycle."""
+    from src.bootstrap.event_handlers import register_event_handlers  # noqa: PLC0415
+
+    register_event_handlers()
     settings = get_settings()
     logger.info("app.startup", env=settings.app_env, name=settings.app_name)
     yield
