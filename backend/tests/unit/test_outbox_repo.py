@@ -42,5 +42,4 @@ async def test_mark_delivered(client=None):
     async with async_session_factory() as session:
         repo = OutboxRepository(session)
         pending = await repo.list_pending()
-        delivered_ids = {p.id for p in pending}
         # The delivered one should not be in pending
