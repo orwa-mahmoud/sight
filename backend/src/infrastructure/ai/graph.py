@@ -51,6 +51,63 @@ class AgentState(TypedDict):
     contact_id: str | None
 
 
+async def _execute_tools_node(
+    state: AgentState,
+    *,
+    retriever: RetrieverPort,
+    uow: UnitOfWork,
+) -> dict[str, Any]:
+    last_msg = state["messages"][-1]
+    if not isinstance(last_msg, AIMessage) or not last_msg.tool_calls:
+        return dict(state)
+
+    new_messages: list[BaseMessage] = []
+    new_tool_calls: list[ToolCallResult] = []
+    tenant_id = UUID(state["tenant_id"])
+    channel = ConversationChannel(state["channel"])
+    conversation_id = UUID(state["conversation_id"]) if state["conversation_id"] else None
+    contact_id = UUID(state["contact_id"]) if state["contact_id"] else None
+
+    for tc in last_msg.tool_calls:
+        tool_name = tc["name"]
+        args = tc.get("args") or {}
+        logger.info("graph.tool_call", tool=tool_name, iteration=state["iteration"])
+
+        result = await _dispatch_tool(
+            tool_name=tool_name,
+            arguments=args,
+            tenant_id=tenant_id,
+            channel=channel,
+            conversation_id=conversation_id,
+            contact_id=contact_id,
+            retriever=retriever,
+            uow=uow,
+        )
+        result_str = json.dumps(result, default=str)
+        new_messages.append(ToolMessage(content=result_str, tool_call_id=tc.get("id", "")))
+        new_tool_calls.append(
+            ToolCallResult(
+                tool_name=tool_name,
+                arguments=args,
+                result=result,
+                summary=result_str[:300],
+            )
+        )
+
+    return {
+        "messages": [*state["messages"], *new_messages],
+        "tool_calls_made": [*state["tool_calls_made"], *new_tool_calls],
+        "iteration": state["iteration"] + 1,
+    }
+
+
+def _should_continue(state: AgentState) -> str:
+    last = state["messages"][-1]
+    if isinstance(last, AIMessage) and last.tool_calls and state["iteration"] < _MAX_ITERATIONS:
+        return "execute_tools"
+    return END
+
+
 def build_agent_graph(
     *,
     llm: LLMClientPort,
@@ -78,58 +135,13 @@ def build_agent_graph(
         }
 
     async def execute_tools(state: AgentState) -> dict[str, Any]:
-        last_msg = state["messages"][-1]
-        if not isinstance(last_msg, AIMessage) or not last_msg.tool_calls:
-            return dict(state)
-
-        new_messages: list[BaseMessage] = []
-        new_tool_calls: list[ToolCallResult] = []
-        tenant_id = UUID(state["tenant_id"])
-        channel = ConversationChannel(state["channel"])
-
-        for tc in last_msg.tool_calls:
-            tool_name = tc["name"]
-            args = tc.get("args") or {}
-            logger.info("graph.tool_call", tool=tool_name, iteration=state["iteration"])
-
-            result = await _dispatch_tool(
-                tool_name=tool_name,
-                arguments=args,
-                tenant_id=tenant_id,
-                channel=channel,
-                conversation_id=UUID(state["conversation_id"]) if state["conversation_id"] else None,
-                contact_id=UUID(state["contact_id"]) if state["contact_id"] else None,
-                retriever=retriever,
-                uow=uow,
-            )
-            result_str = json.dumps(result, default=str)
-            new_messages.append(ToolMessage(content=result_str, tool_call_id=tc.get("id", "")))
-            new_tool_calls.append(
-                ToolCallResult(
-                    tool_name=tool_name,
-                    arguments=args,
-                    result=result,
-                    summary=result_str[:300],
-                )
-            )
-
-        return {
-            "messages": [*state["messages"], *new_messages],
-            "tool_calls_made": [*state["tool_calls_made"], *new_tool_calls],
-            "iteration": state["iteration"] + 1,
-        }
-
-    def should_continue(state: AgentState) -> str:
-        last = state["messages"][-1]
-        if isinstance(last, AIMessage) and last.tool_calls and state["iteration"] < _MAX_ITERATIONS:
-            return "execute_tools"
-        return END
+        return await _execute_tools_node(state, retriever=retriever, uow=uow)
 
     graph: StateGraph[AgentState] = StateGraph(AgentState)
     graph.add_node("call_llm", call_llm)
     graph.add_node("execute_tools", execute_tools)
     graph.set_entry_point("call_llm")
-    graph.add_conditional_edges("call_llm", should_continue, {"execute_tools": "execute_tools", END: END})
+    graph.add_conditional_edges("call_llm", _should_continue, {"execute_tools": "execute_tools", END: END})
     graph.add_edge("execute_tools", "call_llm")
 
     return graph

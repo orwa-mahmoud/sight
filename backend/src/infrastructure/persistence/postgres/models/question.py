@@ -12,6 +12,8 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.persistence.postgres.models import Base
 
+_ON_DELETE_SET_NULL = "SET NULL"
+
 
 class QuestionModel(Base):
     __tablename__ = "questions"
@@ -25,14 +27,14 @@ class QuestionModel(Base):
     )
     conversation_id: Mapped[UUID | None] = mapped_column(
         PgUUID(as_uuid=True),
-        ForeignKey("conversations.id", ondelete="SET NULL"),
+        ForeignKey("conversations.id", ondelete=_ON_DELETE_SET_NULL),
         nullable=True,
         index=True,
     )
     channel: Mapped[str] = mapped_column(String(32), nullable=False)
     contact_id: Mapped[UUID | None] = mapped_column(
         PgUUID(as_uuid=True),
-        ForeignKey("contacts.id", ondelete="SET NULL"),
+        ForeignKey("contacts.id", ondelete=_ON_DELETE_SET_NULL),
         nullable=True,
         index=True,
     )
@@ -42,7 +44,7 @@ class QuestionModel(Base):
     owner_reply: Mapped[str | None] = mapped_column(Text, nullable=True)
     replied_by_user_id: Mapped[UUID | None] = mapped_column(
         PgUUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
+        ForeignKey("users.id", ondelete=_ON_DELETE_SET_NULL),
         nullable=True,
     )
     replied_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
