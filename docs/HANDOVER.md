@@ -61,11 +61,15 @@ grep -rn "^from langchain\|^from langgraph" backend/src/domain/ backend/src/appl
 
 ## Current State (as of last session)
 
-- **109 commits** on https://github.com/orwa-mahmoud/frontdesk
-- **Backend:** 217 source files, 531 tests, 99.4% coverage, ~9k LOC
-- **Frontend:** 180 tests, 99.4% coverage, lint + typecheck + build clean, ~2k LOC
+Run these to get current numbers:
+
+```bash
+git log --oneline | wc -l                                    # commits
+cd backend && uv run pytest --tb=short -q --cov=src 2>&1 | tail -3  # tests + coverage
+cd frontend && npx vitest run 2>&1 | grep Tests              # frontend tests
+```
+
 - **SonarQube:** 0/0/0 on BOTH projects, quality gates PASSED
-- **29 API routes** all responding
 - **CI:** GitHub Actions on PRs only, Husky pre-commit hooks, branch protection on main
 - **LangGraph StateGraph** wired for per-turn orchestration
 - **DB messages** as cross-turn source of truth (no LangGraph checkpointer)
