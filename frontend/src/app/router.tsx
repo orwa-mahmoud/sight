@@ -6,6 +6,7 @@ import { ConversationsPage } from "../features/conversations/ConversationsPage";
 import { DocumentsPage } from "../features/documents/DocumentsPage";
 import { InboxPage } from "../features/escalations/InboxPage";
 import { UsagePage } from "../features/llm-usage/UsagePage";
+import { SettingsPage } from "../features/settings/SettingsPage";
 import { ProtectedShell } from "../shared/components/AppShell";
 import { RequireAuth } from "../shared/components/RequireAuth";
 
@@ -50,6 +51,16 @@ export function AppRoutes() {
           <RequireAuth>
             <ProtectedShell>
               <UsagePage />
+            </ProtectedShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <RequireAuth>
+            <ProtectedShell>
+              <SettingsPage />
             </ProtectedShell>
           </RequireAuth>
         }
