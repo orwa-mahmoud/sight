@@ -7,12 +7,14 @@ zone). If a fact with the same key already exists, it's updated.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from src.ai.types import ToolDef
 from src.domain.key_facts.entities import KeyFact
-from src.infrastructure.persistence.postgres.repositories.key_fact_repo import PostgresKeyFactRepository
+
+if TYPE_CHECKING:
+    from src.application.shared.unit_of_work import UnitOfWork
 
 SAVE_KEY_FACT_DEF = ToolDef(
     name="save_key_fact",
@@ -37,18 +39,17 @@ async def run_save_key_fact(
     arguments: dict[str, Any],
     tenant_id: UUID,
     contact_id: UUID,
-    session: Any,
+    uow: UnitOfWork,
 ) -> dict[str, str]:
     key = arguments.get("key", "").strip().lower()
     value = arguments.get("value", "").strip()
     if not key or not value:
         return {"status": "skipped", "reason": "empty key or value"}
 
-    repo = PostgresKeyFactRepository(session)
-    existing = await repo.get(tenant_id, contact_id, key)
+    existing = await uow.key_facts.get(tenant_id, contact_id, key)
     if existing:
         existing.update_value(value)
-        await repo.save(existing)
+        await uow.key_facts.save(existing)
         return {"status": "updated", "key": key}
 
     fact = KeyFact.create(
@@ -57,5 +58,5 @@ async def run_save_key_fact(
         key=key,
         value=value,
     )
-    await repo.save(fact)
+    await uow.key_facts.save(fact)
     return {"status": "saved", "key": key}

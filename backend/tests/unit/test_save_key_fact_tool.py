@@ -42,7 +42,7 @@ async def test_save_key_fact_creates_new(client: None) -> None:
             arguments={"key": "name", "value": "Sara"},
             tenant_id=t.id,
             contact_id=c.id,
-            session=session,
+            uow=UnitOfWork(session),
         )
         await session.commit()
     assert result["status"] == "saved"
@@ -68,7 +68,7 @@ async def test_save_key_fact_updates_existing(client: None) -> None:
             arguments={"key": "name", "value": "New"},
             tenant_id=t.id,
             contact_id=c.id,
-            session=session,
+            uow=UnitOfWork(session),
         )
         await session.commit()
     assert result["status"] == "updated"
@@ -82,7 +82,7 @@ async def test_save_key_fact_skips_empty(client: None) -> None:
             arguments={"key": "", "value": ""},
             tenant_id=uuid4(),
             contact_id=uuid4(),
-            session=session,
+            uow=UnitOfWork(session),
         )
     assert result["status"] == "skipped"
 
@@ -107,7 +107,7 @@ async def test_remove_key_fact_removes(client: None) -> None:
             arguments={"key": "name"},
             tenant_id=t.id,
             contact_id=c.id,
-            session=session,
+            uow=UnitOfWork(session),
         )
         await session.commit()
     assert result["status"] == "removed"
@@ -121,6 +121,6 @@ async def test_remove_key_fact_not_found(client: None) -> None:
             arguments={"key": "nonexistent"},
             tenant_id=uuid4(),
             contact_id=uuid4(),
-            session=session,
+            uow=UnitOfWork(session),
         )
     assert result["status"] == "not_found"

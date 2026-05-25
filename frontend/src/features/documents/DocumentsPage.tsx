@@ -191,7 +191,11 @@ export function DocumentsPage() {
                       variant="subtle"
                       color="red"
                       size="xs"
-                      onClick={() => deleteMutation.mutate(d.id)}
+                      onClick={() => {
+                        if (globalThis.confirm("Are you sure you want to delete this document?")) {
+                          deleteMutation.mutate(d.id);
+                        }
+                      }}
                       loading={deleteMutation.isPending && deleteMutation.variables === d.id}
                     >
                       Delete

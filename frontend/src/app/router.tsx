@@ -9,6 +9,7 @@ import { InboxPage } from "../features/escalations/InboxPage";
 import { UsagePage } from "../features/llm-usage/UsagePage";
 import { SettingsPage } from "../features/settings/SettingsPage";
 import { ProtectedShell } from "../shared/components/AppShell";
+import { ErrorBoundary } from "../shared/components/ErrorBoundary";
 import { RequireAuth } from "../shared/components/RequireAuth";
 
 export function AppRoutes() {
@@ -21,7 +22,9 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <ProtectedShell>
-              <InboxPage />
+              <ErrorBoundary>
+                <InboxPage />
+              </ErrorBoundary>
             </ProtectedShell>
           </RequireAuth>
         }
@@ -31,7 +34,9 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <ProtectedShell>
-              <ConversationsPage />
+              <ErrorBoundary>
+                <ConversationsPage />
+              </ErrorBoundary>
             </ProtectedShell>
           </RequireAuth>
         }
@@ -41,7 +46,9 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <ProtectedShell>
-              <DocumentsPage />
+              <ErrorBoundary>
+                <DocumentsPage />
+              </ErrorBoundary>
             </ProtectedShell>
           </RequireAuth>
         }
@@ -51,7 +58,9 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <ProtectedShell>
-              <UsagePage />
+              <ErrorBoundary>
+                <UsagePage />
+              </ErrorBoundary>
             </ProtectedShell>
           </RequireAuth>
         }
@@ -61,7 +70,9 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <ProtectedShell>
-              <ChatTestPage />
+              <ErrorBoundary>
+                <ChatTestPage />
+              </ErrorBoundary>
             </ProtectedShell>
           </RequireAuth>
         }
@@ -71,7 +82,9 @@ export function AppRoutes() {
         element={
           <RequireAuth>
             <ProtectedShell>
-              <SettingsPage />
+              <ErrorBoundary>
+                <SettingsPage />
+              </ErrorBoundary>
             </ProtectedShell>
           </RequireAuth>
         }

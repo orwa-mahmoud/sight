@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from src.ai.types import ToolDef
-from src.infrastructure.persistence.postgres.repositories.key_fact_repo import PostgresKeyFactRepository
+
+if TYPE_CHECKING:
+    from src.application.shared.unit_of_work import UnitOfWork
 
 REMOVE_KEY_FACT_DEF = ToolDef(
     name="remove_key_fact",
@@ -24,14 +26,13 @@ async def run_remove_key_fact(
     arguments: dict[str, Any],
     tenant_id: UUID,
     contact_id: UUID,
-    session: Any,
+    uow: UnitOfWork,
 ) -> dict[str, str]:
     key = arguments.get("key", "").strip().lower()
     if not key:
         return {"status": "skipped", "reason": "empty key"}
-    repo = PostgresKeyFactRepository(session)
-    existing = await repo.get(tenant_id, contact_id, key)
+    existing = await uow.key_facts.get(tenant_id, contact_id, key)
     if not existing:
         return {"status": "not_found", "key": key}
-    await repo.delete(existing.id)
+    await uow.key_facts.delete(existing.id)
     return {"status": "removed", "key": key}

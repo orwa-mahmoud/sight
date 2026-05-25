@@ -223,7 +223,7 @@ async def _dispatch_tool(
             arguments=arguments,
             tenant_id=tenant_id,
             contact_id=contact_id,
-            session=uow._session,
+            uow=uow,
         )
 
     return {"error": f"Unknown tool: {tool_name}"}

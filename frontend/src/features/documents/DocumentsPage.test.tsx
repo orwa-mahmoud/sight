@@ -126,7 +126,8 @@ describe("DocumentsPage", () => {
     });
   });
 
-  it("calls delete API when delete clicked", async () => {
+  it("calls delete API when delete confirmed", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     vi.mocked(api.get).mockResolvedValue({ data: DOC_LIST });
     vi.mocked(api.delete).mockResolvedValue({});
     render(<DocumentsPage />, { wrapper: createWrapper() });
@@ -141,6 +142,23 @@ describe("DocumentsPage", () => {
     await waitFor(() => {
       expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d1");
     });
+    vi.mocked(globalThis.confirm).mockRestore();
+  });
+
+  it("does not delete when confirm is cancelled", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(false);
+    vi.mocked(api.get).mockResolvedValue({ data: DOC_LIST });
+    render(<DocumentsPage />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByText("guide.pdf")).toBeInTheDocument();
+    });
+
+    const deleteButtons = screen.getAllByText("Delete");
+    fireEvent.click(deleteButtons[0]);
+
+    expect(api.delete).not.toHaveBeenCalled();
+    vi.mocked(globalThis.confirm).mockRestore();
   });
 
   it("formats MB size correctly", async () => {
@@ -214,6 +232,7 @@ describe("DocumentsPage", () => {
   });
 
   it("shows loading on the correct delete button while pending", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     vi.mocked(api.get).mockResolvedValue({ data: DOC_LIST });
     vi.mocked(api.delete).mockReturnValue(new Promise(() => {}));
     render(<DocumentsPage />, { wrapper: createWrapper() });
@@ -224,5 +243,6 @@ describe("DocumentsPage", () => {
     await waitFor(() => {
       expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d1");
     });
+    vi.mocked(globalThis.confirm).mockRestore();
   });
 });

@@ -19,6 +19,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconSettings } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import {
   getSettings,
@@ -36,7 +37,7 @@ const LLM_PROVIDERS = [
   { value: "google", label: "Google" },
 ];
 
-function useSectionMutation(fn: (p: Record<string, unknown>) => Promise<unknown>, label: string) {
+function useSectionMutation<T>(fn: (p: T) => Promise<unknown>, label: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
@@ -66,6 +67,30 @@ export function SettingsPage() {
   const waForm = useForm({ initialValues: { phone_number_id: "", access_token: "", verify_token: "" } });
   const tgForm = useForm({ initialValues: { bot_token: "", webhook_secret: "" } });
   const botForm = useForm({ initialValues: { name: "", welcome_message: "", language: "" } });
+
+  const settingsData = settingsQuery.data;
+  useEffect(() => {
+    if (!settingsData) return;
+    llmForm.setValues({
+      provider: settingsData.llm_provider,
+      model: settingsData.llm_model,
+      max_tokens: settingsData.llm_max_tokens,
+      temperature: settingsData.llm_temperature,
+    });
+    embForm.setValues({
+      model: settingsData.embedding_model,
+      dimensions: settingsData.embedding_dimensions,
+    });
+    waForm.setValues({
+      phone_number_id: settingsData.whatsapp_phone_number_id ?? "",
+    });
+    botForm.setValues({
+      name: settingsData.bot_name,
+      welcome_message: settingsData.bot_welcome_message,
+      language: settingsData.bot_language,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsData]);
 
   if (settingsQuery.isLoading) {
     return (
@@ -106,13 +131,13 @@ export function SettingsPage() {
           <Accordion.Panel>
             <form
               onSubmit={llmForm.onSubmit((v) => {
-                const payload: Record<string, unknown> = {};
-                if (v.provider) payload.provider = v.provider;
-                if (v.model) payload.model = v.model;
-                if (v.api_key) payload.api_key = v.api_key;
-                if (v.max_tokens) payload.max_tokens = v.max_tokens;
-                if (v.temperature !== undefined) payload.temperature = v.temperature;
-                llmMutation.mutate(payload);
+                llmMutation.mutate({
+                  ...(v.provider ? { provider: v.provider } : {}),
+                  ...(v.model ? { model: v.model } : {}),
+                  ...(v.api_key ? { api_key: v.api_key } : {}),
+                  ...(v.max_tokens ? { max_tokens: v.max_tokens } : {}),
+                  ...(v.temperature === undefined ? {} : { temperature: v.temperature }),
+                });
               })}
             >
               <Stack>
@@ -165,11 +190,11 @@ export function SettingsPage() {
           <Accordion.Panel>
             <form
               onSubmit={embForm.onSubmit((v) => {
-                const payload: Record<string, unknown> = {};
-                if (v.model) payload.model = v.model;
-                if (v.api_key) payload.api_key = v.api_key;
-                if (v.dimensions) payload.dimensions = v.dimensions;
-                embeddingMutation.mutate(payload);
+                embeddingMutation.mutate({
+                  ...(v.model ? { model: v.model } : {}),
+                  ...(v.api_key ? { api_key: v.api_key } : {}),
+                  ...(v.dimensions ? { dimensions: v.dimensions } : {}),
+                });
               })}
             >
               <Stack>
@@ -208,11 +233,11 @@ export function SettingsPage() {
           <Accordion.Panel>
             <form
               onSubmit={waForm.onSubmit((v) => {
-                const payload: Record<string, unknown> = {};
-                if (v.phone_number_id) payload.phone_number_id = v.phone_number_id;
-                if (v.access_token) payload.access_token = v.access_token;
-                if (v.verify_token) payload.verify_token = v.verify_token;
-                whatsappMutation.mutate(payload);
+                whatsappMutation.mutate({
+                  ...(v.phone_number_id ? { phone_number_id: v.phone_number_id } : {}),
+                  ...(v.access_token ? { access_token: v.access_token } : {}),
+                  ...(v.verify_token ? { verify_token: v.verify_token } : {}),
+                });
               })}
             >
               <Stack>
@@ -258,10 +283,10 @@ export function SettingsPage() {
           <Accordion.Panel>
             <form
               onSubmit={tgForm.onSubmit((v) => {
-                const payload: Record<string, unknown> = {};
-                if (v.bot_token) payload.bot_token = v.bot_token;
-                if (v.webhook_secret) payload.webhook_secret = v.webhook_secret;
-                telegramMutation.mutate(payload);
+                telegramMutation.mutate({
+                  ...(v.bot_token ? { bot_token: v.bot_token } : {}),
+                  ...(v.webhook_secret ? { webhook_secret: v.webhook_secret } : {}),
+                });
               })}
             >
               <Stack>
@@ -302,11 +327,11 @@ export function SettingsPage() {
           <Accordion.Panel>
             <form
               onSubmit={botForm.onSubmit((v) => {
-                const payload: Record<string, unknown> = {};
-                if (v.name) payload.name = v.name;
-                if (v.welcome_message) payload.welcome_message = v.welcome_message;
-                if (v.language) payload.language = v.language;
-                botMutation.mutate(payload);
+                botMutation.mutate({
+                  ...(v.name ? { name: v.name } : {}),
+                  ...(v.welcome_message ? { welcome_message: v.welcome_message } : {}),
+                  ...(v.language ? { language: v.language } : {}),
+                });
               })}
             >
               <Stack>

@@ -202,7 +202,11 @@ export function InboxPage() {
                     <Button
                       size="xs"
                       variant="default"
-                      onClick={() => closeMutation.mutate(q.id)}
+                      onClick={() => {
+                        if (globalThis.confirm("Are you sure you want to close this question?")) {
+                          closeMutation.mutate(q.id);
+                        }
+                      }}
                       loading={closeMutation.isPending && closeMutation.variables === q.id}
                     >
                       Close

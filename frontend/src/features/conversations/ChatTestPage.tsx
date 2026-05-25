@@ -21,6 +21,7 @@ export function ChatTestPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [threadId, setThreadId] = useState<string | null>(null);
 
   const send = async () => {
     const text = input.trim();
@@ -30,7 +31,12 @@ export function ChatTestPage() {
     setSending(true);
 
     try {
-      const { data } = await api.post<ChatApiResponse>("/api/v1/chat", { message: text });
+      const payload: Record<string, string> = { message: text };
+      if (threadId) payload.thread_id = threadId;
+      const { data } = await api.post<ChatApiResponse>("/api/v1/chat", payload);
+      if (data.thread_id && !threadId) {
+        setThreadId(data.thread_id);
+      }
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
       if (data.escalated) {
         notifications.show({ color: "orange", message: "Question escalated to the owner inbox." });
@@ -59,9 +65,9 @@ export function ChatTestPage() {
                 Send a message to test the agent pipeline.
               </Text>
             )}
-            {messages.map((m) => (
+            {messages.map((m, i) => (
               <Card
-                key={`msg-${m.role}-${m.content.slice(0,30)}`}
+                key={`msg-${i}`}
                 withBorder
                 radius="md"
                 p="sm"

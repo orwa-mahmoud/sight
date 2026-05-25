@@ -157,7 +157,8 @@ describe("InboxPage", () => {
     });
   });
 
-  it("calls closeQuestion on Close click", async () => {
+  it("calls closeQuestion on Close click when confirmed", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
     vi.mocked(closeQuestion).mockResolvedValue({ ...QUESTIONS[0], status: "closed" });
     render(<InboxPage />, { wrapper: createWrapper() });
@@ -172,6 +173,23 @@ describe("InboxPage", () => {
     await waitFor(() => {
       expect(closeQuestion).toHaveBeenCalledWith("q1");
     });
+    vi.mocked(globalThis.confirm).mockRestore();
+  });
+
+  it("does not close question when confirm is cancelled", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(false);
+    vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
+    render(<InboxPage />, { wrapper: createWrapper() });
+
+    await waitFor(() => {
+      expect(screen.getByText("What are your hours?")).toBeInTheDocument();
+    });
+
+    const closeButtons = screen.getAllByText("Close");
+    fireEvent.click(closeButtons[0]);
+
+    expect(closeQuestion).not.toHaveBeenCalled();
+    vi.mocked(globalThis.confirm).mockRestore();
   });
 
   it("shows owner reply when present", async () => {
@@ -243,6 +261,7 @@ describe("InboxPage", () => {
   });
 
   it("shows error notification when close fails", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
     vi.mocked(closeQuestion).mockRejectedValue(new Error("network"));
     render(<InboxPage />, { wrapper: createWrapper() });
@@ -251,6 +270,7 @@ describe("InboxPage", () => {
     fireEvent.click(screen.getAllByText("Close")[0]);
 
     await waitFor(() => expect(closeQuestion).toHaveBeenCalled());
+    vi.mocked(globalThis.confirm).mockRestore();
   });
 
   it("changes filter via segmented control", async () => {
@@ -267,6 +287,7 @@ describe("InboxPage", () => {
   });
 
   it("shows loading on close button while pending", async () => {
+    vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
     vi.mocked(closeQuestion).mockReturnValue(new Promise(() => {}));
     render(<InboxPage />, { wrapper: createWrapper() });
@@ -274,6 +295,7 @@ describe("InboxPage", () => {
 
     fireEvent.click(screen.getAllByText("Close")[0]);
     await waitFor(() => expect(closeQuestion).toHaveBeenCalledWith("q1"));
+    vi.mocked(globalThis.confirm).mockRestore();
   });
 
   it("refresh button invalidates queries", async () => {

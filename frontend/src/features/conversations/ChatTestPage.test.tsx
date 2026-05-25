@@ -72,6 +72,29 @@ describe("ChatTestPage", () => {
     expect(api.post).toHaveBeenCalledWith("/api/v1/chat", { message: "Hello" });
   });
 
+  it("sends thread_id in subsequent messages", async () => {
+    vi.mocked(api.post)
+      .mockResolvedValueOnce({
+        data: { response: "First reply", thread_id: "t42", escalated: false, request_id: "r1" },
+      })
+      .mockResolvedValueOnce({
+        data: { response: "Second reply", thread_id: "t42", escalated: false, request_id: "r2" },
+      });
+    render(wrap(<ChatTestPage />));
+
+    fireEvent.change(screen.getByPlaceholderText("Type a message..."), { target: { value: "msg1" } });
+    fireEvent.click(screen.getByText("Send"));
+
+    await waitFor(() => expect(screen.getByText("First reply")).toBeInTheDocument());
+    expect(api.post).toHaveBeenCalledWith("/api/v1/chat", { message: "msg1" });
+
+    fireEvent.change(screen.getByPlaceholderText("Type a message..."), { target: { value: "msg2" } });
+    fireEvent.click(screen.getByText("Send"));
+
+    await waitFor(() => expect(screen.getByText("Second reply")).toBeInTheDocument());
+    expect(api.post).toHaveBeenCalledWith("/api/v1/chat", { message: "msg2", thread_id: "t42" });
+  });
+
   it("shows user and AI labels", async () => {
     vi.mocked(api.post).mockResolvedValue({
       data: { response: "reply", thread_id: "t1", escalated: false, request_id: "r1" },

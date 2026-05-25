@@ -30,11 +30,6 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 60
     jwt_refresh_token_expire_days: int = 30
 
-    # ── Channels ───────────────────────────────────────────────────
-    whatsapp_verify_token: str | None = None
-    whatsapp_app_secret: str | None = None
-    telegram_webhook_secret: str | None = None
-
     # ── Observability ──────────────────────────────────────────────
     otel_exporter_otlp_endpoint: str | None = None
     otel_service_name: str = "frontdesk-backend"
