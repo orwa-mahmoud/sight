@@ -16,7 +16,7 @@ def _make_dto(
     hidden: bool = False,
     is_checkpoint: bool = False,
 ) -> ThreadMessageDTO:
-    from uuid import uuid4  # noqa: PLC0415
+    from uuid import uuid4
 
     return ThreadMessageDTO(
         id=uuid4(),

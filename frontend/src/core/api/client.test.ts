@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
 import { api, getToken, setToken, clearToken } from "./client";
 
@@ -92,5 +92,15 @@ describe("response interceptor", () => {
       ({ data: { ok: true }, status: 200, statusText: "OK", headers: {}, config }) as AxiosResponse;
     const res = await api.get("/ok");
     expect(res.data).toEqual({ ok: true });
+  });
+});
+
+describe("BASE_URL configuration", () => {
+  it("uses VITE_API_URL env var when set", async () => {
+    vi.stubEnv("VITE_API_URL", "https://api.example.com");
+    vi.resetModules();
+    const { api: freshApi } = await import("./client");
+    expect(freshApi.defaults.baseURL).toBe("https://api.example.com");
+    vi.unstubAllEnvs();
   });
 });

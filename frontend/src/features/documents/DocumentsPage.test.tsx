@@ -155,6 +155,16 @@ describe("DocumentsPage", () => {
     });
   });
 
+  it("shows fallback gray badge for unknown status", async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [{ ...DOC_LIST[0], id: "d5", status: "unknown_status" }],
+    });
+    render(<DocumentsPage />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText("unknown_status")).toBeInTheDocument();
+    });
+  });
+
   it("formats byte size correctly", async () => {
     vi.mocked(api.get).mockResolvedValue({
       data: [{
@@ -200,6 +210,19 @@ describe("DocumentsPage", () => {
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalled();
+    });
+  });
+
+  it("shows loading on the correct delete button while pending", async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: DOC_LIST });
+    vi.mocked(api.delete).mockReturnValue(new Promise(() => {}));
+    render(<DocumentsPage />, { wrapper: createWrapper() });
+    await waitFor(() => expect(screen.getAllByText("Delete")).toHaveLength(2));
+
+    fireEvent.click(screen.getAllByText("Delete")[0]);
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d1");
     });
   });
 });

@@ -123,4 +123,20 @@ describe("RegisterPage", () => {
     render(wrap(<RegisterPage />));
     expect(screen.getByText(/sets up your tenant and owner account/i)).toBeInTheDocument();
   });
+
+  it("shows validation errors for invalid fields", async () => {
+    render(wrap(<RegisterPage />));
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "bad" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
+    fireEvent.change(screen.getByLabelText("Tenant display name"), { target: { value: "" } });
+    fireEvent.change(screen.getByLabelText("Tenant slug"), { target: { value: "X" } });
+    fireEvent.click(screen.getByRole("button", { name: /create account/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Enter a valid email")).toBeInTheDocument();
+      expect(screen.getByText("At least 8 characters")).toBeInTheDocument();
+      expect(screen.getByText("Required")).toBeInTheDocument();
+      expect(screen.getByText(/min 2 chars/i)).toBeInTheDocument();
+    });
+    expect(mockRegister).not.toHaveBeenCalled();
+  });
 });

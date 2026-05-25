@@ -92,7 +92,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["PLR2004", "S101"]
+"tests/*" = ["PLR2004", "S101", "PLC0415", "N806"]
 "alembic/env.py" = ["E402"]
 # SQLAlchemy types like `UUID` are classes, but the constant-naming rule
 # flags `UUID as PgUUID` re-imports — silence here for the ORM layer.
@@ -130,3 +130,4 @@ markers = [
 [tool.coverage.run]
 source = ["src"]
 omit = ["alembic/*", "tests/*", "scripts/*"]
+concurrency = ["greenlet", "thread"]

@@ -27,9 +27,9 @@ from sqlalchemy import text
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def _migrate_test_db() -> AsyncIterator[None]:
     """Apply alembic migrations to the test database once per session."""
-    from alembic.config import Config  # noqa: PLC0415
+    from alembic.config import Config
 
-    from alembic import command  # noqa: PLC0415
+    from alembic import command
 
     cfg = Config("alembic.ini")
     cfg.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL_SYNC"])
@@ -40,7 +40,7 @@ async def _migrate_test_db() -> AsyncIterator[None]:
 @pytest_asyncio.fixture
 async def _clean_db() -> AsyncIterator[None]:
     """Truncate data tables before each test (preserves schema + alembic_version)."""
-    from src.infrastructure.persistence.postgres.database import async_session_factory  # noqa: PLC0415
+    from src.infrastructure.persistence.postgres.database import async_session_factory
 
     async with async_session_factory() as session:
         await session.execute(
@@ -56,7 +56,7 @@ async def _clean_db() -> AsyncIterator[None]:
 
 @pytest_asyncio.fixture
 async def client(_clean_db: None) -> AsyncIterator[AsyncClient]:
-    from src.main import app  # noqa: PLC0415
+    from src.main import app
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
@@ -65,7 +65,7 @@ async def client(_clean_db: None) -> AsyncIterator[AsyncClient]:
 
 async def register_and_token(client: AsyncClient) -> tuple[str, str, str]:
     """Helper: register a fresh owner, return (token, user_id, tenant_id)."""
-    import uuid  # noqa: PLC0415
+    import uuid
 
     slug = f"t-{uuid.uuid4().hex[:8]}"
     resp = await client.post(

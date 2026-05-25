@@ -7,8 +7,8 @@ from src.drivers.api.webhooks.whatsapp import _verify_signature
 
 def test_valid_signature() -> None:
     body = b'{"test": "data"}'
-    import hashlib  # noqa: PLC0415
-    import hmac as hmac_mod  # noqa: PLC0415
+    import hashlib
+    import hmac as hmac_mod
 
     secret = "test-secret"
     sig = "sha256=" + hmac_mod.new(secret.encode(), body, hashlib.sha256).hexdigest()

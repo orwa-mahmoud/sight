@@ -22,7 +22,7 @@ async def test_checkpoint_not_triggered_below_threshold(client: None) -> None:
     tenant_id = uuid4()
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        from src.domain.tenants.entities import Tenant  # noqa: PLC0415
+        from src.domain.tenants.entities import Tenant
 
         t = Tenant.create(name="CP", slug=f"cp-{uuid4().hex[:8]}")
         await uow.tenants.save(t)
@@ -63,7 +63,7 @@ async def test_checkpoint_triggered_above_threshold(client: None) -> None:
     """When tokens exceed 3000, a checkpoint message is created."""
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        from src.domain.tenants.entities import Tenant  # noqa: PLC0415
+        from src.domain.tenants.entities import Tenant
 
         t = Tenant.create(name="CP2", slug=f"cp2-{uuid4().hex[:8]}")
         await uow.tenants.save(t)

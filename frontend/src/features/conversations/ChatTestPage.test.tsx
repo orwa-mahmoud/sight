@@ -127,4 +127,20 @@ describe("ChatTestPage", () => {
 
     await waitFor(() => expect(screen.getByText("escalated reply")).toBeInTheDocument());
   });
+
+  it("does not send on Shift+Enter", () => {
+    render(wrap(<ChatTestPage />));
+    const ta = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(ta, { target: { value: "newline" } });
+    fireEvent.keyDown(ta, { key: "Enter", shiftKey: true });
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  it("does not send on non-Enter key", () => {
+    render(wrap(<ChatTestPage />));
+    const ta = screen.getByPlaceholderText("Type a message...");
+    fireEvent.change(ta, { target: { value: "typing" } });
+    fireEvent.keyDown(ta, { key: "a", shiftKey: false });
+    expect(api.post).not.toHaveBeenCalled();
+  });
 });

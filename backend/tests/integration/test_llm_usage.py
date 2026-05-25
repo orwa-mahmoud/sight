@@ -54,7 +54,7 @@ async def test_usage_stats_aggregate_after_recording(client: AsyncClient) -> Non
     tenant_id_str = resp.json()["tenant_id"]
     token = resp.json()["access_token"]
 
-    from uuid import UUID  # noqa: PLC0415
+    from uuid import UUID
 
     tenant_id = UUID(tenant_id_str)
 

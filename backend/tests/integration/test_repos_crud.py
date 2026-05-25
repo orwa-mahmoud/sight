@@ -168,7 +168,7 @@ async def test_question_list_filter_and_count(client: None) -> None:
         await uow.commit()
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        from src.domain.questions.value_objects import QuestionStatus  # noqa: PLC0415
+        from src.domain.questions.value_objects import QuestionStatus
 
         all_q = await uow.questions.list_for_tenant(tenant.id)
         assert len(all_q) == 1

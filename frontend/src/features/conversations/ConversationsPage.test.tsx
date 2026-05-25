@@ -139,4 +139,17 @@ describe("ConversationsPage", () => {
       expect(screen.getByText(`${longId.slice(0, 40)}...`)).toBeInTheDocument();
     });
   });
+
+  it("shows raw channel name when not in lookup map", async () => {
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url.includes("daily-summary")) return { data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 } };
+      return {
+        data: [{ id: "c1", thread_id: "t1", channel: "sms", last_message_at: null, created_at: "2026-01-01T09:00:00Z" }],
+      };
+    });
+    render(<ConversationsPage />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText("sms")).toBeInTheDocument();
+    });
+  });
 });

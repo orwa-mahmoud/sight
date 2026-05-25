@@ -24,7 +24,7 @@ def test_parse_markdown() -> None:
 
 def test_parse_pdf_valid() -> None:
     """Create a minimal valid PDF to test the parser."""
-    from pypdf import PdfWriter  # noqa: PLC0415
+    from pypdf import PdfWriter
 
     writer = PdfWriter()
     writer.add_blank_page(width=200, height=200)

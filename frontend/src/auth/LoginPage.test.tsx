@@ -101,4 +101,16 @@ describe("LoginPage", () => {
     render(wrap(<LoginPage />));
     expect(screen.getByText("Your AI front desk dashboard.")).toBeInTheDocument();
   });
+
+  it("shows validation error for invalid email", async () => {
+    render(wrap(<LoginPage />));
+    fireEvent.change(screen.getByPlaceholderText("owner@example.com"), { target: { value: "bad" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Enter a valid email")).toBeInTheDocument();
+      expect(screen.getByText("At least 8 characters")).toBeInTheDocument();
+    });
+    expect(mockLogin).not.toHaveBeenCalled();
+  });
 });

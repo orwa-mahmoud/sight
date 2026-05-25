@@ -26,7 +26,7 @@ def _make_config(tenant_id: object) -> TenantConfig:
 @pytest.mark.asyncio
 async def test_gateway_full_flow_with_mocked_graph(client: None) -> None:
     """End-to-end gateway: saves inbound msg, calls graph, saves reply, records tokens."""
-    from src.domain.tenants.entities import Tenant  # noqa: PLC0415
+    from src.domain.tenants.entities import Tenant
 
     # Seed tenant + config
     async with async_session_factory() as session:
@@ -92,8 +92,8 @@ async def test_gateway_full_flow_with_mocked_graph(client: None) -> None:
 @pytest.mark.asyncio
 async def test_gateway_with_tool_calls(client: None) -> None:
     """Gateway with escalation tool call — verifies tool exchanges are saved."""
-    from src.ai.types import ToolCallResult  # noqa: PLC0415
-    from src.domain.tenants.entities import Tenant  # noqa: PLC0415
+    from src.ai.types import ToolCallResult
+    from src.domain.tenants.entities import Tenant
 
     async with async_session_factory() as session:
         uow = UnitOfWork(session)

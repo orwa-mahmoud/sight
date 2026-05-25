@@ -15,7 +15,7 @@ from src.infrastructure.persistence.postgres.database import async_session_facto
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_escalate_creates_question(client: None) -> None:
-    from src.domain.tenants.entities import Tenant  # noqa: PLC0415
+    from src.domain.tenants.entities import Tenant
 
     async with async_session_factory() as session:
         uow = UnitOfWork(session)

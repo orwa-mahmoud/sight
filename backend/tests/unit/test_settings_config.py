@@ -6,7 +6,7 @@ import os
 
 
 def test_settings_loads_from_env(monkeypatch: object) -> None:
-    import pytest  # noqa: PLC0415
+    import pytest
 
     mp = pytest.MonkeyPatch()
     mp.setenv("DATABASE_URL", "postgresql+asyncpg://localhost/test")
@@ -15,7 +15,7 @@ def test_settings_loads_from_env(monkeypatch: object) -> None:
     mp.setenv("CORS_ORIGINS", "http://a.com,http://b.com")
 
     # Clear the cache so we get a fresh Settings instance.
-    from src.config.settings import Settings  # noqa: PLC0415
+    from src.config.settings import Settings
 
     s = Settings()  # type: ignore[call-arg]
     assert s.jwt_secret_key == "test-key"
@@ -24,7 +24,7 @@ def test_settings_loads_from_env(monkeypatch: object) -> None:
 
 
 def test_cors_origins_split() -> None:
-    from src.config.settings import Settings  # noqa: PLC0415
+    from src.config.settings import Settings
 
     os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://localhost/test")
     os.environ.setdefault("DATABASE_URL_SYNC", "postgresql://localhost/test")

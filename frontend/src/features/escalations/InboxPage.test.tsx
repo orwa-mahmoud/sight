@@ -213,6 +213,15 @@ describe("InboxPage", () => {
     });
   });
 
+  it("shows raw channel name for unknown channels", async () => {
+    const unknownChannelQ: Question = {
+      ...QUESTIONS[0], id: "q9", channel: "sms",
+    };
+    vi.mocked(listQuestions).mockResolvedValue([unknownChannelQ]);
+    render(<InboxPage />, { wrapper: createWrapper() });
+    await waitFor(() => expect(screen.getByText("sms")).toBeInTheDocument());
+  });
+
   it("has refresh button", () => {
     vi.mocked(listQuestions).mockResolvedValue([]);
     render(<InboxPage />, { wrapper: createWrapper() });
@@ -256,6 +265,16 @@ describe("InboxPage", () => {
     await waitFor(() => {
       expect(listQuestions).toHaveBeenCalledWith(undefined);
     });
+  });
+
+  it("shows loading on close button while pending", async () => {
+    vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
+    vi.mocked(closeQuestion).mockReturnValue(new Promise(() => {}));
+    render(<InboxPage />, { wrapper: createWrapper() });
+    await waitFor(() => expect(screen.getByText("What are your hours?")).toBeInTheDocument());
+
+    fireEvent.click(screen.getAllByText("Close")[0]);
+    await waitFor(() => expect(closeQuestion).toHaveBeenCalledWith("q1"));
   });
 
   it("refresh button invalidates queries", async () => {
