@@ -4,8 +4,8 @@
 
 | Project | Stack | Guidelines |
 | ------- | ----- | ---------- |
-| [backend/](backend/) | FastAPI + LangGraph, hexagonal DDD | [backend/CLAUDE.md](backend/CLAUDE.md), [backend/docs/ARCHITECTURE.md](backend/docs/ARCHITECTURE.md) |
-| [frontend/](frontend/) | React 19 + Mantine 9, TanStack Query | [frontend/CLAUDE.md](frontend/CLAUDE.md), [frontend/docs/ARCHITECTURE.md](frontend/docs/ARCHITECTURE.md) |
+| [backend/](backend/) | FastAPI + LangGraph, hexagonal DDD | [backend/CLAUDE.md](backend/CLAUDE.md), [backend/docs/](backend/docs/) |
+| [frontend/](frontend/) | React 19 + Mantine 9, TanStack Query | [frontend/CLAUDE.md](frontend/CLAUDE.md), [frontend/docs/](frontend/docs/) |
 
 **Read the subproject's CLAUDE.md before doing work inside it.**
 

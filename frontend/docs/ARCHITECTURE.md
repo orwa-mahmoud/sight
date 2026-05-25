@@ -323,183 +323,15 @@ and sidebar. There is no lazy loading yet -- all page imports are eager.
 
 ---
 
-## 9. Theme and Design Tokens
+## 9. Design System
 
-**File:** `src/app/theme.ts`
+Color palette, component patterns, naming conventions, and styling reference:
 
-### Colors
-
-#### Coral (primary)
-
-The brand color. Used for buttons, links, active states, and accent UI.
-
-| Shade | Hex       | Usage                     |
-| ----- | --------- | ------------------------- |
-| 0     | `#fff3ed` | Lightest background       |
-| 1     | `#ffe2d3` | Hover backgrounds         |
-| 2     | `#fdc2a7` | Light borders             |
-| 3     | `#fba076` | Badges, light accents     |
-| 4     | `#f9844c` | Medium accent             |
-| 5     | `#f87330` | Primary on dark scheme    |
-| 6     | `#f76b22` | **Primary on light scheme** (buttons, CTAs) |
-| 7     | `#dc5915` | Hover on primary          |
-| 8     | `#c44e10` | Active/pressed            |
-| 9     | `#aa4109` | Darkest emphasis          |
-
-#### Slate (accent)
-
-Deep blue-gray for contrast: headings, sidebar active states, nav.
-
-| Shade | Hex       | Usage                     |
-| ----- | --------- | ------------------------- |
-| 0     | `#f3f5f8` | Lightest background       |
-| 1     | `#e3e6eb` | Subtle highlights         |
-| 2     | `#c5cbd5` | Light borders             |
-| 3     | `#a4adbd` | Muted text                |
-| 4     | `#88949f` | Secondary text            |
-| 5     | `#717f97` | Medium accent             |
-| 6     | `#67768f` | Base accent               |
-| 7     | `#566480` | Hover on accent           |
-| 8     | `#4d5a73` | Active/pressed            |
-| 9     | `#404c66` | Darkest accent            |
-
-### Primary shade
-
-```ts
-primaryShade: { light: 6, dark: 5 }
-```
-
-Mantine picks `coral.6` (`#f76b22`) in light mode and `coral.5` (`#f87330`)
-in dark mode for all components that use the primary color.
-
-### Default radius
-
-```ts
-defaultRadius: "md"
-```
-
-Applies to buttons, inputs, cards, and all Mantine components that accept a
-`radius` prop.
-
-### Font stack
-
-```
--apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif
-```
-
-Used for both body text and headings. Headings use `fontWeight: "600"`.
-
-### Button defaults
-
-All buttons render with `fw: 500` (medium weight) by default.
+- **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)** -- coral + slate color palettes, primary shade config, font stack, default radius, button defaults, page structure skeleton, four-state rendering pattern, mutation patterns, form patterns, naming conventions, icon usage, brand color usage, component prop conventions, notifications.
 
 ---
 
-## 10. Component Patterns
-
-### Page structure
-
-Every page follows the same skeleton:
-
-```tsx
-export function FeaturePage() {
-  const someQuery = useQuery({ queryKey: [...], queryFn: ... });
-
-  return (
-    <Stack>
-      {/* Header: Title + description + actions */}
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>Page Title</Title>
-          <Text c="dimmed" size="sm">Description.</Text>
-        </div>
-        {/* Optional action buttons */}
-      </Group>
-
-      {/* Loading state */}
-      {someQuery.isLoading && <Center py="xl"><Loader /></Center>}
-
-      {/* Error state */}
-      {someQuery.isError && <Alert color="red">Could not load data.</Alert>}
-
-      {/* Empty state */}
-      {someQuery.isSuccess && someQuery.data.length === 0 && (
-        <Card withBorder radius="md" p="xl">
-          <Center py="xl">
-            <Stack align="center" gap="xs">
-              <SomeIcon size={32} stroke={1.4} />
-              <Text fw={500}>Nothing here.</Text>
-              <Text c="dimmed" size="sm">Guidance text.</Text>
-            </Stack>
-          </Center>
-        </Card>
-      )}
-
-      {/* Data state */}
-      {someQuery.isSuccess && someQuery.data.length > 0 && (
-        /* Table or card grid */
-      )}
-    </Stack>
-  );
-}
-```
-
-### Four-state rendering
-
-Every data-driven page handles exactly four states:
-
-1. **Loading** -- `<Loader />` centered on the page.
-2. **Error** -- `<Alert color="red">` with a user-friendly message.
-3. **Empty** -- `<Card>` with an icon, bold text, and guidance.
-4. **Data** -- the actual content (table, card grid, etc.).
-
-### Mutations
-
-Mutations use `useMutation` from TanStack Query. Two patterns:
-
-**Inline onSuccess/onError** (most pages):
-
-```tsx
-const mutation = useMutation({
-  mutationFn: apiCall,
-  onSuccess: () => {
-    notifications.show({ color: "teal", message: "Done." });
-    queryClient.invalidateQueries({ queryKey: [...] });
-  },
-  onError: () => {
-    notifications.show({ color: "red", message: "Failed." });
-  },
-});
-```
-
-**Section mutation helper** (SettingsPage):
-
-```tsx
-function useSectionMutation(fn, label) {
-  return useMutation({
-    mutationFn: fn,
-    onSuccess: () => { notify success; invalidate; },
-    onError: () => { notify error; },
-  });
-}
-```
-
-### Forms
-
-All forms use `@mantine/form`:
-
-```tsx
-const form = useForm({
-  initialValues: { ... },
-  validate: { fieldName: (v) => condition ? null : "Error message" },
-});
-
-const handleSubmit = form.onSubmit(async (values) => { ... });
-```
-
----
-
-## 11. Testing Strategy
+## 10. Testing Strategy
 
 ### Tools
 
@@ -605,7 +437,7 @@ describe("ComponentName", () => {
 
 ---
 
-## 12. Backend Contract
+## 11. Backend Contract
 
 ### JSON shape
 
@@ -645,56 +477,6 @@ the shared Axios instance which has `baseURL` set to
 
 ---
 
-## 13. Conventions
+## 12. Conventions
 
-### Naming
-
-| What                | Convention                          | Example                 |
-| ------------------- | ----------------------------------- | ----------------------- |
-| Page component      | `PascalCase` + `Page` suffix        | `InboxPage`             |
-| API file            | `api.ts` in feature folder          | `escalations/api.ts`    |
-| Types file          | `types.ts` in feature folder        | `escalations/types.ts`  |
-| Test file           | Same name + `.test.tsx` / `.test.ts`| `InboxPage.test.tsx`    |
-| Hook                | `camelCase` with `use` prefix       | `useAuth`               |
-| Context             | `PascalCase` + `Context`            | `AuthContext`            |
-| Exported functions  | Named exports only                  | `export function X()`   |
-
-### Imports
-
-- Relative imports within the same module (`./api`, `./types`).
-- Path-based imports across modules (`../../core/api/client`).
-- No path aliases configured in this project (vite.config.ts has no
-  `resolve.alias`).
-
-### Icons
-
-All icons come from `@tabler/icons-react`.
-
-- Standard size: `18` for inline / nav icons.
-- Standard stroke: `1.4` to `1.6`.
-- Smaller context: `14` (badges, labels).
-
-### Brand color usage
-
-- Primary actions (buttons, links): `coral` (the Mantine primary color).
-- Accent/nav contrast: `slate`.
-- Success feedback: `teal`.
-- Error feedback: `red`.
-- Neutral/muted: `gray`, `dimmed`.
-
-### Component prop conventions
-
-- `Readonly<{ children: ReactNode }>` on all wrapper components.
-- `Readonly<Props>` on component function signatures.
-- Mantine style props for spacing and layout (`p`, `px`, `gap`, `mt`).
-
-### Notifications
-
-All user-facing notifications use `@mantine/notifications`:
-
-```tsx
-notifications.show({ color: "teal", message: "Success." });
-notifications.show({ color: "red", message: "Something went wrong." });
-```
-
-Notifications are positioned `top-right` (configured in `Providers.tsx`).
+Naming, imports, icons, brand colors, component props, and notification patterns are documented in **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)**.

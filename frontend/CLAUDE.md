@@ -13,7 +13,10 @@
 
 React 19 + Mantine 9 + TypeScript 6 + Vite 8 + TanStack Query 5 + React Router 7 + Axios + @tabler/icons-react + Vitest
 
-Full architecture reference: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) -- theme/color tokens, component patterns, testing strategy, routing table, and full folder structure.
+Architecture and reference docs:
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) -- folder structure, state management, auth flow, API client, feature modules, routing, testing strategy.
+- [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) -- color palette (coral + slate), component patterns, naming conventions, four-state rendering, mutation patterns, form patterns, icon usage, notifications, theme configuration.
 
 ## Folder Structure
 

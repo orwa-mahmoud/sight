@@ -18,7 +18,15 @@
 
 **Frontdesk** is a multi-tenant AI front desk assistant. Stack: Python 3.13, FastAPI, LangGraph, PostgreSQL 17 + pgvector (HNSW + GIN), SQLAlchemy 2.0 (async), Alembic. Strict hexagonal DDD + CQRS. The AI agent handles visitor questions via WhatsApp, Telegram, and a direct Chat API, backed by a RAG knowledge base per tenant.
 
-Full architecture reference: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) -- layer boundaries, RAG pipeline details, channel adapter internals, tiered compression, concurrency/idempotency, testing strategy, and adding a feature guide.
+Architecture and reference docs:
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) -- layer boundaries, DDD patterns, CQRS, UoW, forbidden imports, concurrency/idempotency, testing strategy, adding a feature guide.
+- [`docs/RAG_PIPELINE.md`](docs/RAG_PIPELINE.md) -- document ingestion (parse/chunk/embed/persist), hybrid retrieval (vector HNSW + BM25 + RRF), tenant isolation, domain ports.
+- [`docs/AI_ORCHESTRATION.md`](docs/AI_ORCHESTRATION.md) -- gateway, agent loop, LangGraph isolation, tool definitions, system prompt, context loading, tiered compression, checkpoint summarization, concurrency.
+- [`docs/CHANNEL_INTEGRATION.md`](docs/CHANNEL_INTEGRATION.md) -- channel adapters (WhatsApp, Telegram, API), webhook endpoints, contact resolution, notification routing.
+- [`docs/BUSINESS_OVERVIEW.md`](docs/BUSINESS_OVERVIEW.md) -- what frontdesk does, user flows, core features.
+- [`docs/ERD.md`](docs/ERD.md) -- entity relationship diagram, table overview, constraints.
+- [`docs/SETUP.md`](docs/SETUP.md) -- prerequisites, database creation, env vars, migrations, dev server, running tests.
 
 ## Architecture
 

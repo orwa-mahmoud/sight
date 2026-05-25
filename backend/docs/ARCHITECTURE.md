@@ -547,182 +547,23 @@ Contacts are external people who interact with a tenant's front desk. They are s
 
 **Why this matters:** The contact resolution happens before any message is saved, so every message in the DB has a real `participant_id` (or `None` for unresolved Telegram users). This drives key facts loading, question attribution, and notification routing.
 
-## Channel Infrastructure
+## Channel Integration
 
-```text
-ChannelAdapter (ABC)
-|-- parse_incoming(raw_payload) -> IncomingMessage
-|-- send_text(recipient, text) -> dict | None
-|-- send_voice(recipient, audio, mime_type) -> None
-|-- send_image(recipient, url, caption) -> None
-|-- send_video(recipient, url, caption) -> None
-|-- send_document(recipient, url, caption) -> None
-|-- send_media_group(recipient, urls, caption) -> dict | None
-|-- send_structured(recipient, clean_text, media) -> ChannelSendResult
-|-- send_response(recipient, text) -> ChannelSendResult     # extract_media() then send_structured()
-|
-+-- WhatsAppAdapter (Meta Cloud API v23.0)
-|   - Credentials from TenantConfig (phone_number_id, access_token, verify_token)
-|   - send_text: POST to graph.facebook.com/{phone_number_id}/messages
-|   - send_image/video/document: native rich media via Meta API
-|   - send_media_group: no album API, sends sequentially with delay
-|   - verify_signature: HMAC-SHA256 with replay protection
-|   - _get_media_url: resolve media_id to download URL for voice/image
-|
-+-- TelegramAdapter (Bot API)
-|   - Credentials from TenantConfig (telegram_bot_token)
-|   - send_text: sendMessage with HTML parse_mode, fallback to plain text
-|   - send_image: sendPhoto API
-|   - send_media_group: sendMediaGroup (native album), fallback to plain caption
-|   - send_video: sendVideo API
-|   - send_document: sendDocument API
-|   - send_contact_request: keyboard button for phone number sharing
-|   - Text auto-chunked at 4096 chars (Telegram limit)
-|
-+-- APIAdapter (Direct)
-    - For programmatic chat via REST API
-```
+Channel adapters, webhook endpoints, contact resolution, and notification routing are documented in **[CHANNEL_INTEGRATION.md](./CHANNEL_INTEGRATION.md)**.
 
-**Retry infrastructure:** All channel sends use `@channel_send_retry()` decorator for transient failure handling. WhatsApp has configurable delay between album images (`WHATSAPP_IMAGE_SEND_DELAY_SECONDS`) and max images per album (`WHATSAPP_MAX_IMAGES_PER_ALBUM`).
-
-**Media extraction:** The `send_response()` method on the base adapter calls `extract_media()` (from `domain/shared/media.py`) to parse `<<<IMAGES>>>`, `<<<VIDEOS>>>`, `<<<DOCUMENTS>>>` blocks and markdown image syntax from LLM responses, then sends native rich media per-channel.
-
-## Notification Routing
-
-Notifications are channel-agnostic. The routing adapter resolves the best delivery channel for a recipient:
-
-```text
-NotificationRoutingPort.resolve_route(tenant_id, recipient_id, recipient_type)
-    |
-    +-- Step 1: Find most recent conversation for this recipient+tenant -> send there
-    +-- Step 2: Tenant has WhatsApp configured + recipient has phone -> WhatsApp thread
-    +-- Step 3: Recipient has telegram_user_id -> Telegram thread
-    +-- Step 4: All failed -> raise NotificationRoutingError
-```
-
-Returns a `ResolvedRoute(channel, thread_id, conversation_id, tenant_id, recipient_id)`. The `channel_sender.py` then sends via the resolved channel adapter.
+**Quick reference:** `ChannelAdapter` ABC (`infrastructure/channels/base.py`), WhatsApp via Meta Cloud API v23.0, Telegram via Bot API, direct Chat API endpoint. Notification routing uses a 4-step fallback (existing conversation -> WhatsApp -> Telegram -> error).
 
 ## RAG Pipeline
 
-```text
-Document upload -> Ingest:
-    1. Parse: infrastructure/rag/parser.py extracts text from PDF, DOCX, TXT, etc.
-    2. Chunk: RecursiveTokenChunker splits on natural boundaries
-       (paragraph -> line -> sentence -> word -> char)
-       Target: ~512 tokens per chunk, ~15% overlap
-       Sizing: tiktoken (o200k_base encoding)
-    3. Embed: OpenAIEmbedder calls OpenAI embeddings endpoint
-       Per-tenant API key + model + dimensions from TenantConfig
-    4. Persist: Each Chunk row stores content + embedding vector + extra_metadata
-       HNSW index (cosine ops) + GIN index (tsvector) on chunks table
+Document ingestion (parse -> chunk -> embed -> persist) and hybrid retrieval (vector HNSW + BM25 tsvector + RRF fusion) are documented in **[RAG_PIPELINE.md](./RAG_PIPELINE.md)**.
 
-Query-time retrieval:
-    1. Vector search: HNSW cosine distance, top-50 candidates
-    2. BM25 search: websearch_to_tsquery + ts_rank over tsvector, top-50 candidates
-    3. Reciprocal Rank Fusion (RRF, k=60): combine ranks from both sources
-       score(doc) = sum(1 / (k + rank)) across lists
-    4. Return top-k (default 8) RetrievedChunk objects
-
-    Every query filters by tenant_id -- never trust callers to scope.
-```
-
-**Tenant isolation:** Both vector and BM25 queries include `WHERE tenant_id = :tid`. This is enforced at the infrastructure layer, not left to callers.
-
-**Future:** The `RetrievedChunk` shape carries enough metadata to feed a cross-encoder reranker (Step 5) when added.
+**Quick reference:** `RecursiveTokenChunker` (512 tokens, 15% overlap, tiktoken o200k_base), `OpenAIEmbedder` (text-embedding-3-large, 1536 dims), `HybridRetriever` (cosine + BM25 + RRF k=60, top-8). Tenant-isolated at every query.
 
 ## AI Orchestration
 
-The AI layer has three key components:
+The gateway, agent loop, tool definitions, system prompt, context loading, tiered compression, checkpoint summarization, and concurrency are documented in **[AI_ORCHESTRATION.md](./AI_ORCHESTRATION.md)**.
 
-### Gateway (`ai/gateway.py`)
-
-Single public entry point: `chat_with_agent(ChatInput, uow) -> ChatResult`. Every channel (WhatsApp webhook, Telegram webhook, Chat API) calls this. The gateway:
-
-1. Loads tenant's LLM config from DB (per-tenant, not `.env`)
-2. Resolves sender to a Contact entity
-3. Saves the inbound message
-4. Loads history from DB (source of truth)
-5. Builds system prompt + tool definitions + key facts context
-6. Runs the LangGraph agent (infrastructure/ai/graph.py)
-7. Saves tool exchanges + assistant reply
-8. Records token usage with domain-side cost calculation
-9. Creates a conversation checkpoint if token budget exceeded
-10. Returns response text for the channel to send back
-
-### Agent Loop (`ai/agents/agent.py` + `infrastructure/ai/graph.py`)
-
-Two implementations exist -- the graph-based one (`infrastructure/ai/graph.py`) is the active path:
-
-```text
-call_llm -> should_continue?
-    |-- has tool_calls + iteration < 5 -> execute_tools -> call_llm (loop)
-    |-- no tool_calls or iteration >= 5 -> END
-```
-
-**LangGraph isolation:** `infrastructure/ai/graph.py` is the ONLY file importing `langgraph`. It translates between domain value objects (`LLMMessage`) and LangChain message types (`SystemMessage`, `HumanMessage`, `AIMessage`, `ToolMessage`) at the boundary. The rest of `ai/` never sees LangGraph or LangChain types.
-
-**Per-turn only:** The graph runs fresh per turn with no checkpointer. The DB messages table is the cross-turn source of truth. This trades a small amount of glue code for transparent queries, a readable admin UI, and version-independent persistence.
-
-### Available Tools
-
-| Tool | Purpose | Implementation |
-| ---- | ------- | -------------- |
-| `search_documents` | RAG retrieval from the tenant's knowledge base | Calls `HybridRetriever.hybrid_retrieve()` |
-| `escalate_question` | Escalate a question the AI cannot answer to the owner | Creates a `Question` entity via `SubmitQuestionUseCase` |
-| `save_key_fact` | Remember a fact about the current contact | Persists to `key_facts` table |
-| `remove_key_fact` | Forget a previously saved fact | Removes from `key_facts` table |
-
-Tools are defined as framework-agnostic `ToolDef` objects (name, description, JSON Schema parameters). The graph's `_dispatch_tool()` routes by tool name to the concrete runner function.
-
-### System Prompt
-
-The system prompt (`ai/context/prompts.py`) instructs the agent to:
-
-1. ALWAYS search the knowledge base first before answering factual questions
-2. Answer based ONLY on search results -- do not guess
-3. Escalate if no results found or not confident
-4. Escalate immediately if user asks to speak with a person
-5. Keep answers concise (1-3 sentences)
-6. Match the language the asker uses
-
-### Context Loading
-
-- **History** (`ai/context/history.py`): Loads messages from DB via `LoadThreadHistoryUseCase`. Maps `ConversationRole` to `LLMMessageRole`. Injects a staleness hint if the conversation went quiet for 30+ minutes.
-- **Memory** (`ai/context/memory.py`): Loads key facts for the current contact and appends them to the system prompt (e.g. "Known facts about this asker: - name: John - preference: quick responses").
-- **Checkpoint** (`ai/context/checkpoint.py`): After each agent response, checks if total tokens since last checkpoint exceed 3000. If so, generates a structured JSON summary compressing the conversation into current active state.
-
-## Tiered Tool Compression
-
-Frontdesk preserves tool exchanges in their native format so the LLM sees them as `tool_use` / `tool_result` blocks:
-
-```text
-Message fields for tool exchanges:
-- tool_call_id    : str | None     # tool name (set on ASSISTANT messages with tool_calls)
-- tool_args       : dict | None    # tool arguments (JSONB)
-- tool_result     : dict | None    # tool result (set on TOOL messages)
-- is_compressed   : bool           # set when older exchanges get rolled up
-- compressed_summary : str | None  # human-readable summary after compression
-```
-
-**Recent exchanges** stay verbatim (`tool_use` / `tool_result` blocks the LLM was trained on). **Older exchanges** get rolled up via the checkpoint system to a structured summary, while the original `tool_args` / `tool_result` are retained in JSONB for UUID-driven recovery.
-
-The history loader (`ai/context/history.py`) uses `compressed_summary` if `is_compressed` is true, otherwise uses the original `content`. Hidden messages are filtered out (except checkpoints which are included).
-
-## Token + Cost Ledger
-
-Every LLM call writes a `TokenUsage` row via the domain entity factory:
-
-```python
-TokenUsage.record(
-    tenant_id=..., provider="anthropic", model="claude-sonnet-4-5",
-    input_tokens=1200, output_tokens=300, cache_read_tokens=800,
-    thread_id=..., request_id=..., source="asker", channel="whatsapp",
-)
-```
-
-The factory calls `calculate_cost()` from `domain/llm_usage/pricing.py` which looks up per-million USD rates and computes cost in `Decimal(18,8)`. Pricing lives domain-side so the cost math stays testable without infrastructure. Aggregation happens in SQL, not in Python.
-
-**Supported models:** Claude Opus 4.5, Claude Sonnet 4.5, Claude Haiku 4.5, GPT-4o, GPT-4o-mini, Gemini 2.0 Flash. Unknown models cost $0 (logged elsewhere).
+**Quick reference:** `chat_with_agent()` is the single entry point. LangGraph state graph in `infrastructure/ai/graph.py` (ONLY langgraph import site). Tools: `search_documents`, `escalate_question`, `save_key_fact`, `remove_key_fact`. Per-turn graph, DB as cross-turn truth.
 
 ## Forbidden Imports
 
