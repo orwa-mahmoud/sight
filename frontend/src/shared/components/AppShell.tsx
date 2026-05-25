@@ -17,6 +17,7 @@ import {
   IconLogout,
   IconMessageCircle,
   IconQuestionMark,
+  IconSettings,
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -28,6 +29,7 @@ const NAV_ITEMS: Array<{ label: string; to: string; icon: ReactNode }> = [
   { label: "Conversations", to: "/conversations", icon: <IconMessageCircle size={18} stroke={1.6} /> },
   { label: "Documents", to: "/documents", icon: <IconFileText size={18} stroke={1.6} /> },
   { label: "Usage & cost", to: "/usage", icon: <IconChartBar size={18} stroke={1.6} /> },
+  { label: "Settings", to: "/settings", icon: <IconSettings size={18} stroke={1.6} /> },
 ];
 
 export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) {
