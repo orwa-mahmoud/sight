@@ -13,7 +13,7 @@ class QuestionSubmitted(DomainEvent):
     question_id: UUID
     tenant_id: UUID
     channel: str
-    asker_contact: str | None
+    contact_id: UUID | None
 
 
 @dataclass(frozen=True, kw_only=True)

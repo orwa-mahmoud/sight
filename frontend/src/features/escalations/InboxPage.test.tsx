@@ -32,7 +32,7 @@ function createWrapper() {
 const QUESTIONS: Question[] = [
   {
     id: "q1", conversation_id: null, channel: "whatsapp",
-    asker_name: "Sara", asker_contact: "+971500000000",
+    contact_id: "c-uuid-sara",
     question_text: "What are your hours?",
     ai_answer_attempt: "We are open 9-5.",
     status: "submitted", owner_reply: null,
@@ -41,7 +41,7 @@ const QUESTIONS: Question[] = [
   },
   {
     id: "q2", conversation_id: null, channel: "telegram",
-    asker_name: null, asker_contact: null,
+    contact_id: null,
     question_text: "Do you deliver?",
     ai_answer_attempt: null,
     status: "submitted", owner_reply: null,
@@ -52,7 +52,7 @@ const QUESTIONS: Question[] = [
 
 const RESOLVED_QUESTION: Question = {
   id: "q3", conversation_id: null, channel: "web",
-  asker_name: "Ali", asker_contact: "ali@test.com",
+  contact_id: "c-uuid-ali",
   question_text: "Price?", ai_answer_attempt: null,
   status: "resolved", owner_reply: "It's $10.",
   replied_by_user_id: "u1", replied_at: "2026-01-01T12:00:00Z",
@@ -114,12 +114,11 @@ describe("InboxPage", () => {
     });
   });
 
-  it("shows asker name and contact", async () => {
+  it("shows contact ID when present", async () => {
     vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
     render(<InboxPage />, { wrapper: createWrapper() });
     await waitFor(() => {
-      expect(screen.getByText("Sara")).toBeInTheDocument();
-      expect(screen.getByText("+971500000000")).toBeInTheDocument();
+      expect(screen.getByText(/Contact: c-uuid-s/)).toBeInTheDocument();
     });
   });
 

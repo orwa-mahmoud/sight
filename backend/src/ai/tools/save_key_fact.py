@@ -36,7 +36,7 @@ async def run_save_key_fact(
     *,
     arguments: dict[str, Any],
     tenant_id: UUID,
-    participant_identifier: str,
+    contact_id: UUID,
     session: Any,
 ) -> dict[str, str]:
     key = arguments.get("key", "").strip().lower()
@@ -45,7 +45,7 @@ async def run_save_key_fact(
         return {"status": "skipped", "reason": "empty key or value"}
 
     repo = PostgresKeyFactRepository(session)
-    existing = await repo.get(tenant_id, participant_identifier, key)
+    existing = await repo.get(tenant_id, contact_id, key)
     if existing:
         existing.update_value(value)
         await repo.save(existing)
@@ -53,7 +53,7 @@ async def run_save_key_fact(
 
     fact = KeyFact.create(
         tenant_id=tenant_id,
-        participant_identifier=participant_identifier,
+        contact_id=contact_id,
         key=key,
         value=value,
     )

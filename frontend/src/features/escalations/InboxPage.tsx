@@ -158,14 +158,9 @@ export function InboxPage() {
                     <Badge color="gray" variant="default">
                       {CHANNEL_LABEL[q.channel] ?? q.channel}
                     </Badge>
-                    {q.asker_name && (
-                      <Text size="sm" fw={500}>
-                        {q.asker_name}
-                      </Text>
-                    )}
-                    {q.asker_contact && (
+                    {q.contact_id && (
                       <Text size="xs" c="dimmed">
-                        {q.asker_contact}
+                        Contact: {q.contact_id.slice(0, 8)}…
                       </Text>
                     )}
                     <Text size="xs" c="dimmed" ml="auto">
@@ -227,10 +222,9 @@ export function InboxPage() {
               <Text size="sm" fw={500}>
                 {active.question_text}
               </Text>
-              {active.asker_name && (
+              {active.contact_id && (
                 <Text size="xs" c="dimmed" mt={4}>
-                  {active.asker_name}
-                  {active.asker_contact && ` · ${active.asker_contact}`}
+                  Contact: {active.contact_id.slice(0, 8)}…
                 </Text>
               )}
             </Card>

@@ -7,8 +7,7 @@ describe("Question type", () => {
       id: "1",
       conversation_id: null,
       channel: "whatsapp",
-      asker_name: "Sara",
-      asker_contact: "+971500000000",
+      contact_id: "c-uuid-1234",
       question_text: "Are you open?",
       ai_answer_attempt: null,
       status: "submitted" as QuestionStatus,
@@ -19,6 +18,6 @@ describe("Question type", () => {
       updated_at: "2026-01-01T00:00:00Z",
     };
     expect(q.status).toBe("submitted");
-    expect(q.asker_name).toBe("Sara");
+    expect(q.contact_id).toBe("c-uuid-1234");
   });
 });

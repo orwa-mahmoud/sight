@@ -1,6 +1,6 @@
 """Key facts context loader — injects known facts into the system prompt.
 
-Before the agent runs, we load all key facts for the current asker
+Before the agent runs, we load all key facts for the current contact
 and append them to the system prompt so the AI knows who it's talking
 to without having to search the DB every turn.
 """
@@ -15,11 +15,11 @@ from src.application.shared.unit_of_work import UnitOfWork
 async def load_key_facts_context(
     *,
     tenant_id: UUID,
-    participant_identifier: str,
+    contact_id: UUID,
     uow: UnitOfWork,
 ) -> str:
-    """Return a formatted string of known facts for this asker, or empty."""
-    facts = await uow.key_facts.list_for_participant(tenant_id, participant_identifier)
+    """Return a formatted string of known facts for this contact, or empty."""
+    facts = await uow.key_facts.list_for_contact(tenant_id, contact_id)
     if not facts:
         return ""
     lines = ["Known facts about this asker:"]

@@ -42,7 +42,6 @@ async def test_owner_full_onboarding_flow(client: AsyncClient) -> None:
         json={
             "channel": "whatsapp",
             "question_text": "What are your office hours?",
-            "asker_name": "Sara",
         },
         headers=h,
     )
@@ -75,3 +74,6 @@ async def test_owner_full_onboarding_flow(client: AsyncClient) -> None:
     resp = await client.post("/api/v1/auth/refresh", headers=h)
     assert resp.status_code == 200
     assert resp.json()["access_token"]
+
+
+x = 1

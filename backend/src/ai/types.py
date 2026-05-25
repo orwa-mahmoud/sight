@@ -19,6 +19,7 @@ class ChatInput:
     sender_identifier: str  # phone for WA, telegram_user_id for TG
     sender_name: str | None = None
     thread_id: str | None = None  # if known; gateway resolves if None
+    contact_id: UUID | None = None  # resolved by sender resolution; None for anonymous
 
 
 @dataclass(kw_only=True)

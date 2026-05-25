@@ -32,7 +32,7 @@ class Conversation(BaseEntity):
     tenant_id: UUID
     thread_id: str
     channel: ConversationChannel
-    participant_id: UUID | None  # asker id; null for owner-dashboard threads
+    participant_id: UUID | None
     created_at: datetime
     updated_at: datetime
     last_message_at: datetime | None = None

@@ -48,8 +48,7 @@ class AgentState(TypedDict):
     tenant_id: str
     channel: str
     conversation_id: str | None
-    asker_name: str | None
-    asker_contact: str | None
+    contact_id: str | None
 
 
 def build_agent_graph(
@@ -99,8 +98,7 @@ def build_agent_graph(
                 tenant_id=tenant_id,
                 channel=channel,
                 conversation_id=UUID(state["conversation_id"]) if state["conversation_id"] else None,
-                asker_name=state["asker_name"],
-                asker_contact=state["asker_contact"],
+                contact_id=UUID(state["contact_id"]) if state["contact_id"] else None,
                 retriever=retriever,
                 uow=uow,
             )
@@ -144,8 +142,7 @@ async def run_graph(
     tenant_id: UUID,
     channel: ConversationChannel,
     conversation_id: UUID | None,
-    asker_name: str | None,
-    asker_contact: str | None,
+    contact_id: UUID | None,
 ) -> AgentLoopResult:
     """Compile and invoke the graph. Returns domain-typed result."""
     compiled = graph.compile()
@@ -161,8 +158,7 @@ async def run_graph(
         "tenant_id": str(tenant_id),
         "channel": channel.value,
         "conversation_id": str(conversation_id) if conversation_id else None,
-        "asker_name": asker_name,
-        "asker_contact": asker_contact,
+        "contact_id": str(contact_id) if contact_id else None,
     }
 
     final_state = await compiled.ainvoke(initial_state)
@@ -189,8 +185,7 @@ async def _dispatch_tool(
     tenant_id: UUID,
     channel: ConversationChannel,
     conversation_id: UUID | None,
-    asker_name: str | None,
-    asker_contact: str | None,
+    contact_id: UUID | None,
     retriever: RetrieverPort,
     uow: UnitOfWork,
 ) -> Any:
@@ -203,15 +198,16 @@ async def _dispatch_tool(
                 tenant_id=tenant_id,
                 channel=channel,
                 conversation_id=conversation_id,
-                asker_name=asker_name,
-                asker_contact=asker_contact,
+                contact_id=contact_id,
                 uow=uow,
             )
         case "save_key_fact":
+            if contact_id is None:
+                return {"error": "Cannot save key fact without a resolved contact"}
             return await run_save_key_fact(
                 arguments=arguments,
                 tenant_id=tenant_id,
-                participant_identifier=asker_contact or "",
+                contact_id=contact_id,
                 session=uow._session,
             )
         case _:

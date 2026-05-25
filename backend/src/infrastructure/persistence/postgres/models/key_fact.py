@@ -15,9 +15,7 @@ from src.infrastructure.persistence.postgres.models import Base
 
 class KeyFactModel(Base):
     __tablename__ = "key_facts"
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "participant_identifier", "key", name="uq_key_fact_per_participant"),
-    )
+    __table_args__ = (UniqueConstraint("tenant_id", "contact_id", "key", name="uq_key_fact_per_contact"),)
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
     tenant_id: Mapped[UUID] = mapped_column(
@@ -26,7 +24,12 @@ class KeyFactModel(Base):
         nullable=False,
         index=True,
     )
-    participant_identifier: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    contact_id: Mapped[UUID] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("contacts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     key: Mapped[str] = mapped_column(String(128), nullable=False)
     value: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(

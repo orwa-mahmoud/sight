@@ -61,6 +61,7 @@ async def test_conversation_repo_save_update_model_not_found(client: None) -> No
 @pytest.mark.asyncio
 async def test_key_fact_repo_save_update_model_not_found(client: None) -> None:
     """key_fact_repo lines 25-26: entity not new, model not in DB -> insert."""
+    from src.domain.contacts.entities import Contact
     from src.domain.key_facts.entities import KeyFact
     from src.domain.tenants.entities import Tenant
 
@@ -69,10 +70,13 @@ async def test_key_fact_repo_save_update_model_not_found(client: None) -> None:
         tenant = Tenant.create(name="KFTest", slug=f"kf-{uuid4().hex[:8]}")
         await uow.tenants.save(tenant)
         await uow.flush()
+        contact = Contact.create(tenant_id=tenant.id, phone="+123")
+        await uow.contacts.save(contact)
+        await uow.flush()
 
         fact = KeyFact.create(
             tenant_id=tenant.id,
-            participant_identifier="+123",
+            contact_id=contact.id,
             key="name",
             value="Alice",
         )
@@ -82,7 +86,7 @@ async def test_key_fact_repo_save_update_model_not_found(client: None) -> None:
 
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        loaded = await uow.key_facts.get(tenant.id, "+123", "name")
+        loaded = await uow.key_facts.get(tenant.id, contact.id, "name")
         assert loaded is not None
 
 

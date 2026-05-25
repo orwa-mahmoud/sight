@@ -23,14 +23,14 @@ async def run_remove_key_fact(
     *,
     arguments: dict[str, Any],
     tenant_id: UUID,
-    participant_identifier: str,
+    contact_id: UUID,
     session: Any,
 ) -> dict[str, str]:
     key = arguments.get("key", "").strip().lower()
     if not key:
         return {"status": "skipped", "reason": "empty key"}
     repo = PostgresKeyFactRepository(session)
-    existing = await repo.get(tenant_id, participant_identifier, key)
+    existing = await repo.get(tenant_id, contact_id, key)
     if not existing:
         return {"status": "not_found", "key": key}
     await repo.delete(existing.id)

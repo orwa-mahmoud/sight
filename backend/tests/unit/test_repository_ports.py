@@ -18,10 +18,10 @@ class FakeKeyFactRepo:
     async def save(self, fact: KeyFact) -> None:
         pass
 
-    async def get(self, tenant_id, participant_identifier: str, key: str) -> KeyFact | None:
+    async def get(self, tenant_id, contact_id, key: str) -> KeyFact | None:
         return None
 
-    async def list_for_participant(self, tenant_id, participant_identifier: str) -> list[KeyFact]:
+    async def list_for_contact(self, tenant_id, contact_id) -> list[KeyFact]:
         return []
 
     async def delete(self, fact_id) -> None:
@@ -55,10 +55,11 @@ def test_tenant_config_repo_protocol_satisfied() -> None:
 async def test_key_fact_repo_methods() -> None:
     repo = FakeKeyFactRepo()
     tid = uuid4()
-    fact = KeyFact.create(tenant_id=tid, participant_identifier="+971", key="name", value="Ali")
+    cid = uuid4()
+    fact = KeyFact.create(tenant_id=tid, contact_id=cid, key="name", value="Ali")
     await repo.save(fact)
-    assert await repo.get(tid, "+971", "name") is None
-    assert await repo.list_for_participant(tid, "+971") == []
+    assert await repo.get(tid, cid, "name") is None
+    assert await repo.list_for_contact(tid, cid) == []
     await repo.delete(fact.id)
 
 

@@ -49,8 +49,7 @@ async def run_escalate_question(
     tenant_id: UUID,
     channel: ConversationChannel,
     conversation_id: UUID | None,
-    asker_name: str | None,
-    asker_contact: str | None,
+    contact_id: UUID | None,
     uow: UnitOfWork,
 ) -> dict[str, str]:
     question_text = arguments.get("question_text", "")
@@ -62,8 +61,7 @@ async def run_escalate_question(
             channel=channel,
             question_text=question_text,
             conversation_id=conversation_id,
-            asker_name=asker_name,
-            asker_contact=asker_contact,
+            contact_id=contact_id,
             ai_answer_attempt=ai_attempt,
         )
     )

@@ -1,4 +1,4 @@
-# frontdesk-frontend — AI assistant guidelines
+# Frontdesk Frontend — AI Assistant Guidelines
 
 ## STRICT RULES
 
@@ -11,60 +11,146 @@
 
 ## Stack
 
-React 19 · Mantine 9 · TypeScript · Vite · TanStack Query · React Router v6 · Axios
+React 19 + Mantine 9 + TypeScript 6 + Vite 8 + TanStack Query 5 + React Router 7 + Axios + @tabler/icons-react + Vitest
 
-## Layout
+Architecture and reference docs:
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) -- folder structure, state management, auth flow, API client, feature modules, routing, testing strategy.
+- [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md) -- color palette (coral + slate), component patterns, naming conventions, four-state rendering, mutation patterns, form patterns, icon usage, notifications, theme configuration.
+
+## Folder Structure
 
 ```text
 src/
-├── app/                       # composition root
-│   ├── Providers.tsx          # Mantine, QueryClient, Router, Auth
-│   ├── router.tsx             # route table
-│   └── theme.ts               # brand palette (coral primary, slate accent)
-├── auth/                      # auth feature
-│   ├── AuthContext.tsx        # provider + useAuth hook
-│   ├── api.ts                 # /api/v1/auth/* wrappers
-│   ├── LoginPage.tsx
-│   ├── RegisterPage.tsx
-│   └── types.ts
-├── core/
-│   └── api/
-│       └── client.ts          # axios instance + token storage + 401 handling
-├── features/                  # one folder per feature
-│   ├── conversations/
-│   ├── documents/
-│   ├── escalations/           # the differentiating page (Inbox)
-│   └── llm-usage/
-└── shared/
-    └── components/
-        ├── AppShell.tsx       # header + sidebar
-        └── RequireAuth.tsx    # route guard
++-- app/                    # Composition root
+|   +-- Providers.tsx       # Mantine, Notifications, QueryClient, BrowserRouter, AuthProvider
+|   +-- router.tsx          # Route table (AppRoutes component)
+|   +-- theme.ts            # Mantine theme: coral + slate palettes, font stack, radius
+|
++-- auth/                   # Authentication (infrastructure, not a feature)
+|   +-- api.ts              # login(), register(), me()
+|   +-- AuthContext.tsx      # AuthProvider -- token bootstrap, login/register/logout
+|   +-- useAuth.ts          # useAuth() hook (throws if outside provider)
+|   +-- LoginPage.tsx, RegisterPage.tsx
+|
++-- core/api/client.ts      # Axios instance, token helpers, interceptors
+|
++-- features/               # One folder per business feature
+|   +-- escalations/        # Owner inbox (question cards, reply modal)
+|   +-- conversations/      # AI conversation threads + daily summary
+|   +-- documents/          # Knowledge base (RAG document management)
+|   +-- llm-usage/          # Token + cost ledger
+|   +-- settings/           # Tenant configuration (LLM, embedding, channels, bot)
+|
++-- shared/components/      # AppShell (ProtectedShell), RequireAuth guard
++-- test/                   # setup.ts (polyfills), wrapper.tsx (TestWrapper)
 ```
+
+## State Management
+
+Two categories only. No Redux, no Zustand.
+
+- **Server state -- TanStack Query:** Every API call uses `useQuery` or `useMutation`. QueryClient: `staleTime: 30_000`, `refetchOnWindowFocus: false`, `retry: 1`. Cache invalidation via `queryClient.invalidateQueries({ queryKey })`.
+- **Auth state -- React Context:** `AuthContext` holds `user | null` + `loading`. Single source of truth for auth. Consumed via `useAuth()`.
+
+## Auth Flow
+
+- **Bootstrap:** AuthProvider mounts -> `getToken()` -> `authApi.me()` -> `setUser()`
+- **Login:** form submit -> `authApi.login()` -> `setToken(access_token)` -> `loadCurrentUser()`
+- **Logout:** `clearToken()` -> `setUser(null)` -> RequireAuth redirects to `/login`
+- **401:** Axios response interceptor -> `clearToken()` -> RequireAuth redirects
+- **Token:** `frontdesk_access_token` in localStorage
+
+## API Client (`src/core/api/client.ts`)
+
+Axios instance, `baseURL: VITE_API_URL` (default `http://localhost:8000`), timeout 30s. Request interceptor injects `Bearer <token>`. Response interceptor clears token on 401 (promise propagates to TanStack Query). Helpers: `getToken()`, `setToken(t)`, `clearToken()`.
+
+## Feature Module Pattern
+
+Each feature is a self-contained folder under `src/features/`:
+
+```text
+features/<name>/
++-- api.ts           # Typed API functions (calls Axios instance)
++-- types.ts         # TypeScript interfaces matching backend snake_case JSON
++-- <Name>Page.tsx   # Page component (useQuery/useMutation)
++-- *.test.tsx       # Co-located tests
+```
+
+**Rules:**
+- One feature = one folder. Features own their API, types, and pages.
+- No cross-feature imports. Features communicate through shared infrastructure only.
+- Features with only a page (no dedicated API) inline fetch functions in the page file.
+
+| Feature | Folder | Key pages |
+| ------- | ------ | --------- |
+| Escalations | `escalations/` | InboxPage |
+| Conversations | `conversations/` | ConversationsPage, ChatTestPage |
+| Documents | `documents/` | DocumentsPage |
+| LLM Usage | `llm-usage/` | UsagePage |
+| Settings | `settings/` | SettingsPage |
 
 ## Conventions
 
-- **One feature = one folder.** Each feature owns its `api.ts`, `types.ts`,
-  and the page components. Avoid cross-feature imports.
-- **State**: server state lives in TanStack Query; auth state in the
-  React context. Avoid Redux / Zustand for v1.
-- **Types**: match backend snake_case JSON shapes in interfaces. There is
-  no codegen; keep types in sync by hand.
-- **Brand color**: coral primary (`coral.6`) on light, `coral.5` on dark.
-  Slate as accent for sidebar / nav active state.
-- **Icons**: `@tabler/icons-react`, stroke 1.4–1.6.
+### Naming
 
-## Backend contract
+- Page components: `PascalCase` + `Page` suffix (`InboxPage`, `SettingsPage`)
+- API/Types files: `api.ts`, `types.ts` in feature folder
+- Test files: same name + `.test.tsx` / `.test.ts`
+- Hooks: `camelCase` with `use` prefix
+- **Named exports** only (`export function X`, not `export default`)
+- `Readonly<Props>` on all component function signatures
 
-All backend calls go through `api` (the axios instance). It auto-injects
-the bearer token. On a 401, the token is cleared — the router redirects
-to `/login` on the next render via `RequireAuth`.
+### Icons
+
+All icons from `@tabler/icons-react`. Standard size: 18 for inline/nav, 14 for badges/labels. Stroke: 1.4-1.6.
+
+### Brand Colors
+
+- Primary actions (buttons, links): `coral` (Mantine primary -- `#f76b22` light, `#f87330` dark)
+- Accent/nav contrast: `slate`
+- Success: `teal`
+- Error: `red`
+- Neutral/muted: `gray`, `dimmed`
+
+### Imports
+
+- Relative imports within same module (`./api`, `./types`)
+- Path-based imports across modules (`../../core/api/client`)
+- No path aliases configured
+
+### Four-State Rendering
+
+Every data-driven page handles exactly: Loading (`<Loader />`), Error (`<Alert color="red">`), Empty (`<Card>` with icon + guidance), Data (actual content).
+
+### Mutations
+
+- Inline `onSuccess/onError` with `notifications.show()` for most pages
+- Success: `color: "teal"` -- Error: `color: "red"`
+- Forms use `@mantine/form` with `useForm({ initialValues, validate })`
 
 ## Commands
 
 ```bash
-npm run dev         # vite dev server on http://localhost:5173
-npm run build       # tsc + vite build
+npm run dev         # Vite dev server on http://localhost:5173
+npm run build       # tsc + Vite production build
 npm run typecheck   # tsc --noEmit
-npm run lint        # eslint
-npm test            # vitest
+npm run lint        # ESLint
+npm test            # Vitest
 ```
+
+## Backend Contract
+
+- Backend (FastAPI) uses **snake_case** JSON. Frontend types mirror this exactly. No codegen.
+- All endpoints under `/api/v1/`. Feature API files use the shared Axios instance.
+- When backend adds or renames a field, update the corresponding `types.ts` manually.
+
+| Frontend feature | Backend endpoints |
+| ---------------- | ----------------- |
+| Auth | `POST /api/v1/auth/login`, `/register`, `GET /me` |
+| Escalations | `GET /api/v1/questions`, `POST .../reply`, `.../close` |
+| Conversations | `GET /api/v1/conversations`, `.../daily-summary` |
+| Documents | `GET/POST/DELETE /api/v1/documents` |
+| LLM Usage | `GET /api/v1/llm-usage/stats` |
+| Chat | `POST /api/v1/chat` |
+| Settings | `GET /api/v1/settings`, `PUT .../llm`, `.../embedding`, `.../whatsapp`, `.../telegram`, `.../bot` |

@@ -1,4 +1,4 @@
-"""KeyFact entity — one fact per (tenant, participant, key)."""
+"""KeyFact entity — one fact per (tenant, contact, key)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from src.domain.shared.entities import BaseEntity
 @dataclass(eq=False, kw_only=True)
 class KeyFact(BaseEntity):
     tenant_id: UUID
-    participant_identifier: str  # phone, email, telegram_user_id
+    contact_id: UUID  # FK → contacts.id
     key: str  # e.g. "name", "preferred_language", "budget"
     value: str
     created_at: datetime
@@ -23,7 +23,7 @@ class KeyFact(BaseEntity):
         cls,
         *,
         tenant_id: UUID,
-        participant_identifier: str,
+        contact_id: UUID,
         key: str,
         value: str,
     ) -> KeyFact:
@@ -31,7 +31,7 @@ class KeyFact(BaseEntity):
         fact = cls(
             id=uuid4(),
             tenant_id=tenant_id,
-            participant_identifier=participant_identifier.strip(),
+            contact_id=contact_id,
             key=key.strip().lower(),
             value=value.strip(),
             created_at=now,

@@ -14,8 +14,7 @@ class SubmitQuestion:
     channel: ConversationChannel
     question_text: str
     conversation_id: UUID | None = None
-    asker_name: str | None = None
-    asker_contact: str | None = None
+    contact_id: UUID | None = None
     ai_answer_attempt: str | None = None
 
 

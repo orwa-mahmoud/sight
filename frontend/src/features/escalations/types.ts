@@ -4,8 +4,7 @@ export interface Question {
   id: string;
   conversation_id: string | null;
   channel: string;
-  asker_name: string | null;
-  asker_contact: string | null;
+  contact_id: string | null;
   question_text: string;
   ai_answer_attempt: string | null;
   status: QuestionStatus;

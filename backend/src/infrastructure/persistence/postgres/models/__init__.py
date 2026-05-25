@@ -15,12 +15,14 @@ class Base(DeclarativeBase):
 
 # ── Model imports (must come after Base to avoid circulars) ───────
 from src.infrastructure.persistence.postgres.models.chunk import ChunkModel  # noqa: E402
+from src.infrastructure.persistence.postgres.models.contact import ContactModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.conversation import ConversationModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.document import DocumentModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.key_fact import KeyFactModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.message import MessageModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.outbox import OutboxEventModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.question import QuestionModel  # noqa: E402
+from src.infrastructure.persistence.postgres.models.telegram_phone import TelegramPhoneModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.tenant import TenantModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.tenant_config import TenantConfigModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.token_usage import TokenUsageModel  # noqa: E402
@@ -30,12 +32,14 @@ from src.infrastructure.persistence.postgres.models.user_tenant import UserTenan
 __all__ = [
     "Base",
     "ChunkModel",
+    "ContactModel",
     "ConversationModel",
     "DocumentModel",
     "KeyFactModel",
     "MessageModel",
     "OutboxEventModel",
     "QuestionModel",
+    "TelegramPhoneModel",
     "TenantConfigModel",
     "TenantModel",
     "TokenUsageModel",

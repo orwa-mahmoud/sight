@@ -25,7 +25,12 @@ class ConversationModel(Base):
     )
     thread_id: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
     channel: Mapped[str] = mapped_column(String(32), nullable=False)
-    participant_id: Mapped[UUID | None] = mapped_column(PgUUID(as_uuid=True), nullable=True, index=True)
+    participant_id: Mapped[UUID | None] = mapped_column(
+        PgUUID(as_uuid=True),
+        ForeignKey("contacts.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         nullable=False,

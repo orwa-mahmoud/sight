@@ -49,8 +49,7 @@ def _to_response(dto: object) -> QuestionResponse:
         id=dto.id,
         conversation_id=dto.conversation_id,
         channel=dto.channel,
-        asker_name=dto.asker_name,
-        asker_contact=dto.asker_contact,
+        contact_id=dto.contact_id,
         question_text=dto.question_text,
         ai_answer_attempt=dto.ai_answer_attempt,
         status=QuestionStatus(dto.status),
@@ -75,8 +74,7 @@ async def submit(
             channel=req.channel,
             question_text=req.question_text,
             conversation_id=req.conversation_id,
-            asker_name=req.asker_name,
-            asker_contact=req.asker_contact,
+            contact_id=req.contact_id,
             ai_answer_attempt=req.ai_answer_attempt,
         )
     )

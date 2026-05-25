@@ -1,1 +1,1 @@
-"""Channel adapters — send messages back to askers."""
+"""Channels -- adapters for WhatsApp, Telegram, Direct API."""
