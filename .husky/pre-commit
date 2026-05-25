@@ -1,18 +1,33 @@
 #!/bin/sh
 
-# Backend: lint + format staged Python files
+# Backend checks — only if backend files are staged
 PY_FILES=$(git diff --cached --name-only --diff-filter=ACM -- 'backend/*.py' 'backend/**/*.py')
 if [ -n "$PY_FILES" ]; then
-  # Strip backend/ prefix since we cd into it
   RELATIVE=$(echo "$PY_FILES" | sed 's|^backend/||')
+
+  echo "→ backend: ruff check + format"
   (cd backend && uv run ruff check --fix $RELATIVE && uv run ruff format $RELATIVE) || exit 1
   echo "$PY_FILES" | xargs git add
+
+  echo "→ backend: mypy"
+  (cd backend && uv run mypy $RELATIVE) || exit 1
+
+  echo "→ backend: tests"
+  (cd backend && uv run pytest --tb=short -q) || exit 1
 fi
 
-# Frontend: lint staged TS/TSX files
+# Frontend checks — only if frontend files are staged
 TS_FILES=$(git diff --cached --name-only --diff-filter=ACM -- 'frontend/src/*.ts' 'frontend/src/*.tsx' 'frontend/src/**/*.ts' 'frontend/src/**/*.tsx')
 if [ -n "$TS_FILES" ]; then
   RELATIVE=$(echo "$TS_FILES" | sed 's|^frontend/||')
+
+  echo "→ frontend: eslint"
   (cd frontend && npx eslint --fix $RELATIVE) || exit 1
   echo "$TS_FILES" | xargs git add
+
+  echo "→ frontend: typecheck"
+  (cd frontend && npm run typecheck) || exit 1
+
+  echo "→ frontend: tests"
+  (cd frontend && npm test) || exit 1
 fi
