@@ -5,11 +5,10 @@ questions get RAG-grounded answers from the tenant's documents; anything
 the AI doesn't know is escalated to the owner as a pending question,
 and the asker is notified once the owner replies.
 
-> **Status:** active development. Backend is feature-complete for v1
-> (auth, RAG, escalation, usage ledger). Frontend has auth + the
-> escalation inbox + document upload + usage dashboard. WhatsApp /
-> Telegram channels and the agent loop land in the next phase — see
-> [docs/](docs/) for the design.
+> **Status:** v0.1.0 — functional. 35 commits, 243 backend tests (90%+
+> coverage), SonarQube 0/0/0 on both projects. LangGraph agent loop,
+> per-tenant LLM config from DB, WhatsApp + Telegram webhooks,
+> RAG with hybrid retrieval, escalation inbox, settings dashboard.
 
 ## What it does
 
@@ -98,8 +97,8 @@ npm run dev                             # http://localhost:5173
 cd backend
 uv run ruff check src/ tests/
 uv run ruff format --check src/ tests/
-uv run mypy src/                        # strict, 0 errors across 150+ files
-uv run pytest tests/ -q                 # 29 tests pass
+uv run mypy src/                        # strict, 0 errors across 180+ files
+uv run pytest tests/ -q                 # 243 tests, 90%+ coverage
 
 # Frontend
 cd frontend
