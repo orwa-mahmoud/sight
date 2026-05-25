@@ -3,9 +3,15 @@
 A UoW owns one async session, exposes the typed repositories needed for a
 flow, and is committed/rolled back by the caller (typically the route handler).
 Use cases interact ONLY with the UoW; they never see the session directly.
+
+Repo attributes are annotated with domain Protocol types so use cases
+depend on the abstract contract, not on concrete Postgres implementations.
+The concrete wiring happens here (composition-root pattern).
 """
 
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,8 +39,34 @@ from src.infrastructure.persistence.postgres.repositories.user_tenant_repo impor
     PostgresUserTenantRepository,
 )
 
+if TYPE_CHECKING:
+    from src.domain.contacts.repositories import ContactRepository
+    from src.domain.conversations.repositories import ConversationRepository, MessageRepository
+    from src.domain.documents.repositories import ChunkRepository, DocumentRepository
+    from src.domain.key_facts.repositories import KeyFactRepository
+    from src.domain.llm_usage.repositories import TokenUsageRepository
+    from src.domain.questions.repositories import QuestionRepository
+    from src.domain.telegram.repositories import TelegramPhoneRepository
+    from src.domain.tenant_config.repositories import TenantConfigRepository
+    from src.domain.tenants.repositories import TenantRepository
+    from src.domain.users.repositories import UserRepository, UserTenantRepository
+
 
 class UnitOfWork:
+    tenants: TenantRepository
+    users: UserRepository
+    user_tenants: UserTenantRepository
+    token_usages: TokenUsageRepository
+    conversations: ConversationRepository
+    messages: MessageRepository
+    documents: DocumentRepository
+    chunks: ChunkRepository
+    questions: QuestionRepository
+    tenant_configs: TenantConfigRepository
+    key_facts: KeyFactRepository
+    contacts: ContactRepository
+    telegram_phones: TelegramPhoneRepository
+
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self.tenants = PostgresTenantRepository(session)
