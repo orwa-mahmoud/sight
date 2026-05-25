@@ -9,6 +9,7 @@ import pytest
 from src.application.shared.outbox_publisher import publish_events
 from src.domain.tenants.events import TenantCreated
 from src.infrastructure.persistence.postgres.database import async_session_factory
+from src.infrastructure.persistence.postgres.repositories.outbox_repo import OutboxRepository
 
 
 @pytest.mark.integration
@@ -18,7 +19,6 @@ async def test_publish_events_writes_and_dispatches(client=None):
     async with async_session_factory() as session:
         await publish_events([event], session)
     # Verify written to outbox
-    from src.infrastructure.persistence.postgres.repositories.outbox_repo import OutboxRepository
 
     async with async_session_factory() as session:
         repo = OutboxRepository(session)
