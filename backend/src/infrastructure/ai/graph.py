@@ -23,6 +23,7 @@ from langgraph.constants import END
 from langgraph.graph import StateGraph
 
 from src.ai.tools.escalate_question import run_escalate_question
+from src.ai.tools.save_key_fact import run_save_key_fact
 from src.ai.tools.search_documents import run_search_documents
 from src.ai.types import AgentLoopResult, ToolCallResult, ToolDef
 from src.application.shared.unit_of_work import UnitOfWork
@@ -205,6 +206,13 @@ async def _dispatch_tool(
                 asker_name=asker_name,
                 asker_contact=asker_contact,
                 uow=uow,
+            )
+        case "save_key_fact":
+            return await run_save_key_fact(
+                arguments=arguments,
+                tenant_id=tenant_id,
+                participant_identifier=asker_contact or "",
+                session=uow._session,
             )
         case _:
             return {"error": f"Unknown tool: {tool_name}"}

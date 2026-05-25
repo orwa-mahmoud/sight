@@ -23,6 +23,7 @@ import structlog
 from src.ai.context.history import load_history
 from src.ai.context.prompts import build_asker_system_prompt
 from src.ai.tools.escalate_question import ESCALATE_QUESTION_DEF
+from src.ai.tools.save_key_fact import SAVE_KEY_FACT_DEF
 from src.ai.tools.search_documents import SEARCH_DOCUMENTS_DEF
 from src.ai.types import ChatInput, ChatResult
 from src.application.conversations.commands import SaveThreadMessage
@@ -39,7 +40,7 @@ from src.infrastructure.rag.retriever import HybridRetriever
 
 logger = structlog.get_logger()
 
-_TOOLS = [SEARCH_DOCUMENTS_DEF, ESCALATE_QUESTION_DEF]
+_TOOLS = [SEARCH_DOCUMENTS_DEF, ESCALATE_QUESTION_DEF, SAVE_KEY_FACT_DEF]
 
 
 async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
