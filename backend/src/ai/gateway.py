@@ -95,11 +95,13 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     from src.ai.context.memory import load_key_facts_context  # noqa: PLC0415
 
     system_msg = build_asker_system_prompt()
-    facts_context = await load_key_facts_context(
-        tenant_id=inp.tenant_id,
-        participant_identifier=inp.sender_identifier,
-        uow=uow,
-    )
+    facts_context = ""
+    if contact_id is not None:
+        facts_context = await load_key_facts_context(
+            tenant_id=inp.tenant_id,
+            contact_id=contact_id,
+            uow=uow,
+        )
     messages: list[LLMMessage] = [system_msg]
     if facts_context:
         messages.append(LLMMessage(role=LLMMessageRole.SYSTEM, content=facts_context))

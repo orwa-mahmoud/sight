@@ -202,10 +202,12 @@ async def _dispatch_tool(
                 uow=uow,
             )
         case "save_key_fact":
+            if contact_id is None:
+                return {"error": "Cannot save key fact without a resolved contact"}
             return await run_save_key_fact(
                 arguments=arguments,
                 tenant_id=tenant_id,
-                participant_identifier=str(contact_id) if contact_id else "",
+                contact_id=contact_id,
                 session=uow._session,
             )
         case _:

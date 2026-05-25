@@ -15,7 +15,7 @@ async def test_remove_key_fact_empty_key() -> None:
     result = await run_remove_key_fact(
         arguments={"key": "  "},
         tenant_id=uuid4(),
-        participant_identifier="+971",
+        contact_id=uuid4(),
         session=MagicMock(),
     )
     assert result["status"] == "skipped"
@@ -30,7 +30,7 @@ async def test_remove_key_fact_not_found() -> None:
         result = await run_remove_key_fact(
             arguments={"key": "name"},
             tenant_id=uuid4(),
-            participant_identifier="+971",
+            contact_id=uuid4(),
             session=MagicMock(),
         )
     assert result["status"] == "not_found"
@@ -49,7 +49,7 @@ async def test_remove_key_fact_success() -> None:
         result = await run_remove_key_fact(
             arguments={"key": "  Name  "},
             tenant_id=uuid4(),
-            participant_identifier="+971",
+            contact_id=uuid4(),
             session=MagicMock(),
         )
     assert result["status"] == "removed"

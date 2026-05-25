@@ -1,4 +1,4 @@
-"""Key facts routes — owner can see what the AI remembers about askers."""
+"""Key facts routes — owner can see what the AI remembers about contacts."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/key-facts", tags=["key-facts"])
 
 class KeyFactResponse(BaseModel):
     id: UUID
-    participant_identifier: str
+    contact_id: UUID
     key: str
     value: str
 
@@ -32,11 +32,11 @@ async def _resolve_tenant_id(current_user: CurrentUser, uow: UnitOfWorkDep) -> U
 async def list_key_facts(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
-    participant: Annotated[str | None, Query()] = None,
+    contact_id: Annotated[UUID | None, Query()] = None,
 ) -> list[KeyFactResponse]:
     tenant_id = await _resolve_tenant_id(current_user, uow)
-    if participant:
-        facts = await uow.key_facts.list_for_participant(tenant_id, participant)
+    if contact_id:
+        facts = await uow.key_facts.list_for_contact(tenant_id, contact_id)
     else:
         from sqlalchemy import select  # noqa: PLC0415
 
@@ -45,7 +45,7 @@ async def list_key_facts(
         stmt = (
             select(KeyFactModel)
             .where(KeyFactModel.tenant_id == tenant_id)
-            .order_by(KeyFactModel.participant_identifier, KeyFactModel.key)
+            .order_by(KeyFactModel.contact_id, KeyFactModel.key)
             .limit(500)
         )
         result = await uow._session.execute(stmt)
@@ -55,7 +55,7 @@ async def list_key_facts(
             KeyFact(
                 id=m.id,
                 tenant_id=m.tenant_id,
-                participant_identifier=m.participant_identifier,
+                contact_id=m.contact_id,
                 key=m.key,
                 value=m.value,
                 created_at=m.created_at,
@@ -63,7 +63,4 @@ async def list_key_facts(
             )
             for m in result.scalars().all()
         ]
-    return [
-        KeyFactResponse(id=f.id, participant_identifier=f.participant_identifier, key=f.key, value=f.value)
-        for f in facts
-    ]
+    return [KeyFactResponse(id=f.id, contact_id=f.contact_id, key=f.key, value=f.value) for f in facts]

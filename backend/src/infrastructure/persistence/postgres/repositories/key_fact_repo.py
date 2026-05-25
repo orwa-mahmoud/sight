@@ -27,20 +27,20 @@ class PostgresKeyFactRepository:
         model.value = fact.value
         model.updated_at = fact.updated_at
 
-    async def get(self, tenant_id: UUID, participant_identifier: str, key: str) -> KeyFact | None:
+    async def get(self, tenant_id: UUID, contact_id: UUID, key: str) -> KeyFact | None:
         stmt = select(KeyFactModel).where(
             KeyFactModel.tenant_id == tenant_id,
-            KeyFactModel.participant_identifier == participant_identifier,
+            KeyFactModel.contact_id == contact_id,
             KeyFactModel.key == key,
         )
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
-    async def list_for_participant(self, tenant_id: UUID, participant_identifier: str) -> list[KeyFact]:
+    async def list_for_contact(self, tenant_id: UUID, contact_id: UUID) -> list[KeyFact]:
         stmt = (
             select(KeyFactModel)
-            .where(KeyFactModel.tenant_id == tenant_id, KeyFactModel.participant_identifier == participant_identifier)
+            .where(KeyFactModel.tenant_id == tenant_id, KeyFactModel.contact_id == contact_id)
             .order_by(KeyFactModel.key)
         )
         result = await self._session.execute(stmt)
@@ -54,7 +54,7 @@ class PostgresKeyFactRepository:
         return KeyFactModel(
             id=f.id,
             tenant_id=f.tenant_id,
-            participant_identifier=f.participant_identifier,
+            contact_id=f.contact_id,
             key=f.key,
             value=f.value,
             created_at=f.created_at,
@@ -66,7 +66,7 @@ class PostgresKeyFactRepository:
         return KeyFact(
             id=m.id,
             tenant_id=m.tenant_id,
-            participant_identifier=m.participant_identifier,
+            contact_id=m.contact_id,
             key=m.key,
             value=m.value,
             created_at=m.created_at,
