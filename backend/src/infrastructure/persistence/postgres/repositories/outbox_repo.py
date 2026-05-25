@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
@@ -17,8 +18,6 @@ class OutboxRepository:
         self._session = session
 
     async def write_event(self, event: DomainEvent, tenant_id: UUID | None = None) -> None:
-        import dataclasses
-
         data = dataclasses.asdict(event) if dataclasses.is_dataclass(event) else {}
         for k, v in data.items():
             if isinstance(v, UUID):
