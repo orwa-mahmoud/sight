@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.config.settings import get_settings
 from src.domain.shared.exceptions import DomainError
 from src.drivers.api.responses import domain_error_handler
+from src.drivers.api.v1.health.routes import router as health_router
 from src.drivers.api.v1.router import v1_router
 from src.drivers.api.webhooks.telegram import router as telegram_webhook_router
 from src.drivers.api.webhooks.whatsapp import router as whatsapp_webhook_router
@@ -52,13 +53,10 @@ def create_app() -> FastAPI:
 
     app.add_exception_handler(DomainError, domain_error_handler)  # type: ignore[arg-type]
 
+    app.include_router(health_router)
     app.include_router(v1_router)
     app.include_router(telegram_webhook_router)
     app.include_router(whatsapp_webhook_router)
-
-    @app.get("/health", tags=["health"])
-    async def health() -> dict[str, str]:
-        return {"status": "ok", "service": settings.app_name}
 
     return app
 
