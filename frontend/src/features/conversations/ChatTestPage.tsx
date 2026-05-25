@@ -59,9 +59,9 @@ export function ChatTestPage() {
                 Send a message to test the agent pipeline.
               </Text>
             )}
-            {messages.map((m, i) => (
+            {messages.map((m) => (
               <Card
-                key={`msg-${i}-${m.role}`}
+                key={`msg-${m.role}-${m.content.slice(0,30)}`}
                 withBorder
                 radius="md"
                 p="sm"
