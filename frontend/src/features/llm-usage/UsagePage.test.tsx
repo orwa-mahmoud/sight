@@ -1,22 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { render } from "@testing-library/react";
+import { TestWrapper } from "../../test/wrapper";
+import { UsagePage } from "./UsagePage";
 
-describe("UsagePage helpers", () => {
-  function formatCost(usd: string): string {
-    const n = Number(usd);
-    if (Number.isNaN(n)) return "$0.00";
-    return n < 0.01 ? "$" + n.toFixed(6) : "$" + n.toFixed(2);
-  }
-  function formatTokens(n: number): string {
-    if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
-    if (n >= 1000) return (n / 1000).toFixed(1) + "K";
-    return String(n);
-  }
+vi.mock("../../core/api/client", () => ({
+  api: { get: vi.fn().mockResolvedValue({ data: { total_input_tokens: 0, total_output_tokens: 0, total_cache_read_tokens: 0, total_input_cost: "0", total_cache_read_cost: "0", total_output_cost: "0", total_cost: "0", total_calls: 0 } }), post: vi.fn(), put: vi.fn(), delete: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } }, defaults: { headers: {} } },
+  getToken: () => "tok", setToken: vi.fn(), clearToken: vi.fn(),
+}));
 
-  it("formats cost below 1 cent", () => { expect(formatCost("0.005")).toBe("$0.005000"); });
-  it("formats cost above 1 cent", () => { expect(formatCost("1.23")).toBe("$1.23"); });
-  it("formats NaN", () => { expect(formatCost("not")).toBe("$0.00"); });
-  it("formats zero", () => { expect(formatCost("0")).toBe("$0.000000"); });
-  it("formats tokens K", () => { expect(formatTokens(1500)).toBe("1.5K"); });
-  it("formats tokens M", () => { expect(formatTokens(2500000)).toBe("2.5M"); });
-  it("formats tokens small", () => { expect(formatTokens(42)).toBe("42"); });
+describe("UsagePage", () => {
+  it("renders without crash", () => {
+    const { container } = render(<UsagePage />, { wrapper: TestWrapper });
+    expect(container).toBeTruthy();
+  });
 });
