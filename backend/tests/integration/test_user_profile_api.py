@@ -1,4 +1,5 @@
 """Integration tests for user profile endpoint."""
+
 from __future__ import annotations
 
 import pytest
@@ -19,6 +20,7 @@ async def test_update_full_name(client: AsyncClient) -> None:
     assert resp.status_code == 200
     assert resp.json()["full_name"] == "New Name"
 
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_update_password(client: AsyncClient) -> None:
@@ -29,6 +31,7 @@ async def test_update_password(client: AsyncClient) -> None:
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
