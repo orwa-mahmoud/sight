@@ -85,3 +85,4 @@ logs/
 # ── Playwright / test artefacts ───────────────────────────────────
 playwright-report/
 test-results/
+.scannerwork/

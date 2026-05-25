@@ -20,7 +20,6 @@ import uuid
 
 import structlog
 
-from src.ai.agents.agent import run_agent_loop
 from src.ai.context.history import load_history
 from src.ai.context.prompts import build_asker_system_prompt
 from src.ai.tools.escalate_question import ESCALATE_QUESTION_DEF
@@ -96,7 +95,9 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     )
     retriever = HybridRetriever(session=uow._session, embedder=embedder)
 
-    # ── 5. Run agent loop ─────────────────────────────────────────
+    # ── 5. Run LangGraph agent ────────────────────────────────────
+    from src.infrastructure.ai.graph import build_agent_graph, run_graph  # noqa: PLC0415
+
     logger.info(
         "gateway.agent_start",
         thread_id=thread_id,
@@ -104,18 +105,21 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         provider=tenant_config.llm_provider.value,
         model=tenant_config.llm_model,
     )
-    result = await run_agent_loop(
-        messages=messages,
-        tools=_TOOLS,
+    graph = build_agent_graph(
         llm=llm,
+        tools=_TOOLS,
+        retriever=retriever,
+        uow=uow,
+        max_tokens=tenant_config.llm_max_tokens,
+    )
+    result = await run_graph(
+        graph,
+        messages=messages,
         tenant_id=inp.tenant_id,
         channel=inp.channel,
         conversation_id=conversation_id,
         asker_name=inp.sender_name,
         asker_contact=inp.sender_identifier,
-        retriever=retriever,
-        uow=uow,
-        max_tokens=tenant_config.llm_max_tokens,
     )
     logger.info(
         "gateway.agent_done",
