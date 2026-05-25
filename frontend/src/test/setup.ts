@@ -1,24 +1,22 @@
 import "@testing-library/jest-dom/vitest";
 
-// Mantine requires matchMedia which jsdom doesn't provide.
-Object.defineProperty(window, "matchMedia", {
+Object.defineProperty(globalThis, "matchMedia", {
   writable: true,
   value: (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
+    addListener: () => { /* noop */ },
+    removeListener: () => { /* noop */ },
+    addEventListener: () => { /* noop */ },
+    removeEventListener: () => { /* noop */ },
     dispatchEvent: () => false,
   }),
 });
 
-// ResizeObserver mock for Mantine components
 class ResizeObserverMock {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() { /* noop for test env */ }
+  unobserve() { /* noop for test env */ }
+  disconnect() { /* noop for test env */ }
 }
-window.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+globalThis.ResizeObserver = ResizeObserverMock;
