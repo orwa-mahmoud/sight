@@ -1,1 +1,18 @@
-npx lint-staged
+#!/bin/sh
+
+# Backend: lint + format staged Python files
+PY_FILES=$(git diff --cached --name-only --diff-filter=ACM -- 'backend/*.py' 'backend/**/*.py')
+if [ -n "$PY_FILES" ]; then
+  # Strip backend/ prefix since we cd into it
+  RELATIVE=$(echo "$PY_FILES" | sed 's|^backend/||')
+  (cd backend && uv run ruff check --fix $RELATIVE && uv run ruff format $RELATIVE) || exit 1
+  echo "$PY_FILES" | xargs git add
+fi
+
+# Frontend: lint staged TS/TSX files
+TS_FILES=$(git diff --cached --name-only --diff-filter=ACM -- 'frontend/src/*.ts' 'frontend/src/*.tsx' 'frontend/src/**/*.ts' 'frontend/src/**/*.tsx')
+if [ -n "$TS_FILES" ]; then
+  RELATIVE=$(echo "$TS_FILES" | sed 's|^frontend/||')
+  (cd frontend && npx eslint --fix $RELATIVE) || exit 1
+  echo "$TS_FILES" | xargs git add
+fi

@@ -23,7 +23,7 @@ def test_on_question_submitted() -> None:
         question_id=uuid4(),
         tenant_id=uuid4(),
         channel="whatsapp",
-        asker_contact="+971500000000",
+        contact_id=uuid4(),
     )
     _on_question_submitted(event)  # no crash
 
@@ -63,7 +63,7 @@ def test_register_event_handlers_subscribes_all() -> None:
 
     # Publish each event type through the bus — handlers should fire.
     events = [
-        QuestionSubmitted(question_id=uuid4(), tenant_id=uuid4(), channel="api", asker_contact=None),
+        QuestionSubmitted(question_id=uuid4(), tenant_id=uuid4(), channel="api", contact_id=None),
         QuestionResolved(question_id=uuid4(), tenant_id=uuid4(), replied_by_user_id=uuid4()),
         TenantCreated(tenant_id=uuid4(), name="T", slug="t"),
         TokenUsageRecorded(

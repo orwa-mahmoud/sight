@@ -20,8 +20,7 @@ class SubmitQuestionUseCase:
             channel=cmd.channel,
             question_text=cmd.question_text,
             conversation_id=cmd.conversation_id,
-            asker_name=cmd.asker_name,
-            asker_contact=cmd.asker_contact,
+            contact_id=cmd.contact_id,
             ai_answer_attempt=cmd.ai_answer_attempt,
         )
         await self._uow.questions.save(question)

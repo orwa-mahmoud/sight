@@ -15,8 +15,6 @@ async def _submit_question(client: AsyncClient, token: str) -> dict:
         json={
             "channel": "web",
             "question_text": "What are your hours?",
-            "asker_name": "Sara",
-            "asker_contact": "sara@test.com",
         },
     )
     assert resp.status_code == 201
@@ -29,7 +27,6 @@ async def test_submit_question(client: AsyncClient) -> None:
     q = await _submit_question(client, token)
     assert q["status"] == "submitted"
     assert q["question_text"] == "What are your hours?"
-    assert q["asker_name"] == "Sara"
 
 
 @pytest.mark.asyncio

@@ -58,6 +58,20 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
 
     thread_id = inp.thread_id or f"{inp.channel.value}:{inp.sender_identifier}:{inp.tenant_id}"
 
+    # ── 0b. Resolve sender to a Contact ──────────────────────────
+    contact_id = inp.contact_id
+    if contact_id is None:
+        from src.ai.utils.sender import resolve_sender  # noqa: PLC0415
+
+        contact_id = await resolve_sender(
+            tenant_id=inp.tenant_id,
+            channel=inp.channel,
+            sender_identifier=inp.sender_identifier,
+            sender_name=inp.sender_name,
+            uow=uow,
+        )
+        await uow.flush()
+
     # ── 1. Save inbound message ───────────────────────────────────
     save_uc = SaveThreadMessageUseCase(uow=uow)
     save_result = await save_uc.execute(
@@ -67,6 +81,7 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
             channel=inp.channel,
             role=ConversationRole.USER,
             content=inp.message,
+            participant_id=contact_id,
             request_id=request_id,
         )
     )
@@ -129,8 +144,7 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         tenant_id=inp.tenant_id,
         channel=inp.channel,
         conversation_id=conversation_id,
-        asker_name=inp.sender_name,
-        asker_contact=inp.sender_identifier,
+        contact_id=contact_id,
     )
     logger.info(
         "gateway.agent_done",

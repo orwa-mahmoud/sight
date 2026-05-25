@@ -42,8 +42,7 @@ async def run_agent_loop(
     tenant_id: UUID,
     channel: ConversationChannel,
     conversation_id: UUID | None,
-    asker_name: str | None,
-    asker_contact: str | None,
+    contact_id: UUID | None,
     retriever: RetrieverPort,
     uow: UnitOfWork,
     max_tokens: int = 1024,
@@ -82,8 +81,7 @@ async def run_agent_loop(
                 tenant_id=tenant_id,
                 channel=channel,
                 conversation_id=conversation_id,
-                asker_name=asker_name,
-                asker_contact=asker_contact,
+                contact_id=contact_id,
                 retriever=retriever,
                 uow=uow,
             )
@@ -119,8 +117,7 @@ async def _execute_tool(
     tenant_id: UUID,
     channel: ConversationChannel,
     conversation_id: UUID | None,
-    asker_name: str | None,
-    asker_contact: str | None,
+    contact_id: UUID | None,
     retriever: RetrieverPort,
     uow: UnitOfWork,
 ) -> Any:
@@ -133,8 +130,7 @@ async def _execute_tool(
                 tenant_id=tenant_id,
                 channel=channel,
                 conversation_id=conversation_id,
-                asker_name=asker_name,
-                asker_contact=asker_contact,
+                contact_id=contact_id,
                 uow=uow,
             )
         case _:

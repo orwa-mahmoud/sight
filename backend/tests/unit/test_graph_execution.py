@@ -35,8 +35,7 @@ async def test_graph_text_only_response() -> None:
         tenant_id=uuid4(),
         channel=ConversationChannel.WEB,
         conversation_id=None,
-        asker_name=None,
-        asker_contact=None,
+        contact_id=None,
     )
     assert result.text == "Hello!"
     assert result.tool_calls == []
@@ -75,8 +74,7 @@ async def test_graph_with_tool_call() -> None:
         tenant_id=uuid4(),
         channel=ConversationChannel.WEB,
         conversation_id=None,
-        asker_name=None,
-        asker_contact=None,
+        contact_id=None,
     )
     assert result.text == "We're open 9-5!"
     assert len(result.tool_calls) == 1
@@ -113,7 +111,6 @@ async def test_graph_unknown_tool_returns_error() -> None:
         tenant_id=uuid4(),
         channel=ConversationChannel.WEB,
         conversation_id=None,
-        asker_name=None,
-        asker_contact=None,
+        contact_id=None,
     )
     assert "nonexistent_tool" in str(result.tool_calls[0].result)
