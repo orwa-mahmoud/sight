@@ -1,4 +1,5 @@
 """Integration tests for tenant API."""
+
 from __future__ import annotations
 
 import pytest
@@ -16,6 +17,7 @@ async def test_get_my_tenant(client: AsyncClient) -> None:
     body = resp.json()
     assert body["id"] == tenant_id
     assert body["status"] == "active"
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
