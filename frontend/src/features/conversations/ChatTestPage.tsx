@@ -61,7 +61,7 @@ export function ChatTestPage() {
             )}
             {messages.map((m, i) => (
               <Card
-                key={i}
+                key={`msg-${i}-${m.role}`}
                 withBorder
                 radius="md"
                 p="sm"

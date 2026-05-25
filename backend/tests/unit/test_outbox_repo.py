@@ -17,7 +17,7 @@ async def test_write_and_list_pending(client=None):
     async with async_session_factory() as session:
         repo = OutboxRepository(session)
         event = TenantCreated(tenant_id=uuid4(), name="Test", slug="test")
-        await repo.write_event(event, tenant_id=uuid4())
+        repo.write_event(event, tenant_id=uuid4())
         await session.commit()
     async with async_session_factory() as session:
         repo = OutboxRepository(session)
@@ -32,7 +32,7 @@ async def test_mark_delivered(client=None):
     async with async_session_factory() as session:
         repo = OutboxRepository(session)
         event = TenantCreated(tenant_id=uuid4(), name="Del", slug="del")
-        await repo.write_event(event)
+        repo.write_event(event)
         await session.commit()
     async with async_session_factory() as session:
         repo = OutboxRepository(session)

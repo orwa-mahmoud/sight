@@ -33,7 +33,7 @@ async def publish_events(
     repo = OutboxRepository(session)
     for event in events:
         try:
-            await repo.write_event(event, tenant_id=tenant_id)
+            repo.write_event(event, tenant_id=tenant_id)
         except Exception:
             logger.warning("outbox.write_failed", event_type=type(event).__name__, exc_info=True)
     await session.commit()

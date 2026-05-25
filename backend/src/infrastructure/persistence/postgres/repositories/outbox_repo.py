@@ -17,7 +17,7 @@ class OutboxRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def write_event(self, event: DomainEvent, tenant_id: UUID | None = None) -> None:
+    def write_event(self, event: DomainEvent, tenant_id: UUID | None = None) -> None:
         data = dataclasses.asdict(event) if dataclasses.is_dataclass(event) else {}
         for k, v in data.items():
             if isinstance(v, UUID):
