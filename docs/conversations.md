@@ -23,7 +23,7 @@ CREATE TABLE conversations (
   tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   thread_id       VARCHAR(128) UNIQUE NOT NULL,        -- channel-derived
   channel         VARCHAR(32)  NOT NULL,
-  participant_id  UUID,                                -- asker id, null for owner-AI chat
+  participant_id  UUID REFERENCES contacts(id),         -- FK to contacts; null for owner-AI chat
   created_at      TIMESTAMPTZ NOT NULL,
   updated_at      TIMESTAMPTZ NOT NULL,
   last_message_at TIMESTAMPTZ
