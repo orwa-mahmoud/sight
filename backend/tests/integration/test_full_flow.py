@@ -12,7 +12,7 @@ from tests.conftest import register_and_token
 async def test_owner_full_onboarding_flow(client: AsyncClient) -> None:
     """Owner registers → configures LLM → uploads doc → asks question → checks stats."""
     # 1. Register
-    token, user_id, tenant_id = await register_and_token(client)
+    token, _user_id, _tenant_id = await register_and_token(client)
     h = {"Authorization": f"Bearer {token}"}
 
     # 2. Get settings (default config)
