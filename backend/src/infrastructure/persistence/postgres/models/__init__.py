@@ -17,6 +17,7 @@ class Base(DeclarativeBase):
 from src.infrastructure.persistence.postgres.models.chunk import ChunkModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.conversation import ConversationModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.document import DocumentModel  # noqa: E402
+from src.infrastructure.persistence.postgres.models.key_fact import KeyFactModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.message import MessageModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.question import QuestionModel  # noqa: E402
 from src.infrastructure.persistence.postgres.models.tenant import TenantModel  # noqa: E402
@@ -30,6 +31,7 @@ __all__ = [
     "ChunkModel",
     "ConversationModel",
     "DocumentModel",
+    "KeyFactModel",
     "MessageModel",
     "QuestionModel",
     "TenantConfigModel",
