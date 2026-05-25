@@ -11,8 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config.settings import get_settings
 from src.domain.shared.exceptions import DomainError
-from src.drivers.api.responses import domain_error_handler
 from src.drivers.api.middleware.request_id import RequestIDMiddleware
+from src.drivers.api.responses import domain_error_handler
 from src.drivers.api.v1.health.routes import router as health_router
 from src.drivers.api.v1.router import v1_router
 from src.drivers.api.webhooks.telegram import router as telegram_webhook_router
@@ -43,8 +43,6 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
-
-    from src.drivers.api.middleware.request_id import RequestIDMiddleware
 
     app.add_middleware(RequestIDMiddleware)
 
