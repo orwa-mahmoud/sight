@@ -26,6 +26,7 @@ import { useAuth } from "../../auth/useAuth";
 
 const NAV_ITEMS: Array<{ label: string; to: string; icon: ReactNode }> = [
   { label: "Inbox", to: "/", icon: <IconQuestionMark size={18} stroke={1.6} /> },
+  { label: "Chat (test)", to: "/chat", icon: <IconMessageCircle size={18} stroke={1.6} /> },
   { label: "Conversations", to: "/conversations", icon: <IconMessageCircle size={18} stroke={1.6} /> },
   { label: "Documents", to: "/documents", icon: <IconFileText size={18} stroke={1.6} /> },
   { label: "Usage & cost", to: "/usage", icon: <IconChartBar size={18} stroke={1.6} /> },

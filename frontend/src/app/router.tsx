@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { LoginPage } from "../auth/LoginPage";
 import { RegisterPage } from "../auth/RegisterPage";
+import { ChatTestPage } from "../features/conversations/ChatTestPage";
 import { ConversationsPage } from "../features/conversations/ConversationsPage";
 import { DocumentsPage } from "../features/documents/DocumentsPage";
 import { InboxPage } from "../features/escalations/InboxPage";
@@ -51,6 +52,16 @@ export function AppRoutes() {
           <RequireAuth>
             <ProtectedShell>
               <UsagePage />
+            </ProtectedShell>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <RequireAuth>
+            <ProtectedShell>
+              <ChatTestPage />
             </ProtectedShell>
           </RequireAuth>
         }
