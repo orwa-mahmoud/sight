@@ -1,4 +1,5 @@
 """Integration test for auth refresh endpoint."""
+
 from __future__ import annotations
 
 import pytest
@@ -17,6 +18,7 @@ async def test_refresh_returns_new_token(client: AsyncClient) -> None:
     assert body["user_id"] == user_id
     assert body["tenant_id"] == tenant_id
     assert body["access_token"]  # new token issued
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
