@@ -176,6 +176,7 @@ async def test_gateway_no_token_usage_when_zero_tokens() -> None:
     with (
         patch("src.ai.gateway.SaveThreadMessageUseCase", return_value=mock_save_uc),
         patch("src.ai.gateway.load_history", new_callable=AsyncMock, return_value=[]),
+        patch("src.ai.context.memory.load_key_facts_context", new_callable=AsyncMock, return_value=""),
         patch("src.infrastructure.ai.graph.build_agent_graph") as mock_build,
         patch("src.infrastructure.ai.graph.run_graph", new_callable=AsyncMock, return_value=mock_result),
         patch("src.ai.context.checkpoint.maybe_create_checkpoint", new_callable=AsyncMock),
