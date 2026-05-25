@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.drivers.api.middleware.rate_limit import limiter
+from src.drivers.api.middleware.rate_limit import limiter  # noqa: PLC0415
 
 
 def test_limiter_exists():
