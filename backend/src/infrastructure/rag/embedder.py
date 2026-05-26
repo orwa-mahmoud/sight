@@ -36,6 +36,11 @@ class OpenAIEmbedder:
             self._client = AsyncOpenAI(api_key=self._api_key)
         return self._client
 
+    async def close(self) -> None:
+        if self._client is not None:
+            await self._client.close()
+            self._client = None
+
     _BATCH_SIZE = 512
 
     async def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
