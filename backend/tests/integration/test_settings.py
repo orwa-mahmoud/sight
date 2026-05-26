@@ -93,10 +93,10 @@ async def test_update_embedding_config(client: AsyncClient) -> None:
     headers = {"Authorization": f"Bearer {token}"}
     resp = await client.put(
         "/api/v1/settings/embedding",
-        json={"model": "text-embedding-3-small", "dimensions": 512},
+        json={"model": "text-embedding-3-small"},
         headers=headers,
     )
     assert resp.status_code == 200
     body = resp.json()
     assert body["embedding_model"] == "text-embedding-3-small"
-    assert body["embedding_dimensions"] == 512
+    assert "embedding_dimensions" not in body

@@ -41,7 +41,6 @@ const CONFIG: TenantConfigResponse = {
   embedding_provider: "openai",
   embedding_model: "text-embedding-3-large",
   embedding_api_key_masked: "",
-  embedding_dimensions: 1536,
   whatsapp_phone_number_id: "123456",
   whatsapp_access_token_masked: "EAA****",
   whatsapp_verify_token_masked: "vt****",
@@ -377,7 +376,7 @@ describe("SettingsPage", () => {
     });
   });
 
-  it("submits Embedding form with model and dimensions", async () => {
+  it("submits Embedding form with model", async () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateEmbedding).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
@@ -499,21 +498,6 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(updateLLM).toHaveBeenCalled());
   });
 
-  it("submits Embedding form with cleared dimensions", async () => {
-    vi.mocked(getSettings).mockResolvedValue(CONFIG);
-    vi.mocked(updateEmbedding).mockResolvedValue(CONFIG);
-    render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Embedding Configuration")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Embedding Configuration"));
-    await waitFor(() => expect(screen.getByText("Save embedding config")).toBeInTheDocument());
-
-    const dimInputs = screen.getAllByLabelText("Dimensions");
-    fireEvent.change(dimInputs.at(-1)!, { target: { value: "" } });
-    fireEvent.click(screen.getByText("Save embedding config"));
-
-    await waitFor(() => expect(updateEmbedding).toHaveBeenCalled());
-  });
 
   it("shows 'Not set' descriptions for empty WhatsApp tokens", async () => {
     vi.mocked(getSettings).mockResolvedValue({

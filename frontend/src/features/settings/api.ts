@@ -13,7 +13,6 @@ export interface UpdateEmbeddingPayload {
   provider?: string;
   model?: string;
   api_key?: string;
-  dimensions?: number;
 }
 
 export interface UpdateWhatsAppPayload {

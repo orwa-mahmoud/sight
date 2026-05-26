@@ -20,7 +20,6 @@ class TenantConfigResponse(BaseModel):
     embedding_provider: str
     embedding_model: str
     embedding_api_key_masked: str
-    embedding_dimensions: int
     # WhatsApp
     whatsapp_phone_number_id: str | None
     whatsapp_access_token_masked: str | None
@@ -47,7 +46,6 @@ class UpdateEmbeddingConfig(BaseModel):
     provider: str | None = Field(default=None, max_length=32)
     model: str | None = Field(default=None, max_length=64)
     api_key: str | None = Field(default=None, max_length=512)
-    dimensions: int | None = Field(default=None, ge=256, le=4096)
 
 
 class UpdateWhatsAppConfig(BaseModel):

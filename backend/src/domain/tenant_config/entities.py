@@ -33,7 +33,6 @@ class TenantConfig(BaseEntity):
     embedding_provider: str
     embedding_model: str
     embedding_api_key: str
-    embedding_dimensions: int
 
     # ── WhatsApp Cloud API ─────────────────────────────────────────
     whatsapp_phone_number_id: str | None
@@ -67,7 +66,6 @@ class TenantConfig(BaseEntity):
             embedding_provider="openai",
             embedding_model="text-embedding-3-large",
             embedding_api_key="",
-            embedding_dimensions=1536,
             whatsapp_phone_number_id=None,
             whatsapp_access_token=None,
             whatsapp_verify_token=None,
@@ -110,7 +108,6 @@ class TenantConfig(BaseEntity):
         provider: str | None = None,
         model: str | None = None,
         api_key: str | None = None,
-        dimensions: int | None = None,
     ) -> None:
         if provider is not None:
             self.embedding_provider = provider
@@ -118,8 +115,6 @@ class TenantConfig(BaseEntity):
             self.embedding_model = model
         if api_key is not None:
             self.embedding_api_key = api_key
-        if dimensions is not None:
-            self.embedding_dimensions = dimensions
         self.updated_at = datetime.now(UTC)
 
     def update_whatsapp(

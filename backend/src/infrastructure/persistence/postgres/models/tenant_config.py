@@ -34,7 +34,6 @@ class TenantConfigModel(Base):
     embedding_provider: Mapped[str] = mapped_column(String(32), nullable=False, default="openai")
     embedding_model: Mapped[str] = mapped_column(String(64), nullable=False, default="text-embedding-3-large")
     embedding_api_key: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    embedding_dimensions: Mapped[int] = mapped_column(Integer, nullable=False, default=1536)
     # WhatsApp
     whatsapp_phone_number_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     whatsapp_access_token: Mapped[str | None] = mapped_column(Text, nullable=True)

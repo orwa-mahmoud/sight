@@ -10,10 +10,9 @@ from src.domain.tenant_config.value_objects import LLMProvider
 
 def test_update_embedding() -> None:
     c = TenantConfig.create_default(tenant_id=uuid4())
-    c.update_embedding(provider="voyage", model="voyage-3", dimensions=1024)
+    c.update_embedding(provider="voyage", model="voyage-3")
     assert c.embedding_provider == "voyage"
     assert c.embedding_model == "voyage-3"
-    assert c.embedding_dimensions == 1024
 
 
 def test_update_telegram() -> None:
@@ -30,10 +29,10 @@ def test_mask_key_edge_cases() -> None:
 
 
 def test_llm_provider_values() -> None:
-    assert LLMProvider.OPENAI == "openai"
-    assert LLMProvider.ANTHROPIC == "anthropic"
-    assert LLMProvider.AZURE_OPENAI == "azure_openai"
-    assert LLMProvider.GOOGLE == "google"
+    assert LLMProvider.OPENAI.value == "openai"
+    assert LLMProvider.ANTHROPIC.value == "anthropic"
+    assert LLMProvider.AZURE_OPENAI.value == "azure_openai"
+    assert LLMProvider.GOOGLE.value == "google"
 
 
 def test_update_llm_partial() -> None:

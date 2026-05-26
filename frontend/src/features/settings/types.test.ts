@@ -12,7 +12,6 @@ describe("TenantConfigResponse type", () => {
       embedding_provider: "openai",
       embedding_model: "text-embedding-3-large",
       embedding_api_key_masked: "",
-      embedding_dimensions: 1536,
       whatsapp_phone_number_id: null,
       whatsapp_access_token_masked: null,
       whatsapp_verify_token_masked: null,
