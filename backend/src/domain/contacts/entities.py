@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 
 from src.domain.contacts.events import ContactCreated
 from src.domain.shared.entities import BaseEntity
+from src.domain.shared.exceptions import InvalidOperationError
 
 
 @dataclass(eq=False, kw_only=True)
@@ -36,6 +37,8 @@ class Contact(BaseEntity):
         email: str | None = None,
         telegram_user_id: str | None = None,
     ) -> Contact:
+        if not phone and not telegram_user_id:
+            raise InvalidOperationError("Contact must have at least a phone number or telegram_user_id")
         now = datetime.now(UTC)
         contact = cls(
             id=uuid4(),

@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from src.domain.shared.entities import BaseEntity
+from src.domain.shared.exceptions import InvalidOperationError
 from src.domain.users.events import UserAddedToTenant, UserRegistered
 from src.domain.users.value_objects import UserTenantRole
 
@@ -42,10 +43,14 @@ class User(BaseEntity):
         return user
 
     def deactivate(self) -> None:
+        if not self.is_active:
+            raise InvalidOperationError("User is already deactivated")
         self.is_active = False
         self.updated_at = datetime.now(UTC)
 
     def activate(self) -> None:
+        if self.is_active:
+            raise InvalidOperationError("User is already active")
         self.is_active = True
         self.updated_at = datetime.now(UTC)
 
