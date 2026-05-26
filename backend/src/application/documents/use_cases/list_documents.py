@@ -27,28 +27,3 @@ class ListDocumentsUseCase:
             )
             for d in docs
         ]
-
-
-class DeleteDocumentUseCase:
-    """Delete a document (chunks cascade via FK)."""
-
-    def __init__(self, *, uow: UnitOfWork) -> None:
-        self._uow = uow
-
-    async def execute(self, *, tenant_id: object, document_id: object) -> None:
-        from uuid import UUID  # noqa: PLC0415
-
-        from src.domain.shared.exceptions import (  # noqa: PLC0415
-            AuthorizationError,
-            EntityNotFoundError,
-        )
-
-        if not isinstance(document_id, UUID) or not isinstance(tenant_id, UUID):
-            raise EntityNotFoundError("Invalid identifiers")
-
-        doc = await self._uow.documents.get_by_id(document_id)
-        if doc is None:
-            raise EntityNotFoundError("Document not found")
-        if doc.tenant_id != tenant_id:
-            raise AuthorizationError("Document does not belong to this tenant")
-        await self._uow.documents.delete(document_id)

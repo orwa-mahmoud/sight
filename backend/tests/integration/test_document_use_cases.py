@@ -7,7 +7,8 @@ from uuid import uuid4
 import pytest
 
 from src.application.documents.queries import ListDocuments
-from src.application.documents.use_cases.list_documents import DeleteDocumentUseCase, ListDocumentsUseCase
+from src.application.documents.use_cases.delete_document import DeleteDocumentUseCase
+from src.application.documents.use_cases.list_documents import ListDocumentsUseCase
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.documents.entities import Document
 from src.domain.documents.value_objects import DocumentMimeType

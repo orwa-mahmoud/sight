@@ -9,8 +9,9 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
 from src.application.documents.commands import IngestDocument
 from src.application.documents.queries import ListDocuments, RetrieveForQuery
+from src.application.documents.use_cases.delete_document import DeleteDocumentUseCase
 from src.application.documents.use_cases.ingest_document import IngestDocumentUseCase
-from src.application.documents.use_cases.list_documents import DeleteDocumentUseCase, ListDocumentsUseCase
+from src.application.documents.use_cases.list_documents import ListDocumentsUseCase
 from src.application.documents.use_cases.retrieve_for_query import RetrieveForQueryUseCase
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.shared.exceptions import EntityNotFoundError
