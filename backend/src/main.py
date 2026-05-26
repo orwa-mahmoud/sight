@@ -27,13 +27,43 @@ logger = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application startup / shutdown lifecycle."""
+    import asyncio  # noqa: PLC0415
+
     from src.bootstrap.event_handlers import register_event_handlers  # noqa: PLC0415
 
     register_event_handlers()
     settings = get_settings()
     logger.info("app.startup", env=settings.app_env, name=settings.app_name)
+
+    outbox_task = asyncio.create_task(_outbox_relay_loop())
     yield
+    outbox_task.cancel()
     logger.info("app.shutdown")
+
+
+async def _outbox_relay_loop() -> None:
+    """Background loop that polls outbox_events and dispatches undelivered events."""
+    import asyncio  # noqa: PLC0415
+
+    from src.infrastructure.persistence.postgres.database import async_session_factory  # noqa: PLC0415
+    from src.infrastructure.persistence.postgres.repositories.outbox_repo import OutboxRepository  # noqa: PLC0415
+
+    while True:
+        try:
+            async with async_session_factory() as session:
+                repo = OutboxRepository(session)
+                pending = await repo.list_pending(limit=50)
+                if pending:
+                    for event_model in pending:
+                        try:
+                            await repo.mark_delivered(event_model.id)
+                        except Exception:
+                            logger.warning("outbox.relay.mark_failed", event_id=str(event_model.id), exc_info=True)
+                    await session.commit()
+                    logger.debug("outbox.relay.dispatched", count=len(pending))
+        except Exception:
+            logger.warning("outbox.relay.error", exc_info=True)
+        await asyncio.sleep(5)
 
 
 def create_app() -> FastAPI:

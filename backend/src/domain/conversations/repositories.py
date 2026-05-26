@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -14,6 +15,10 @@ class ConversationRepository(Protocol):
     async def get_by_id(self, conversation_id: UUID) -> Conversation | None: ...
 
     async def get_by_thread_id(self, thread_id: str) -> Conversation | None: ...
+
+    async def list_for_tenant(self, tenant_id: UUID, *, limit: int = 100, offset: int = 0) -> list[Conversation]: ...
+
+    async def count_active_since(self, tenant_id: UUID, since: datetime) -> int: ...
 
 
 class MessageRepository(Protocol):
@@ -30,3 +35,5 @@ class MessageRepository(Protocol):
     async def list_since_last_checkpoint(self, conversation_id: UUID) -> list[Message]: ...
 
     async def sum_tokens_since_checkpoint(self, conversation_id: UUID) -> int: ...
+
+    async def count_visible_since(self, tenant_id: UUID, since: datetime) -> int: ...

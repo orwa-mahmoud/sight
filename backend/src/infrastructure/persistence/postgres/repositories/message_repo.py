@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import desc, func, select
@@ -85,6 +86,16 @@ class PostgresMessageRepository:
         if checkpoint_at is not None:
             stmt = stmt.where(MessageModel.created_at > checkpoint_at)
         result = await self._session.execute(stmt)
+        return int(result.scalar_one())
+
+    async def count_visible_since(self, tenant_id: UUID, since: datetime) -> int:
+        result = await self._session.execute(
+            select(func.count(MessageModel.id)).where(
+                MessageModel.tenant_id == tenant_id,
+                MessageModel.created_at >= since,
+                MessageModel.hidden.is_(False),
+            )
+        )
         return int(result.scalar_one())
 
     # ── Mapping helpers ────────────────────────────────────────────

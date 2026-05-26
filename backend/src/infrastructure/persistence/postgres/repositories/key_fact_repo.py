@@ -46,6 +46,16 @@ class PostgresKeyFactRepository:
         result = await self._session.execute(stmt)
         return [self._to_entity(m) for m in result.scalars().all()]
 
+    async def list_for_tenant(self, tenant_id: UUID, *, limit: int = 500) -> list[KeyFact]:
+        stmt = (
+            select(KeyFactModel)
+            .where(KeyFactModel.tenant_id == tenant_id)
+            .order_by(KeyFactModel.contact_id, KeyFactModel.key)
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        return [self._to_entity(m) for m in result.scalars().all()]
+
     async def delete(self, fact_id: UUID) -> None:
         await self._session.execute(delete(KeyFactModel).where(KeyFactModel.id == fact_id))
 

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.conversations.entities import Conversation
@@ -37,6 +38,26 @@ class PostgresConversationRepository:
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
+
+    async def list_for_tenant(self, tenant_id: UUID, *, limit: int = 100, offset: int = 0) -> list[Conversation]:
+        stmt = (
+            select(ConversationModel)
+            .where(ConversationModel.tenant_id == tenant_id)
+            .order_by(ConversationModel.last_message_at.desc().nullslast())
+            .limit(limit)
+            .offset(offset)
+        )
+        result = await self._session.execute(stmt)
+        return [self._to_entity(m) for m in result.scalars().all()]
+
+    async def count_active_since(self, tenant_id: UUID, since: datetime) -> int:
+        result = await self._session.execute(
+            select(func.count(ConversationModel.id)).where(
+                ConversationModel.tenant_id == tenant_id,
+                ConversationModel.last_message_at >= since,
+            )
+        )
+        return int(result.scalar_one())
 
     @staticmethod
     def _to_model(c: Conversation) -> ConversationModel:
