@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, status
+from pydantic import BaseModel, Field
 
 from src.application.auth.commands import AuthenticateUser, RegisterOwner
+from src.application.auth.use_cases.change_password import ChangePassword, ChangePasswordUseCase
 from src.application.auth.use_cases.refresh_token import RefreshTokenUseCase
 from src.bootstrap.container import (
     authenticate_user_use_case,
     get_jwt_service,
+    get_password_hasher,
     get_user_by_id_use_case,
     register_owner_use_case,
 )
@@ -55,3 +58,15 @@ async def refresh(current_user: CurrentUser, uow: UnitOfWorkDep) -> TokenRespons
     uc = RefreshTokenUseCase(uow=uow, jwt_service=get_jwt_service())
     result = await uc.execute(current_user.id)
     return TokenResponse(access_token=result.access_token, user_id=result.user_id, tenant_id=result.tenant_id)
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(req: ChangePasswordRequest, current_user: CurrentUser, uow: UnitOfWorkDep) -> None:
+    await ChangePasswordUseCase(uow=uow, password_hasher=get_password_hasher()).execute(
+        ChangePassword(user_id=current_user.id, old_password=req.old_password, new_password=req.new_password)
+    )
