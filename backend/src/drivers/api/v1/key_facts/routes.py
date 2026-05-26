@@ -30,29 +30,5 @@ async def list_key_facts(
     if contact_id:
         facts = await uow.key_facts.list_for_contact(tenant_id, contact_id)
     else:
-        from sqlalchemy import select  # noqa: PLC0415
-
-        from src.infrastructure.persistence.postgres.models.key_fact import KeyFactModel  # noqa: PLC0415
-
-        stmt = (
-            select(KeyFactModel)
-            .where(KeyFactModel.tenant_id == tenant_id)
-            .order_by(KeyFactModel.contact_id, KeyFactModel.key)
-            .limit(500)
-        )
-        result = await uow._session.execute(stmt)
-        from src.domain.key_facts.entities import KeyFact  # noqa: PLC0415
-
-        facts = [
-            KeyFact(
-                id=m.id,
-                tenant_id=m.tenant_id,
-                contact_id=m.contact_id,
-                key=m.key,
-                value=m.value,
-                created_at=m.created_at,
-                updated_at=m.updated_at,
-            )
-            for m in result.scalars().all()
-        ]
+        facts = await uow.key_facts.list_for_tenant(tenant_id)
     return [KeyFactResponse(id=f.id, contact_id=f.contact_id, key=f.key, value=f.value) for f in facts]

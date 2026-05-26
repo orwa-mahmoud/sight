@@ -7,14 +7,10 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Query
-from sqlalchemy import func, select
 
 from src.domain.shared.exceptions import AuthorizationError, EntityNotFoundError
 from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep, resolve_tenant_id
 from src.drivers.api.v1.conversations.schemas import ConversationSummary, DailySummaryResponse, MessageResponse
-from src.infrastructure.persistence.postgres.models.conversation import ConversationModel
-from src.infrastructure.persistence.postgres.models.message import MessageModel
-from src.infrastructure.persistence.postgres.models.question import QuestionModel
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
@@ -27,23 +23,16 @@ async def list_conversations(
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[ConversationSummary]:
     tenant_id = await resolve_tenant_id(current_user, uow)
-    stmt = (
-        select(ConversationModel)
-        .where(ConversationModel.tenant_id == tenant_id)
-        .order_by(ConversationModel.last_message_at.desc().nullslast())
-        .limit(limit)
-        .offset(offset)
-    )
-    result = await uow._session.execute(stmt)
+    convs = await uow.conversations.list_for_tenant(tenant_id, limit=limit, offset=offset)
     return [
         ConversationSummary(
             id=c.id,
             thread_id=c.thread_id,
-            channel=c.channel,
+            channel=c.channel.value,
             last_message_at=c.last_message_at,
             created_at=c.created_at,
         )
-        for c in result.scalars().all()
+        for c in convs
     ]
 
 
@@ -52,41 +41,16 @@ async def daily_summary(current_user: CurrentUser, uow: UnitOfWorkDep) -> DailyS
     """What happened today — message count, conversation count, question count."""
     tenant_id = await resolve_tenant_id(current_user, uow)
     today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-    session = uow._session
 
-    msg_count = (
-        await session.execute(
-            select(func.count(MessageModel.id)).where(
-                MessageModel.tenant_id == tenant_id,
-                MessageModel.created_at >= today,
-                MessageModel.hidden.is_(False),
-            )
-        )
-    ).scalar_one()
-
-    conv_count = (
-        await session.execute(
-            select(func.count(ConversationModel.id)).where(
-                ConversationModel.tenant_id == tenant_id,
-                ConversationModel.last_message_at >= today,
-            )
-        )
-    ).scalar_one()
-
-    question_count = (
-        await session.execute(
-            select(func.count(QuestionModel.id)).where(
-                QuestionModel.tenant_id == tenant_id,
-                QuestionModel.created_at >= today,
-            )
-        )
-    ).scalar_one()
+    msg_count = await uow.messages.count_visible_since(tenant_id, today)
+    conv_count = await uow.conversations.count_active_since(tenant_id, today)
+    question_count = await uow.questions.count_since(tenant_id, today)
 
     return DailySummaryResponse(
         date=today.date().isoformat(),
-        total_messages=int(msg_count),
-        active_conversations=int(conv_count),
-        questions_escalated=int(question_count),
+        total_messages=msg_count,
+        active_conversations=conv_count,
+        questions_escalated=question_count,
     )
 
 

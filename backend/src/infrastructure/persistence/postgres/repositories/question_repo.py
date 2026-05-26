@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -60,6 +61,15 @@ class PostgresQuestionRepository:
         if status is not None:
             stmt = stmt.where(QuestionModel.status == status.value)
         result = await self._session.execute(stmt)
+        return int(result.scalar_one())
+
+    async def count_since(self, tenant_id: UUID, since: datetime) -> int:
+        result = await self._session.execute(
+            select(func.count(QuestionModel.id)).where(
+                QuestionModel.tenant_id == tenant_id,
+                QuestionModel.created_at >= since,
+            )
+        )
         return int(result.scalar_one())
 
     @staticmethod

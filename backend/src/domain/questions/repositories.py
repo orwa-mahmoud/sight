@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -28,3 +29,5 @@ class QuestionRepository(Protocol):
         *,
         status: QuestionStatus | None = None,
     ) -> int: ...
+
+    async def count_since(self, tenant_id: UUID, since: datetime) -> int: ...
