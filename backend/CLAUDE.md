@@ -58,7 +58,6 @@ Architecture and reference docs:
 | Domain entity | `domain/{context}/entities.py` -- rich, with behavior + factories + events |
 | Value objects | `domain/{context}/value_objects.py` (where applicable) |
 | Repository port | `domain/{context}/repositories.py` |
-| Gateway port | `domain/{context}/ports.py` (LLMClientPort, EmbeddingPort, RetrieverPort, NotificationPort) |
 | ORM models | `infrastructure/persistence/postgres/models/` (one file per model) |
 | Repository impl | `infrastructure/persistence/postgres/repositories/*_repo.py` |
 | Command / Query | `application/{context}/commands.py` / `queries.py` -- frozen dataclasses, typed fields |
@@ -89,7 +88,6 @@ Architecture and reference docs:
 | `llm` | LLM domain port (`LLMClientPort`) + framework-agnostic value objects |
 | `rag` | RAG domain ports (ChunkerPort, EmbeddingPort, RetrieverPort) + value objects |
 | `telegram` | Telegram phone lookup table (telegram_user_id -> phone for contact resolution) |
-| `notifications` | Notification routing port + channel-agnostic delivery |
 
 **Naming:** Plural for domain concepts (`tenants`, `users`, `contacts`). Singular for capabilities (`auth`, `llm`, `rag`, `telegram`).
 

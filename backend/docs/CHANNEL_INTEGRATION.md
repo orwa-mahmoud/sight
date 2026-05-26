@@ -35,12 +35,10 @@ Frontdesk supports three inbound channels: WhatsApp (Meta Cloud API), Telegram (
 
                                     OUTBOUND (notifications)
                                     ────────────────────────
-  NotificationRoutingAdapter.resolve_route()
         │
         ├── Step 1: existing conversation → send there
         ├── Step 2: WhatsApp configured + phone → WhatsApp thread
         ├── Step 3: telegram_user_id → Telegram thread
-        └── Step 4: all failed → NotificationRoutingError
 ```
 
 ---
@@ -290,7 +288,6 @@ Treats the identifier as a phone-like key -- same upsert flow.
 
 ## Notification Routing
 
-**File:** `infrastructure/notifications/routing.py` -- `NotificationRoutingAdapter`
 
 Channel-agnostic outbound notification routing. Given a tenant + recipient, resolves the best delivery channel.
 
@@ -310,7 +307,6 @@ resolve_route(tenant_id, recipient_id, recipient_type)
     │           → create a Telegram thread_id: "contact:{tenant_id}:{tg_id}:telegram"
     │
     └── Step 4: All failed
-                → raise NotificationRoutingError with context data
 ```
 
 **Returns:** `ResolvedRoute(channel, thread_id, conversation_id, tenant_id, recipient_id)`
@@ -319,7 +315,6 @@ resolve_route(tenant_id, recipient_id, recipient_type)
 
 ### Channel Delivery
 
-**File:** `infrastructure/notifications/channel_sender.py` -- `send_to_recipient()`
 
 Takes a `RecipientInfo`, message text, channel name, and tenant config. Uses the cached adapter pool (`infrastructure/channels/cache.py`) for connection reuse:
 
@@ -362,11 +357,8 @@ All webhook credentials are per-tenant, stored in the `tenant_configs` table, an
 | `infrastructure/channels/base.py` | `ChannelAdapter` ABC, `IncomingMessage`, `OutgoingMessage`, media extraction pipeline |
 | `infrastructure/channels/whatsapp.py` | `WhatsAppAdapter` -- Meta Cloud API v23.0 |
 | `infrastructure/channels/telegram.py` | `TelegramAdapter` -- Telegram Bot API |
-| `infrastructure/channels/api.py` | `APIAdapter` -- direct API channel |
 | `infrastructure/channels/cache.py` | Adapter caching for connection reuse |
 | `infrastructure/channels/retry.py` | `@channel_send_retry()` decorator, configurable delays |
-| `infrastructure/notifications/routing.py` | `NotificationRoutingAdapter` -- 4-step fallback resolution |
-| `infrastructure/notifications/channel_sender.py` | `send_to_recipient()` -- deliver via resolved channel |
 | `drivers/api/webhooks/whatsapp.py` | WhatsApp webhook endpoints (GET verify + POST receive) |
 | `drivers/api/webhooks/telegram.py` | Telegram webhook endpoint (POST receive) |
 | `drivers/api/webhooks/chat_api.py` | Direct chat API endpoint (POST, authenticated) |

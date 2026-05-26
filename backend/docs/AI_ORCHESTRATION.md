@@ -132,9 +132,7 @@ class AgentState(TypedDict):
     contact_id: str | None
 ```
 
-### Fallback Agent (`ai/agents/agent.py`)
 
-A simpler implementation (`run_agent_loop()`) exists alongside the graph-based one. It runs the same LLM -> tool -> LLM loop without LangGraph, using a `for` loop with the same 5-iteration safety cap. The graph-based path via `infrastructure/ai/graph.py` is the active one used by the gateway.
 
 ---
 
@@ -307,7 +305,6 @@ The factory calls `calculate_cost()` from `domain/llm_usage/pricing.py` which lo
 | ---- | ---- |
 | `ai/gateway.py` | Single entry point: `chat_with_agent()` |
 | `ai/types.py` | `ChatInput`, `ChatResult`, `ToolDef`, `ToolCallResult`, `AgentLoopResult` |
-| `ai/agents/agent.py` | Fallback agent loop (LLM -> tool -> LLM cycle) |
 | `ai/context/history.py` | Conversation history loader + staleness hint |
 | `ai/context/memory.py` | Key facts context loader |
 | `ai/context/prompts.py` | System prompt builder |
