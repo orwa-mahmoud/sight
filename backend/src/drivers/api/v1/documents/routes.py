@@ -66,8 +66,11 @@ async def upload_document(
     tenant_id = await resolve_tenant_id(current_user, uow)
     config = await _load_tenant_config(tenant_id, uow)
 
+    from src.infrastructure.rag.parser import DocumentParser  # noqa: PLC0415
+
     use_case = IngestDocumentUseCase(
         uow=uow,
+        parser=DocumentParser(),
         chunker=RecursiveTokenChunker(),
         embedder=_build_embedder(config),
     )

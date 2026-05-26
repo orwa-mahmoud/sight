@@ -14,9 +14,8 @@ from src.application.documents.dtos import DocumentDTO
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.documents.entities import Chunk, Document
 from src.domain.documents.value_objects import DocumentMimeType
-from src.domain.rag.ports import ChunkerPort, EmbeddingPort
+from src.domain.rag.ports import ChunkerPort, EmbeddingPort, ParserPort
 from src.domain.shared.exceptions import InvalidOperationError
-from src.infrastructure.rag.parser import parse
 
 logger = structlog.get_logger()
 
@@ -26,10 +25,12 @@ class IngestDocumentUseCase:
         self,
         *,
         uow: UnitOfWork,
+        parser: ParserPort,
         chunker: ChunkerPort,
         embedder: EmbeddingPort,
     ) -> None:
         self._uow = uow
+        self._parser = parser
         self._chunker = chunker
         self._embedder = embedder
 
@@ -52,7 +53,7 @@ class IngestDocumentUseCase:
         await self._uow.flush()
 
         try:
-            text = parse(cmd.content, mime)
+            text = self._parser.parse(cmd.content, mime)
             text_chunks = self._chunker.chunk(text)
             if not text_chunks:
                 raise InvalidOperationError("Document is empty after parsing")
