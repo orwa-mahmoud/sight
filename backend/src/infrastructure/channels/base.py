@@ -19,9 +19,6 @@ from src.domain.shared.media import ExtractedMedia, MediaGroup, extract_media
 
 logger = structlog.get_logger()
 
-# Re-export for any code still importing from here
-__all__ = ["ExtractedMedia", "MediaGroup", "extract_media"]
-
 
 class MessageType(StrEnum):
     TEXT = "text"
