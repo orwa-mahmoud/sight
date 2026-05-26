@@ -49,5 +49,5 @@ def decrypt_value(ciphertext: str) -> str:
     try:
         return f.decrypt(ciphertext[len(_ENC_PREFIX) :].encode()).decode()
     except InvalidToken:
-        logger.warning("crypto.decrypt_failed")
-        return ciphertext
+        logger.error("crypto.decrypt_failed", hint="ENCRYPTION_KEY may have changed")
+        return ""

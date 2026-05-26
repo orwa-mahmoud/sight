@@ -148,6 +148,7 @@ class WhatsAppAdapter(ChannelAdapter):
             logger.error("whatsapp.media_url.error", error=str(e), media_id=media_id)
             return ""
 
+    @channel_send_retry()
     async def send_text(self, recipient: str, text: str) -> dict[str, Any] | None:
         """Send a text message via Meta Cloud API with retry on transient failures."""
         if not self._phone_number_id or not self._access_token:

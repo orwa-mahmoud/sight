@@ -86,6 +86,10 @@ export function DocumentsPage() {
     mutationFn: deleteDocument,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["documents"] });
+      notifications.show({ title: "Deleted", message: "Document removed.", color: "teal" });
+    },
+    onError: () => {
+      notifications.show({ title: "Error", message: "Failed to delete document.", color: "red" });
     },
   });
 

@@ -22,11 +22,19 @@ class Tenant(BaseEntity):
 
     @classmethod
     def create(cls, *, name: str, slug: str) -> Tenant:
+        from src.domain.shared.utils import is_valid_slug  # noqa: PLC0415
+
+        clean_name = name.strip()
+        clean_slug = slug.strip().lower()
+        if not clean_name:
+            raise InvalidOperationError("Tenant name cannot be empty")
+        if not is_valid_slug(clean_slug):
+            raise InvalidOperationError("Invalid slug: must be lowercase alphanumeric with hyphens, min 2 chars")
         now = datetime.now(UTC)
         tenant = cls(
             id=uuid4(),
-            name=name.strip(),
-            slug=slug.strip().lower(),
+            name=clean_name,
+            slug=clean_slug,
             status=TenantStatus.ACTIVE,
             created_at=now,
             updated_at=now,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -13,7 +14,7 @@ from src.domain.documents.value_objects import DocumentMimeType, DocumentStatus
 from src.infrastructure.persistence.postgres.repositories.document_repo import PostgresDocumentRepository
 
 
-def _make_document(**overrides) -> Document:
+def _make_document(**overrides: Any) -> Document:
     return Document.upload(
         tenant_id=overrides.get("tenant_id", uuid4()),
         uploaded_by_user_id=overrides.get("uploaded_by_user_id", uuid4()),
@@ -50,6 +51,7 @@ async def test_save_existing_updates_fields() -> None:
     repo = PostgresDocumentRepository(session)
     doc = _make_document(filename="updated.pdf")
     doc.mark_persisted()
+    doc.mark_ingesting()
     doc.mark_ready(chunk_count=10)
 
     await repo.save(doc)

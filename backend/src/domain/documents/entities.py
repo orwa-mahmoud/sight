@@ -74,12 +74,18 @@ class Document(BaseEntity):
         self.updated_at = datetime.now(UTC)
 
     def mark_ready(self, *, chunk_count: int) -> None:
+        if self.status != DocumentStatus.INGESTING:
+            raise InvalidOperationError(f"Cannot mark ready from status {self.status}")
+        if chunk_count < 1:
+            raise InvalidOperationError("A ready document must have at least one chunk")
         self.status = DocumentStatus.READY
         self.chunk_count = chunk_count
         self.updated_at = datetime.now(UTC)
         self._emit(DocumentIngested(document_id=self.id, tenant_id=self.tenant_id, chunk_count=chunk_count))
 
     def mark_failed(self, *, reason: str) -> None:
+        if self.status != DocumentStatus.INGESTING:
+            raise InvalidOperationError(f"Cannot mark failed from status {self.status}")
         self.status = DocumentStatus.FAILED
         self.error = reason[:1024]
         self.updated_at = datetime.now(UTC)

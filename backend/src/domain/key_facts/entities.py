@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from src.domain.shared.entities import BaseEntity
+from src.domain.shared.exceptions import InvalidOperationError
 
 
 @dataclass(eq=False, kw_only=True)
@@ -27,13 +28,19 @@ class KeyFact(BaseEntity):
         key: str,
         value: str,
     ) -> KeyFact:
+        clean_key = key.strip().lower()
+        clean_value = value.strip()
+        if not clean_key:
+            raise InvalidOperationError("Key fact key cannot be empty")
+        if not clean_value:
+            raise InvalidOperationError("Key fact value cannot be empty")
         now = datetime.now(UTC)
         fact = cls(
             id=uuid4(),
             tenant_id=tenant_id,
             contact_id=contact_id,
-            key=key.strip().lower(),
-            value=value.strip(),
+            key=clean_key,
+            value=clean_value,
             created_at=now,
             updated_at=now,
         )
@@ -41,5 +48,8 @@ class KeyFact(BaseEntity):
         return fact
 
     def update_value(self, new_value: str) -> None:
-        self.value = new_value.strip()
+        clean = new_value.strip()
+        if not clean:
+            raise InvalidOperationError("Key fact value cannot be empty")
+        self.value = clean
         self.updated_at = datetime.now(UTC)

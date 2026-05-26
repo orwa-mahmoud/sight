@@ -257,18 +257,37 @@ async def _save_agent_messages(
     )
 
 
-async def _acquire_thread_lock(thread_id: str) -> ThreadLock | None:
-    """Try to acquire a Redis-based thread lock. Returns the lock or None."""
-    from src.ai.concurrency import ThreadLock  # noqa: PLC0415
+_redis_client: object | None = None
 
+
+def _get_redis_client() -> object | None:
+    global _redis_client  # noqa: PLW0603
+    if _redis_client is not None:
+        return _redis_client
     try:
         import redis.asyncio as aioredis  # noqa: PLC0415
 
         from src.config.settings import get_settings  # noqa: PLC0415
 
-        client = aioredis.from_url(get_settings().redis_url)
+        _redis_client = aioredis.from_url(get_settings().redis_url)
+        return _redis_client
+    except Exception:
+        return None
+
+
+async def _acquire_thread_lock(thread_id: str) -> ThreadLock | None:
+    """Acquire a Redis-based thread lock. Returns the lock or None if unavailable."""
+    from src.ai.concurrency import ThreadLock  # noqa: PLC0415
+
+    client = _get_redis_client()
+    if client is None:
+        return None
+
+    try:
         lock = ThreadLock(client, thread_id)
-        await lock.acquire()
+        acquired = await lock.acquire()
+        if not acquired:
+            logger.warning("gateway.thread_lock.contention", thread_id=thread_id)
         return lock
     except Exception:
         logger.warning("gateway.thread_lock.unavailable", thread_id=thread_id)

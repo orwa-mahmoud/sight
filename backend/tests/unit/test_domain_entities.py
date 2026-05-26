@@ -30,15 +30,15 @@ def test_tenant_create_emits_event() -> None:
 
 
 def test_tenant_suspend_and_activate() -> None:
-    t = Tenant.create(name="X", slug="x")
+    t = Tenant.create(name="X", slug="xx")
     t.suspend()
     assert t.status == TenantStatus.SUSPENDED
     t.activate()
-    assert t.status == TenantStatus.ACTIVE
+    assert t.status == TenantStatus.ACTIVE  # type: ignore[comparison-overlap]
 
 
 def test_tenant_double_suspend_raises() -> None:
-    t = Tenant.create(name="X", slug="x")
+    t = Tenant.create(name="X", slug="xx")
     t.suspend()
     with pytest.raises(InvalidOperationError):
         t.suspend()
@@ -51,7 +51,7 @@ def test_tenant_rename() -> None:
 
 
 def test_tenant_rename_empty_raises() -> None:
-    t = Tenant.create(name="X", slug="x")
+    t = Tenant.create(name="X", slug="xx")
     with pytest.raises(InvalidOperationError):
         t.rename("   ")
 
@@ -177,7 +177,7 @@ def test_question_submit_and_resolve() -> None:
     )
     assert q.status == QuestionStatus.SUBMITTED
     q.resolve(reply="9-5 Sun-Thu", replied_by_user_id=uuid4())
-    assert q.status == QuestionStatus.RESOLVED
+    assert q.status == QuestionStatus.RESOLVED  # type: ignore[comparison-overlap]
     assert q.owner_reply == "9-5 Sun-Thu"
 
 
