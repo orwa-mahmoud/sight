@@ -43,10 +43,37 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
       navbar={{ width: 240, breakpoint: "sm" }}
       padding="lg"
     >
+      <a
+        href="#main-content"
+        style={{
+          position: "absolute",
+          left: -9999,
+          top: "auto",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.position = "fixed";
+          e.currentTarget.style.left = "8px";
+          e.currentTarget.style.top = "8px";
+          e.currentTarget.style.width = "auto";
+          e.currentTarget.style.height = "auto";
+          e.currentTarget.style.zIndex = "9999";
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.position = "absolute";
+          e.currentTarget.style.left = "-9999px";
+        }}
+      >
+        Skip to content
+      </a>
       <MantineAppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group gap="xs">
             <Box
+              role="img"
+              aria-label="Frontdesk logo"
               style={{
                 width: 30,
                 height: 30,
@@ -111,7 +138,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
         </ScrollArea>
       </MantineAppShell.Navbar>
 
-      <MantineAppShell.Main>{children}</MantineAppShell.Main>
+      <MantineAppShell.Main id="main-content">{children}</MantineAppShell.Main>
     </MantineAppShell>
   );
 }
