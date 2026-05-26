@@ -66,20 +66,20 @@ class ChannelAdapter(ABC):
     @abstractmethod
     async def send_voice(self, recipient: str, audio: bytes, mime_type: str = "audio/ogg") -> None: ...
 
-    async def send_image(self, recipient: str, image_url: str, caption: str = "") -> None:
+    async def send_image(self, recipient: str, image_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send an image message. Override in subclasses that support native media."""
         text = f"{caption}\n{image_url}" if caption else image_url
-        await self.send_text(recipient, text)
+        return await self.send_text(recipient, text)
 
-    async def send_video(self, recipient: str, video_url: str, caption: str = "") -> None:
+    async def send_video(self, recipient: str, video_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send a video message. Override in subclasses that support native media."""
         text = f"{caption}\n{video_url}" if caption else video_url
-        await self.send_text(recipient, text)
+        return await self.send_text(recipient, text)
 
-    async def send_document(self, recipient: str, document_url: str, caption: str = "") -> None:
+    async def send_document(self, recipient: str, document_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send a document message. Override in subclasses that support native media."""
         text = f"{caption}\n{document_url}" if caption else document_url
-        await self.send_text(recipient, text)
+        return await self.send_text(recipient, text)
 
     async def send_media_group(self, recipient: str, image_urls: list[str], caption: str = "") -> dict[str, Any] | None:
         """Send multiple images as an album. Override in subclasses that support native albums.

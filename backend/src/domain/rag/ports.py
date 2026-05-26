@@ -32,7 +32,8 @@ class EmbeddingPort(Protocol):
 
 
 class RerankerPort(Protocol):
-    async def rerank(self, query: str, chunks: list[RetrievedChunk], *, top_k: int = 8) -> list[RetrievedChunk]: ...
+    # Sync for now; upgrade to async when a real reranker (Cohere, cross-encoder) is added.
+    def rerank(self, query: str, chunks: list[RetrievedChunk], *, top_k: int = 8) -> list[RetrievedChunk]: ...
 
 
 class RetrieverPort(Protocol):

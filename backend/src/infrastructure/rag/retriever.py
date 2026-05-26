@@ -66,7 +66,7 @@ class HybridRetriever:
             if cid in by_id
         ]
 
-        return await self._reranker.rerank(query, candidates, top_k=top_k)
+        return self._reranker.rerank(query, candidates, top_k=top_k)
 
     # ── Stage 1: vector (HNSW cosine) ─────────────────────────────
     async def _vector_search(

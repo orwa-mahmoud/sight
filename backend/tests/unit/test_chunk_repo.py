@@ -31,8 +31,7 @@ def _make_chunk(
     )
 
 
-@pytest.mark.asyncio
-async def test_save_many_adds_models_and_marks_persisted() -> None:
+def test_save_many_adds_models_and_marks_persisted() -> None:
     session = MagicMock()
     repo = PostgresChunkRepository(session)
 
@@ -40,7 +39,7 @@ async def test_save_many_adds_models_and_marks_persisted() -> None:
     for c in chunks:
         assert c.is_new is True
 
-    await repo.save_many(chunks)
+    repo.save_many(chunks)
 
     session.add_all.assert_called_once()
     models = session.add_all.call_args[0][0]

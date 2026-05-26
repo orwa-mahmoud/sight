@@ -19,7 +19,8 @@ class DocumentRepository(Protocol):
 
 
 class ChunkRepository(Protocol):
-    async def save_many(self, chunks: list[Chunk]) -> None: ...
+    # Sync — add_all is sync. Upgrade to async if batch insert is needed.
+    def save_many(self, chunks: list[Chunk]) -> None: ...
 
     async def delete_for_document(self, document_id: UUID) -> None: ...
 

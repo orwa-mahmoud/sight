@@ -23,7 +23,7 @@ class OutboxEventModel(Base):
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
     event_type: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
-    event_data: Mapped[dict] = mapped_column(JSONB, nullable=False)  # type: ignore[type-arg]
+    event_data: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     tenant_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     delivered: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(

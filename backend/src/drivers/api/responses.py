@@ -1,4 +1,4 @@
-"""Domain exception → HTTP response mapping.
+"""Domain exception -> HTTP response mapping.
 
 Registered on the FastAPI app so use cases can raise `DomainError` (and its
 subclasses) without ever knowing about HTTP. Each subclass declares its
@@ -13,7 +13,8 @@ from fastapi.responses import JSONResponse
 from src.domain.shared.exceptions import DomainError
 
 
-def domain_error_handler(_request: Request, exc: DomainError) -> JSONResponse:
+def domain_error_handler(_request: Request, exc: Exception) -> JSONResponse:
+    assert isinstance(exc, DomainError)
     return JSONResponse(
         status_code=exc.http_status,
         content={"detail": str(exc) or "An error occurred"},

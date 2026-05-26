@@ -13,6 +13,7 @@ instead of property-specific.
 from __future__ import annotations
 
 import json
+from typing import Any
 from uuid import UUID
 
 import structlog
@@ -20,6 +21,7 @@ import structlog
 from src.application.conversations.commands import SaveThreadMessage
 from src.application.conversations.use_cases.save_thread_message import SaveThreadMessageUseCase
 from src.application.shared.unit_of_work import UnitOfWork
+from src.domain.conversations.entities import Message
 from src.domain.conversations.value_objects import ConversationChannel, ConversationRole
 from src.domain.llm.ports import LLMClientPort
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole
@@ -123,7 +125,7 @@ async def maybe_create_checkpoint(
     logger.info("checkpoint.created", thread_id=thread_id, tokens_before=total_tokens)
 
 
-def _build_summarizer_input(messages: list) -> str:  # type: ignore[type-arg]
+def _build_summarizer_input(messages: list[Message]) -> str:
     lines: list[str] = []
     recent = messages[-_MAX_RECENT_MESSAGES:] if len(messages) > _MAX_RECENT_MESSAGES else messages
     if len(messages) > _MAX_RECENT_MESSAGES:
@@ -139,7 +141,7 @@ def _build_summarizer_input(messages: list) -> str:  # type: ignore[type-arg]
     return "\n".join(lines)
 
 
-def _parse_summary(summary_text: str) -> tuple[str, dict | None]:  # type: ignore[type-arg]
+def _parse_summary(summary_text: str) -> tuple[str, dict[str, Any] | None]:
     cleaned = summary_text.strip()
     if cleaned.startswith("```"):
         cleaned = cleaned.split("\n", 1)[-1] if "\n" in cleaned else cleaned[3:]

@@ -13,11 +13,12 @@ import asyncio
 import hashlib
 import time
 from collections import OrderedDict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import structlog
 
 from src.infrastructure.channels.telegram import TelegramAdapter
+from src.infrastructure.channels.telegram import _TenantConfigLike as _TelegramConfigLike
 from src.infrastructure.channels.whatsapp import WhatsAppAdapter
 
 if TYPE_CHECKING:
@@ -97,21 +98,21 @@ async def get_whatsapp_adapter(
     key = f"wa:{tenant_id}:{_cred_hash(phone_number_id, access_token)}"
     existing = await _cache.get(key)
     if existing is not None:
-        return existing  # type: ignore[return-value]
+        return cast(WhatsAppAdapter, existing)
 
     adapter = WhatsAppAdapter(phone_number_id=phone_number_id, access_token=access_token)
     await _cache.put(key, adapter)
     return adapter
 
 
-async def get_telegram_adapter(tenant_id: str, *, tenant_config: object) -> TelegramAdapter:
+async def get_telegram_adapter(tenant_id: str, *, tenant_config: _TelegramConfigLike | None = None) -> TelegramAdapter:
     """Get or create a cached TelegramAdapter for this tenant."""
     token = getattr(tenant_config, "telegram_bot_token", "") or ""
     key = f"tg:{tenant_id}:{_cred_hash(token)}"
     existing = await _cache.get(key)
     if existing is not None:
-        return existing  # type: ignore[return-value]
+        return cast(TelegramAdapter, existing)
 
-    adapter = TelegramAdapter(tenant_config=tenant_config)  # type: ignore[arg-type]
+    adapter = TelegramAdapter(tenant_config=tenant_config)
     await _cache.put(key, adapter)
     return adapter

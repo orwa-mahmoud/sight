@@ -71,7 +71,7 @@ class IngestDocumentUseCase:
                 )
                 for i in range(len(text_chunks))
             ]
-            await self._uow.chunks.save_many(chunks)
+            self._uow.chunks.save_many(chunks)
             doc.mark_ready(chunk_count=len(chunks))
             await self._uow.documents.save(doc)
         except Exception as exc:

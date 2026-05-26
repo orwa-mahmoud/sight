@@ -28,12 +28,27 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   }, []);
 
   useEffect(() => {
-    // Bootstrap effect: load the current user once on mount. setUser is
-    // called only after the awaited promise resolves, so the lint rule
-    // about synchronous setState-in-effect doesn't apply here.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadCurrentUser();
-  }, [loadCurrentUser]);
+    let cancelled = false;
+    (async () => {
+      const token = getToken();
+      if (!token) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+      try {
+        const me = await authApi.me();
+        if (!cancelled) setUser(me);
+      } catch {
+        if (!cancelled) {
+          clearToken();
+          setUser(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
