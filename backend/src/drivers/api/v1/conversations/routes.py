@@ -9,21 +9,14 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 from sqlalchemy import func, select
 
-from src.domain.shared.exceptions import AuthenticationError, AuthorizationError, EntityNotFoundError
-from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
+from src.domain.shared.exceptions import AuthorizationError, EntityNotFoundError
+from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep, resolve_tenant_id
 from src.drivers.api.v1.conversations.schemas import ConversationSummary, DailySummaryResponse, MessageResponse
 from src.infrastructure.persistence.postgres.models.conversation import ConversationModel
 from src.infrastructure.persistence.postgres.models.message import MessageModel
 from src.infrastructure.persistence.postgres.models.question import QuestionModel
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
-
-
-async def _resolve_tenant_id(current_user: CurrentUser, uow: UnitOfWorkDep) -> UUID:
-    links = await uow.user_tenants.list_for_user(current_user.id)
-    if not links:
-        raise AuthenticationError("User is not associated with any tenant")
-    return links[0].tenant_id
 
 
 @router.get("")
@@ -33,7 +26,7 @@ async def list_conversations(
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[ConversationSummary]:
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     stmt = (
         select(ConversationModel)
         .where(ConversationModel.tenant_id == tenant_id)
@@ -57,7 +50,7 @@ async def list_conversations(
 @router.get("/daily-summary")
 async def daily_summary(current_user: CurrentUser, uow: UnitOfWorkDep) -> DailySummaryResponse:
     """What happened today — message count, conversation count, question count."""
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     today = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     session = uow._session
 
@@ -103,7 +96,7 @@ async def get_messages(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
 ) -> list[MessageResponse]:
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     conv = await uow.conversations.get_by_id(conversation_id)
     if conv is None:
         raise EntityNotFoundError("Conversation not found")

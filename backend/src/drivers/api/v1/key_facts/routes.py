@@ -8,8 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
-from src.domain.shared.exceptions import AuthenticationError
-from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
+from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep, resolve_tenant_id
 
 router = APIRouter(prefix="/key-facts", tags=["key-facts"])
 
@@ -21,20 +20,13 @@ class KeyFactResponse(BaseModel):
     value: str
 
 
-async def _resolve_tenant_id(current_user: CurrentUser, uow: UnitOfWorkDep) -> UUID:
-    links = await uow.user_tenants.list_for_user(current_user.id)
-    if not links:
-        raise AuthenticationError("User is not associated with any tenant")
-    return links[0].tenant_id
-
-
 @router.get("")
 async def list_key_facts(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
     contact_id: Annotated[UUID | None, Query()] = None,
 ) -> list[KeyFactResponse]:
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     if contact_id:
         facts = await uow.key_facts.list_for_contact(tenant_id, contact_id)
     else:

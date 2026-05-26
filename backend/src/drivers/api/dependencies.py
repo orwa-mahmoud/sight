@@ -58,3 +58,11 @@ async def get_current_user(
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 UnitOfWorkDep = Annotated[UnitOfWork, Depends(get_uow)]
+
+
+async def resolve_tenant_id(current_user: User, uow: UnitOfWork) -> UUID:
+    """Resolve the tenant ID for the current user. Shared across route files."""
+    links = await uow.user_tenants.list_for_user(current_user.id)
+    if not links:
+        raise AuthenticationError("User is not associated with any tenant")
+    return links[0].tenant_id

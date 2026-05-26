@@ -13,9 +13,9 @@ from src.application.documents.use_cases.ingest_document import IngestDocumentUs
 from src.application.documents.use_cases.list_documents import DeleteDocumentUseCase, ListDocumentsUseCase
 from src.application.documents.use_cases.retrieve_for_query import RetrieveForQueryUseCase
 from src.application.shared.unit_of_work import UnitOfWork
-from src.domain.shared.exceptions import AuthenticationError, EntityNotFoundError
+from src.domain.shared.exceptions import EntityNotFoundError
 from src.domain.tenant_config.entities import TenantConfig
-from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
+from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep, resolve_tenant_id
 from src.drivers.api.v1.documents.schemas import (
     DocumentSummary,
     RetrievedChunkResponse,
@@ -29,13 +29,6 @@ from src.infrastructure.rag.retriever import HybridRetriever
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 _MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25 MB hard cap for v1
-
-
-async def _resolve_tenant_id(current_user: CurrentUser, uow: UnitOfWorkDep) -> UUID:
-    links = await uow.user_tenants.list_for_user(current_user.id)
-    if not links:
-        raise AuthenticationError("User is not associated with any tenant")
-    return links[0].tenant_id
 
 
 async def _load_tenant_config(tenant_id: UUID, uow: UnitOfWork) -> TenantConfig:
@@ -70,7 +63,7 @@ async def upload_document(
     if len(content) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File too large (25 MB max)")
 
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     config = await _load_tenant_config(tenant_id, uow)
 
     use_case = IngestDocumentUseCase(
@@ -106,7 +99,7 @@ async def list_documents(
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[DocumentSummary]:
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     dtos = await ListDocumentsUseCase(uow=uow).execute(ListDocuments(tenant_id=tenant_id, limit=limit, offset=offset))
     return [
         DocumentSummary(
@@ -130,7 +123,7 @@ async def delete_document(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
 ) -> None:
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     await DeleteDocumentUseCase(uow=uow).execute(tenant_id=tenant_id, document_id=document_id)
 
 
@@ -142,7 +135,7 @@ async def retrieve(
 ) -> RetrieveResponse:
     """Test endpoint: run the hybrid retriever and return the matched chunks
     + RRF scores. Useful for tuning the index and for the future "trace" UI."""
-    tenant_id = await _resolve_tenant_id(current_user, uow)
+    tenant_id = await resolve_tenant_id(current_user, uow)
     config = await _load_tenant_config(tenant_id, uow)
     retriever = HybridRetriever(session=uow._session, embedder=_build_embedder(config))
     dtos = await RetrieveForQueryUseCase(retriever=retriever).execute(
