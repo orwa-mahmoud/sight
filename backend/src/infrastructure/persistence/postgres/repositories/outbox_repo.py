@@ -38,6 +38,7 @@ class OutboxRepository:
             .where(OutboxEventModel.delivered.is_(False))
             .order_by(OutboxEventModel.created_at.asc())
             .limit(limit)
+            .with_for_update(skip_locked=True)
         )
         result = await self._session.execute(stmt)
         return list(result.scalars().all())

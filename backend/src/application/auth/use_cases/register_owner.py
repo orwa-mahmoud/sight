@@ -57,6 +57,8 @@ class RegisterOwnerUseCase:
 
         await self._uow.users.save(user)
         await self._uow.tenants.save(tenant)
+        self._uow.track(user)
+        self._uow.track(tenant)
         # Ensure FK targets exist before inserting the link row.
         await self._uow.flush()
 

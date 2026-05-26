@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.domain.shared.entities import BaseEntity
 from src.infrastructure.persistence.postgres.repositories.chunk_repo import PostgresChunkRepository
 from src.infrastructure.persistence.postgres.repositories.contact_repo import PostgresContactRepository
 from src.infrastructure.persistence.postgres.repositories.conversation_repo import (
@@ -69,6 +70,7 @@ class UnitOfWork:
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+        self._tracked_entities: list[BaseEntity] = []
         self.tenants = PostgresTenantRepository(session)
         self.users = PostgresUserRepository(session)
         self.user_tenants = PostgresUserTenantRepository(session)
@@ -83,6 +85,10 @@ class UnitOfWork:
         self.contacts = PostgresContactRepository(session)
         self.telegram_phones = PostgresTelegramPhoneRepository(session)
 
+    def track(self, entity: BaseEntity) -> None:
+        """Register an entity for post-commit event collection."""
+        self._tracked_entities.append(entity)
+
     async def flush(self) -> None:
         """Push pending inserts/updates to the DB without committing — useful
         before referencing newly created entities in FK rows within the same txn."""
@@ -90,6 +96,19 @@ class UnitOfWork:
 
     async def commit(self) -> None:
         await self._session.commit()
+        self._dispatch_events()
 
     async def rollback(self) -> None:
+        self._tracked_entities.clear()
         await self._session.rollback()
+
+    def _dispatch_events(self) -> None:
+        from src.bootstrap.events import publish  # noqa: PLC0415
+
+        all_events = []
+        for entity in self._tracked_entities:
+            all_events.extend(entity.pending_events)
+            entity.clear_events()
+        self._tracked_entities.clear()
+        if all_events:
+            publish(all_events)

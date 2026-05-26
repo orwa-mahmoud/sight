@@ -36,17 +36,23 @@ class OpenAIEmbedder:
             self._client = AsyncOpenAI(api_key=self._api_key)
         return self._client
 
+    _BATCH_SIZE = 512
+
     async def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
         if not texts:
             return []
         client = self._get_client()
         cleaned = [t if t.strip() else " " for t in texts]
-        response = await client.embeddings.create(
-            model=self._model,
-            input=list(cleaned),
-            dimensions=self._dimensions,
-        )
-        return [d.embedding for d in response.data]
+        all_embeddings: list[list[float]] = []
+        for i in range(0, len(cleaned), self._BATCH_SIZE):
+            batch = cleaned[i : i + self._BATCH_SIZE]
+            response = await client.embeddings.create(
+                model=self._model,
+                input=list(batch),
+                dimensions=self._dimensions,
+            )
+            all_embeddings.extend(d.embedding for d in response.data)
+        return all_embeddings
 
     async def embed_query(self, text: str) -> list[float]:
         result = await self.embed_documents([text])

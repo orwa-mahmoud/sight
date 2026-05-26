@@ -27,4 +27,5 @@ class ReplyToQuestionUseCase:
 
         question.resolve(reply=cmd.reply, replied_by_user_id=cmd.replied_by_user_id)
         await self._uow.questions.save(question)
+        self._uow.track(question)
         return to_dto(question)

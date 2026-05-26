@@ -24,4 +24,5 @@ class SubmitQuestionUseCase:
             ai_answer_attempt=cmd.ai_answer_attempt,
         )
         await self._uow.questions.save(question)
+        self._uow.track(question)
         return to_dto(question)
