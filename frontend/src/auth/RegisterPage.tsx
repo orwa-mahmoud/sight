@@ -12,12 +12,12 @@ import {
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "./useAuth";
 
 export function RegisterPage() {
-  const { register } = useAuth();
+  const { user, register } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
@@ -60,6 +60,8 @@ export function RegisterPage() {
       setSubmitting(false);
     }
   });
+
+  if (user) return <Navigate to="/" replace />;
 
   return (
     <Stack align="center" justify="center" mih="100vh" px="md" py="lg">
