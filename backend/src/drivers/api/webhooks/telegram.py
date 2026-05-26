@@ -18,7 +18,6 @@ from src.ai.types import ChatInput
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationChannel
 from src.drivers.api.dependencies import get_session
-from src.infrastructure.channels.telegram import TelegramAdapter
 
 logger = structlog.get_logger()
 
@@ -84,7 +83,9 @@ async def _handle_telegram_post(tid: UUID, body: dict[str, Any], secret_header: 
             await uow.commit()
 
             if config.telegram_bot_token and chat_id:
-                adapter = TelegramAdapter(tenant_config=config)  # type: ignore[arg-type]
+                from src.infrastructure.channels.cache import get_telegram_adapter  # noqa: PLC0415
+
+                adapter = await get_telegram_adapter(str(tid), tenant_config=config)
                 await adapter.send_text(chat_id, result.response)
         except Exception:
             await uow.rollback()
