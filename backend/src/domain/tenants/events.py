@@ -23,3 +23,9 @@ class TenantSuspended(DomainEvent):
 @dataclass(frozen=True, kw_only=True)
 class TenantActivated(DomainEvent):
     tenant_id: UUID
+
+
+@dataclass(frozen=True, kw_only=True)
+class TenantRenamed(DomainEvent):
+    tenant_id: UUID
+    new_name: str

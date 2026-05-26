@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import InvalidOperationError
-from src.domain.tenants.events import TenantActivated, TenantCreated, TenantSuspended
+from src.domain.tenants.events import TenantActivated, TenantCreated, TenantRenamed, TenantSuspended
 from src.domain.tenants.value_objects import TenantStatus
 
 
@@ -63,3 +63,4 @@ class Tenant(BaseEntity):
             raise InvalidOperationError("Tenant name cannot be empty")
         self.name = clean
         self.updated_at = datetime.now(UTC)
+        self._emit(TenantRenamed(tenant_id=self.id, new_name=clean))
