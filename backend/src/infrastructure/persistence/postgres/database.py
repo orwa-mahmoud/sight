@@ -11,13 +11,13 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from src.config.settings import get_settings
 
 
-def _build_engine() -> tuple:  # type: ignore[type-arg]
+def _build_engine() -> tuple[AsyncEngine, async_sessionmaker[AsyncSession]]:
     settings = get_settings()
     is_test = settings.app_env.lower() in {"test", "testing"}
     if is_test:

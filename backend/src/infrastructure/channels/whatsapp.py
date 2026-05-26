@@ -183,9 +183,7 @@ class WhatsAppAdapter(ChannelAdapter):
             raise
 
     @channel_send_retry()
-    async def send_image(  # type: ignore[override]
-        self, recipient: str, image_url: str, caption: str = ""
-    ) -> dict[str, Any] | None:
+    async def send_image(self, recipient: str, image_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send an image message via Meta Cloud API."""
         if not self._phone_number_id or not self._access_token:
             return None
@@ -243,9 +241,7 @@ class WhatsAppAdapter(ChannelAdapter):
         return await super().send_structured(recipient, clean_text, media)
 
     @channel_send_retry()
-    async def send_video(  # type: ignore[override]
-        self, recipient: str, video_url: str, caption: str = ""
-    ) -> dict[str, Any] | None:
+    async def send_video(self, recipient: str, video_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send a video message via Meta Cloud API."""
         if not self._phone_number_id or not self._access_token:
             return None
@@ -279,9 +275,7 @@ class WhatsAppAdapter(ChannelAdapter):
             raise
 
     @channel_send_retry()
-    async def send_document(  # type: ignore[override]
-        self, recipient: str, document_url: str, caption: str = ""
-    ) -> dict[str, Any] | None:
+    async def send_document(self, recipient: str, document_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send a document message via Meta Cloud API."""
         if not self._phone_number_id or not self._access_token:
             return None

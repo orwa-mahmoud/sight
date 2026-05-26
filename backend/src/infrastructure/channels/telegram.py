@@ -7,6 +7,7 @@ removed. General media support (images, albums, video, document, voice) retained
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Coroutine
 from typing import Any, Protocol
 
 import httpx
@@ -54,7 +55,7 @@ def _extract_tg_message_id(resp_json: dict[str, Any]) -> str:
 class _TenantConfigLike(Protocol):
     """Protocol for tenant config with telegram_bot_token."""
 
-    telegram_bot_token: str
+    telegram_bot_token: str | None
 
 
 class TelegramAdapter(ChannelAdapter):
@@ -199,9 +200,7 @@ class TelegramAdapter(ChannelAdapter):
             logger.error("telegram.send_contact_request.error", error=str(e), chat_id=recipient)
 
     @channel_send_retry()
-    async def send_image(  # type: ignore[override]
-        self, recipient: str, image_url: str, caption: str = ""
-    ) -> dict[str, Any] | None:
+    async def send_image(self, recipient: str, image_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send an image via Telegram sendPhoto API."""
         if not self._token:
             logger.warning("telegram.send_image.no_token", recipient=recipient)
@@ -259,9 +258,7 @@ class TelegramAdapter(ChannelAdapter):
             return None
 
     @channel_send_retry()
-    async def send_video(  # type: ignore[override]
-        self, recipient: str, video_url: str, caption: str = ""
-    ) -> dict[str, Any] | None:
+    async def send_video(self, recipient: str, video_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send a video via Telegram sendVideo API."""
         if not self._token:
             logger.warning("telegram.send_video.no_token", recipient=recipient)
@@ -279,9 +276,7 @@ class TelegramAdapter(ChannelAdapter):
         return resp_json
 
     @channel_send_retry()
-    async def send_document(  # type: ignore[override]
-        self, recipient: str, document_url: str, caption: str = ""
-    ) -> dict[str, Any] | None:
+    async def send_document(self, recipient: str, document_url: str, caption: str = "") -> dict[str, Any] | None:
         """Send a document via Telegram sendDocument API."""
         if not self._token:
             logger.warning("telegram.send_document.no_token", recipient=recipient)
@@ -343,11 +338,16 @@ class TelegramAdapter(ChannelAdapter):
 
         return ""
 
-    async def handle_webhook(self, raw_payload: dict[str, Any], tenant_id: str, chat_fn: object = None) -> None:
+    async def handle_webhook(
+        self,
+        raw_payload: dict[str, Any],
+        tenant_id: str,
+        chat_fn: Callable[..., Coroutine[Any, Any, dict[str, Any]]] | None = None,
+    ) -> None:
         """Handle Telegram webhook update."""
         if "message" not in raw_payload:
             logger.debug("telegram.webhook.skip", update_type=list(raw_payload.keys()))
             return
 
         incoming = await self.parse_incoming(raw_payload)
-        await self.process_message(incoming, tenant_id, chat_fn=chat_fn)  # type: ignore[arg-type]
+        await self.process_message(incoming, tenant_id, chat_fn=chat_fn)

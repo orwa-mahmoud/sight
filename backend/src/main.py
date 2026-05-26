@@ -6,9 +6,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import structlog
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from src.config.settings import get_settings
@@ -88,8 +87,15 @@ def create_app() -> FastAPI:
     )
 
     app.state.limiter = limiter
-    app.add_exception_handler(DomainError, domain_error_handler)  # type: ignore[arg-type]
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+    def _handle_rate_limit(request: Request, exc: Exception) -> Response:
+        from slowapi import _rate_limit_exceeded_handler  # noqa: PLC0415
+
+        assert isinstance(exc, RateLimitExceeded)
+        return _rate_limit_exceeded_handler(request, exc)
+
+    app.add_exception_handler(DomainError, domain_error_handler)
+    app.add_exception_handler(RateLimitExceeded, _handle_rate_limit)
 
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest  # noqa: PLC0415
     from starlette.responses import Response  # noqa: PLC0415

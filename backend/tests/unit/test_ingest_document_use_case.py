@@ -19,7 +19,7 @@ def _make_uow() -> MagicMock:
     uow.documents = MagicMock()
     uow.documents.save = AsyncMock()
     uow.chunks = MagicMock()
-    uow.chunks.save_many = AsyncMock()
+    uow.chunks.save_many = MagicMock()
     uow.flush = AsyncMock()
     return uow
 

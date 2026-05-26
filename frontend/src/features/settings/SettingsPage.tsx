@@ -19,7 +19,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconSettings } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   getSettings,
@@ -69,8 +69,10 @@ export function SettingsPage() {
   const botForm = useForm({ initialValues: { name: "", welcome_message: "", language: "" } });
 
   const settingsData = settingsQuery.data;
+  const initialized = useRef(false);
   useEffect(() => {
-    if (!settingsData) return;
+    if (!settingsData || initialized.current) return;
+    initialized.current = true;
     llmForm.setValues({
       provider: settingsData.llm_provider,
       model: settingsData.llm_model,
@@ -88,8 +90,7 @@ export function SettingsPage() {
       welcome_message: settingsData.bot_welcome_message,
       language: settingsData.bot_language,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settingsData]);
+  }, [settingsData, llmForm, embForm, waForm, botForm]);
 
   if (settingsQuery.isLoading) {
     return (
