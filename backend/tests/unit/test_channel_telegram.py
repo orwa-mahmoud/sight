@@ -1,3 +1,4 @@
+# mypy: disable-error-code="method-assign"
 """Unit tests for src/infrastructure/channels/telegram.py.
 
 All httpx calls are mocked -- no real network traffic.
@@ -243,13 +244,11 @@ class TestSendText:
         assert adapter._client.post.await_count == 2
 
     @pytest.mark.asyncio
-    async def test_non_400_error_logged(self) -> None:
+    async def test_non_400_error_re_raised(self) -> None:
         adapter = _make_adapter()
         adapter._client.post = AsyncMock(side_effect=_error_response(500))
-        # Should not raise -- errors are caught
-        result = await adapter.send_text("99", "hi")
-        # Returns None because chunk processing caught the error
-        assert result is None
+        with pytest.raises(httpx.HTTPStatusError):
+            await adapter.send_text("99", "hi")
 
     @pytest.mark.asyncio
     async def test_long_text_chunked(self) -> None:
@@ -271,8 +270,8 @@ class TestSendText:
     async def test_generic_exception_handled(self) -> None:
         adapter = _make_adapter()
         adapter._client.post = AsyncMock(side_effect=RuntimeError("net"))
-        result = await adapter.send_text("99", "hi")
-        assert result is None
+        with pytest.raises(RuntimeError, match="net"):
+            await adapter.send_text("99", "hi")
 
 
 # ---------------------------------------------------------------------------

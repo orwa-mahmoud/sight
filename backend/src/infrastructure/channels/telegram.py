@@ -149,8 +149,10 @@ class TelegramAdapter(ChannelAdapter):
                     last_resp = await self._send_text_plain(recipient, chunk, remove_keyboard)
                 else:
                     logger.error("telegram.send.error", error=str(e), chat_id=recipient)
+                    raise
             except Exception as e:
                 logger.error("telegram.send.error", error=str(e), chat_id=recipient)
+                raise
 
         return last_resp
 

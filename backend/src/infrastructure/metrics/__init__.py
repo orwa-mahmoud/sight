@@ -38,7 +38,7 @@ LLM_TOKENS_TOTAL = Counter(
 AGENT_INVOCATIONS_TOTAL = Counter(
     "frontdesk_agent_invocations_total",
     "Total agent loop invocations",
-    ["channel", "tenant_id"],
+    ["channel"],
 )
 
 AGENT_TOOL_CALLS_TOTAL = Counter(
@@ -57,7 +57,6 @@ AGENT_DURATION = Histogram(
 RAG_RETRIEVALS_TOTAL = Counter(
     "frontdesk_rag_retrievals_total",
     "Total hybrid retrieval queries",
-    ["tenant_id"],
 )
 
 # ── Escalation ────────────────────────────────────────────────────
