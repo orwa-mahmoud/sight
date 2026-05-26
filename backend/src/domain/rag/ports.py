@@ -14,6 +14,10 @@ from uuid import UUID
 from src.domain.rag.value_objects import RetrievedChunk, TextChunk
 
 
+class ParserPort(Protocol):
+    def parse(self, content: bytes, mime_type: object) -> str: ...
+
+
 class ChunkerPort(Protocol):
     def chunk(self, text: str) -> list[TextChunk]: ...
 

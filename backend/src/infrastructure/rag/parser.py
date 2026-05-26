@@ -25,6 +25,15 @@ def parse(content: bytes, mime_type: DocumentMimeType) -> str:
             return content.decode("utf-8", errors="replace")
 
 
+class DocumentParser:
+    """Implements ParserPort — wraps the module-level parse function."""
+
+    def parse(self, content: bytes, mime_type: object) -> str:
+        if not isinstance(mime_type, DocumentMimeType):
+            raise InvalidOperationError("Unsupported mime type")
+        return parse(content, mime_type)
+
+
 def _parse_pdf(content: bytes) -> str:
     try:
         reader = PdfReader(io.BytesIO(content))

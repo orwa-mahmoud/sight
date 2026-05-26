@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -24,6 +24,12 @@ def _make_uow() -> MagicMock:
     return uow
 
 
+def _make_parser(text: str = "Hello world") -> MagicMock:
+    parser = MagicMock()
+    parser.parse.return_value = text
+    return parser
+
+
 def _make_chunker(chunks: list[TextChunk] | None = None) -> MagicMock:
     chunker = MagicMock()
     if chunks is None:
@@ -43,7 +49,7 @@ def _make_embedder(embeddings: list[list[float]] | None = None) -> AsyncMock:
 @pytest.mark.asyncio
 async def test_ingest_unsupported_file_type() -> None:
     uow = _make_uow()
-    uc = IngestDocumentUseCase(uow=uow, chunker=_make_chunker(), embedder=_make_embedder())
+    uc = IngestDocumentUseCase(uow=uow, parser=_make_parser(), chunker=_make_chunker(), embedder=_make_embedder())
     cmd = IngestDocument(
         tenant_id=uuid4(),
         uploaded_by_user_id=uuid4(),
@@ -65,7 +71,7 @@ async def test_ingest_happy_path() -> None:
     chunker = _make_chunker(text_chunks)
     embedder = _make_embedder(embeddings)
 
-    uc = IngestDocumentUseCase(uow=uow, chunker=chunker, embedder=embedder)
+    uc = IngestDocumentUseCase(uow=uow, parser=_make_parser("chunk one\nchunk two"), chunker=chunker, embedder=embedder)
     cmd = IngestDocument(
         tenant_id=uuid4(),
         uploaded_by_user_id=uuid4(),
@@ -73,11 +79,7 @@ async def test_ingest_happy_path() -> None:
         content=b"chunk one\nchunk two",
     )
 
-    with patch(
-        "src.application.documents.use_cases.ingest_document.parse",
-        return_value="chunk one\nchunk two",
-    ):
-        dto = await uc.execute(cmd)
+    dto = await uc.execute(cmd)
 
     assert dto.status == DocumentStatus.READY.value
     assert dto.chunk_count == 2
@@ -92,7 +94,7 @@ async def test_ingest_empty_after_parsing_marks_failed() -> None:
     chunker = _make_chunker([])  # empty chunks
     embedder = _make_embedder()
 
-    uc = IngestDocumentUseCase(uow=uow, chunker=chunker, embedder=embedder)
+    uc = IngestDocumentUseCase(uow=uow, parser=_make_parser(""), chunker=chunker, embedder=embedder)
     cmd = IngestDocument(
         tenant_id=uuid4(),
         uploaded_by_user_id=uuid4(),
@@ -100,13 +102,7 @@ async def test_ingest_empty_after_parsing_marks_failed() -> None:
         content=b"",
     )
 
-    with (
-        patch(
-            "src.application.documents.use_cases.ingest_document.parse",
-            return_value="",
-        ),
-        pytest.raises(InvalidOperationError, match="empty after parsing"),
-    ):
+    with pytest.raises(InvalidOperationError, match="empty after parsing"):
         await uc.execute(cmd)
 
     # Document should have been saved with FAILED status
@@ -122,7 +118,7 @@ async def test_ingest_embedder_failure_marks_failed() -> None:
     embedder = AsyncMock()
     embedder.embed_documents.side_effect = RuntimeError("OpenAI down")
 
-    uc = IngestDocumentUseCase(uow=uow, chunker=chunker, embedder=embedder)
+    uc = IngestDocumentUseCase(uow=uow, parser=_make_parser("text"), chunker=chunker, embedder=embedder)
     cmd = IngestDocument(
         tenant_id=uuid4(),
         uploaded_by_user_id=uuid4(),
@@ -130,13 +126,7 @@ async def test_ingest_embedder_failure_marks_failed() -> None:
         content=b"Some markdown content",
     )
 
-    with (
-        patch(
-            "src.application.documents.use_cases.ingest_document.parse",
-            return_value="text",
-        ),
-        pytest.raises(RuntimeError, match="OpenAI down"),
-    ):
+    with pytest.raises(RuntimeError, match="OpenAI down"):
         await uc.execute(cmd)
 
     save_calls = uow.documents.save.call_args_list
@@ -152,7 +142,7 @@ async def test_ingest_to_dto_conversion() -> None:
     chunker = _make_chunker([TextChunk(index=0, content="hello")])
     embedder = _make_embedder([[0.1]])
 
-    uc = IngestDocumentUseCase(uow=uow, chunker=chunker, embedder=embedder)
+    uc = IngestDocumentUseCase(uow=uow, parser=_make_parser("hello"), chunker=chunker, embedder=embedder)
     cmd = IngestDocument(
         tenant_id=uuid4(),
         uploaded_by_user_id=uuid4(),
@@ -160,11 +150,7 @@ async def test_ingest_to_dto_conversion() -> None:
         content=b"hello",
     )
 
-    with patch(
-        "src.application.documents.use_cases.ingest_document.parse",
-        return_value="hello",
-    ):
-        dto = await uc.execute(cmd)
+    dto = await uc.execute(cmd)
 
     assert dto.filename == "readme.md"
     assert dto.mime_type == "text/markdown"
