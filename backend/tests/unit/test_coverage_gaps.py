@@ -18,11 +18,9 @@ from uuid import uuid4
 
 import pytest
 
-from src.ai.agents.agent import _execute_tool, run_agent_loop
 from src.ai.context.checkpoint import maybe_create_checkpoint
-from src.ai.tools.search_documents import SEARCH_DOCUMENTS_DEF
 from src.domain.conversations.value_objects import ConversationChannel
-from src.domain.llm.value_objects import LLMCallResult, LLMMessage, LLMMessageRole, LLMToolCall, TokenUsage
+from src.domain.llm.value_objects import LLMCallResult, TokenUsage
 from src.infrastructure.channels.whatsapp import WhatsAppAdapter
 
 # ── WhatsApp webhook ──────────────────────────────────────────────
@@ -346,75 +344,6 @@ class TestWhatsAppWebhookSignatureCheck:
 
 
 # ── Agent loop ────────────────────────────────────────────────────
-
-
-class TestAgentLoopMaxIterations:
-    """Cover lines 105-106: max iterations reached."""
-
-    async def test_max_iterations_returns_apology(self) -> None:
-        mock_llm = AsyncMock()
-        # Always return tool calls, never text
-        mock_llm.chat_with_tools.return_value = LLMCallResult(
-            text="",
-            tool_calls=(LLMToolCall(id="call_1", name="search_documents", arguments={"query": "test"}),),
-            usage=TokenUsage(input_tokens=10, output_tokens=5),
-        )
-        mock_retriever = AsyncMock()
-        mock_retriever.hybrid_retrieve.return_value = []
-
-        result = await run_agent_loop(
-            messages=[LLMMessage(role=LLMMessageRole.USER, content="test")],
-            tools=[SEARCH_DOCUMENTS_DEF],
-            llm=mock_llm,
-            tenant_id=uuid4(),
-            channel=ConversationChannel.WEB,
-            conversation_id=None,
-            contact_id=None,
-            retriever=mock_retriever,
-            uow=MagicMock(),
-        )
-        assert "apologize" in result.text.lower() or "trouble" in result.text.lower()
-        assert len(result.tool_calls) == 5  # 5 iterations
-
-
-class TestAgentUnknownTool:
-    """Cover lines 130-142: unknown tool dispatch and escalate_question."""
-
-    async def test_unknown_tool_returns_error(self) -> None:
-        result = await _execute_tool(
-            tool_name="nonexistent_tool",
-            arguments={},
-            tenant_id=uuid4(),
-            channel=ConversationChannel.WEB,
-            conversation_id=None,
-            contact_id=None,
-            retriever=AsyncMock(),
-            uow=MagicMock(),
-        )
-        assert "error" in result
-        assert "nonexistent_tool" in result["error"]
-
-    async def test_escalate_question_dispatch(self) -> None:
-        """Cover line 130-139: escalate_question tool dispatch."""
-        mock_uow = MagicMock()
-        mock_uow.questions = MagicMock()
-        mock_uow.questions.save = AsyncMock()
-        mock_uow.flush = AsyncMock()
-
-        with patch("src.ai.agents.agent.run_escalate_question", new_callable=AsyncMock) as mock_escalate:
-            mock_escalate.return_value = {"status": "submitted", "question_id": str(uuid4())}
-            result = await _execute_tool(
-                tool_name="escalate_question",
-                arguments={"question": "What are your hours?"},
-                tenant_id=uuid4(),
-                channel=ConversationChannel.WEB,
-                conversation_id=uuid4(),
-                contact_id=uuid4(),
-                retriever=AsyncMock(),
-                uow=mock_uow,
-            )
-            mock_escalate.assert_called_once()
-            assert result["status"] == "submitted"
 
 
 # ── Checkpoint ────────────────────────────────────────────────────

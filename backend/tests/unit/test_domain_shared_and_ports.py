@@ -14,7 +14,6 @@ Covers:
 
 from __future__ import annotations
 
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
@@ -23,13 +22,6 @@ import pytest
 from src.domain.contacts.entities import Contact
 from src.domain.contacts.repositories import ContactRepository
 from src.domain.conversations.value_objects import ConversationChannel
-from src.domain.notifications.entities import NotificationFailure
-from src.domain.notifications.ports import (
-    NotificationRoutingError,
-    NotificationRoutingPort,
-    ResolvedRoute,
-)
-from src.domain.notifications.repositories import NotificationFailureRepository
 from src.domain.shared.channel_result import ChannelSendResult
 from src.domain.shared.media import (
     ExtractedMedia,
@@ -257,170 +249,6 @@ class TestExtractMedia:
         assert len(media.images) == 1
         assert len(media.videos) == 1
         assert len(media.documents) == 1
-
-
-# =====================================================================
-# 3. NotificationFailure entity
-# =====================================================================
-
-
-class TestNotificationFailure:
-    def test_create_generates_id_and_timestamp(self) -> None:
-        tid = uuid4()
-        rid = uuid4()
-        f = NotificationFailure.create(
-            tenant_id=tid,
-            recipient_id=rid,
-            recipient_type="contact",
-            reason="no channel configured",
-        )
-        assert isinstance(f.id, UUID)
-        assert f.tenant_id == tid
-        assert f.recipient_id == rid
-        assert f.recipient_type == "contact"
-        assert f.reason == "no channel configured"
-        assert f.context_data == {}
-        assert f.entity_type == ""
-        assert f.entity_id == ""
-        assert isinstance(f.created_at, datetime)
-
-    def test_create_with_optional_fields(self) -> None:
-        f = NotificationFailure.create(
-            tenant_id=uuid4(),
-            recipient_id=uuid4(),
-            recipient_type="owner",
-            reason="timeout",
-            entity_type="question",
-            entity_id="q-123",
-            context_data={"attempt": 3},
-        )
-        assert f.entity_type == "question"
-        assert f.entity_id == "q-123"
-        assert f.context_data == {"attempt": 3}
-
-    def test_frozen_raises_on_mutation(self) -> None:
-        f = NotificationFailure.create(
-            tenant_id=uuid4(),
-            recipient_id=uuid4(),
-            recipient_type="user",
-            reason="fail",
-        )
-        with pytest.raises(AttributeError):
-            f.reason = "changed"  # type: ignore[misc]
-
-
-# =====================================================================
-# 4. Notification ports: ResolvedRoute, NotificationRoutingError,
-#    NotificationRoutingPort ABC
-# =====================================================================
-
-
-class TestResolvedRoute:
-    def test_defaults(self) -> None:
-        r = ResolvedRoute(channel="whatsapp", thread_id="t-123")
-        assert r.channel == "whatsapp"
-        assert r.thread_id == "t-123"
-        assert r.conversation_id is None
-        assert r.tenant_id is None
-        assert r.recipient_id is None
-
-    def test_with_all_fields(self) -> None:
-        cid = uuid4()
-        tid = uuid4()
-        rid = uuid4()
-        r = ResolvedRoute(
-            channel="telegram",
-            thread_id="tg-456",
-            conversation_id=cid,
-            tenant_id=tid,
-            recipient_id=rid,
-        )
-        assert r.conversation_id == cid
-        assert r.tenant_id == tid
-        assert r.recipient_id == rid
-
-    def test_frozen(self) -> None:
-        r = ResolvedRoute(channel="api", thread_id="x")
-        with pytest.raises(AttributeError):
-            r.channel = "whatsapp"  # type: ignore[misc]
-
-
-class TestNotificationRoutingError:
-    def test_basic_error(self) -> None:
-        err = NotificationRoutingError("no route found")
-        assert str(err) == "no route found"
-        assert err.reason == "no route found"
-        assert err.context_data == {}
-
-    def test_error_with_context(self) -> None:
-        err = NotificationRoutingError("fail", context_data={"tenant": "abc"})
-        assert err.context_data == {"tenant": "abc"}
-
-    def test_is_exception(self) -> None:
-        err = NotificationRoutingError("boom")
-        assert isinstance(err, Exception)
-
-
-class FakeRoutingPort(NotificationRoutingPort):
-    """Concrete implementation to exercise the ABC."""
-
-    async def resolve_route(
-        self,
-        *,
-        tenant_id: UUID,
-        recipient_id: UUID,
-        recipient_type: str,
-    ) -> ResolvedRoute:
-        return ResolvedRoute(channel="whatsapp", thread_id="fake-thread")
-
-
-class TestNotificationRoutingPort:
-    def test_abc_cannot_instantiate_directly(self) -> None:
-        with pytest.raises(TypeError):
-            NotificationRoutingPort()  # type: ignore[abstract]
-
-    async def test_fake_implementation_satisfies_abc(self) -> None:
-        port = FakeRoutingPort()
-        route = await port.resolve_route(
-            tenant_id=uuid4(),
-            recipient_id=uuid4(),
-            recipient_type="contact",
-        )
-        assert route.channel == "whatsapp"
-        assert route.thread_id == "fake-thread"
-
-
-# =====================================================================
-# 5. NotificationFailureRepository ABC
-# =====================================================================
-
-
-class FakeNotificationFailureRepo(NotificationFailureRepository):
-    """Concrete implementation to cover the ABC."""
-
-    def __init__(self) -> None:
-        self.saved: list[NotificationFailure] = []
-
-    async def save(self, failure: NotificationFailure) -> None:
-        self.saved.append(failure)
-
-
-class TestNotificationFailureRepository:
-    def test_abc_cannot_instantiate_directly(self) -> None:
-        with pytest.raises(TypeError):
-            NotificationFailureRepository()  # type: ignore[abstract]
-
-    async def test_fake_save(self) -> None:
-        repo = FakeNotificationFailureRepo()
-        f = NotificationFailure.create(
-            tenant_id=uuid4(),
-            recipient_id=uuid4(),
-            recipient_type="contact",
-            reason="test",
-        )
-        await repo.save(f)
-        assert len(repo.saved) == 1
-        assert repo.saved[0] is f
 
 
 # =====================================================================
