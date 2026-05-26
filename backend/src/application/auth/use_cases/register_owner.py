@@ -8,12 +8,12 @@ from src.application.auth.commands import RegisterOwner
 from src.application.auth.dtos import AuthResult
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.auth.ports import PasswordHasher
+from src.domain.auth.ports import TokenServicePort as JwtService
 from src.domain.shared.exceptions import AlreadyExistsError, InvalidOperationError
 from src.domain.tenant_config.entities import TenantConfig
 from src.domain.tenants.entities import Tenant
 from src.domain.users.entities import User, UserTenant
 from src.domain.users.value_objects import UserTenantRole
-from src.infrastructure.auth.jwt_service import JwtService
 
 _SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _MIN_PASSWORD_LENGTH = 8

@@ -48,6 +48,7 @@ class NotificationRoutingAdapter(NotificationRoutingPort):
                 session,
                 recipient_id,
                 recipient_type,
+                tenant_id,
             )
 
             # Step 1: Find most recent conversation for this recipient
@@ -89,20 +90,22 @@ class NotificationRoutingAdapter(NotificationRoutingPort):
         session: Any,
         recipient_id: uuid.UUID,
         recipient_type: str,
+        tenant_id: uuid.UUID,
     ) -> tuple[str | None, str | None]:
-        """Load phone + telegram_user_id for a recipient."""
+        """Load phone + telegram_user_id for a recipient, scoped by tenant."""
         if recipient_type in ("owner", "user"):
             user = (await session.execute(select(UserModel).where(UserModel.id == recipient_id))).scalar_one_or_none()
             if not user:
                 raise NotificationRoutingError(f"User {recipient_id} not found")
             return getattr(user, "phone", None), getattr(user, "telegram_user_id", None)
 
-        # Default: treat as contact
         contact = (
-            await session.execute(select(ContactModel).where(ContactModel.id == recipient_id))
+            await session.execute(
+                select(ContactModel).where(ContactModel.id == recipient_id, ContactModel.tenant_id == tenant_id)
+            )
         ).scalar_one_or_none()
         if not contact:
-            raise NotificationRoutingError(f"Contact {recipient_id} not found")
+            raise NotificationRoutingError(f"Contact {recipient_id} not found for tenant")
         return contact.phone, getattr(contact, "telegram_user_id", None)
 
     async def _try_existing_conversation(

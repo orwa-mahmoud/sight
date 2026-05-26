@@ -50,7 +50,7 @@ class TestLoadRecipientContact:
         session.execute = AsyncMock(return_value=_scalar_result(user))
 
         adapter = NotificationRoutingAdapter(_mock_session_factory(session))
-        phone, tg_uid = await adapter._load_recipient_contact(session, uuid4(), "owner")
+        phone, tg_uid = await adapter._load_recipient_contact(session, uuid4(), "owner", uuid4())
 
         assert phone == "+1234567890"
         assert tg_uid == "tg_123"
@@ -62,7 +62,7 @@ class TestLoadRecipientContact:
 
         adapter = NotificationRoutingAdapter(_mock_session_factory(session))
         with pytest.raises(NotificationRoutingError, match=r"User .* not found"):
-            await adapter._load_recipient_contact(session, uuid4(), "user")
+            await adapter._load_recipient_contact(session, uuid4(), "user", uuid4())
 
     @pytest.mark.asyncio
     async def test_contact_recipient_returns_phone_and_telegram(self) -> None:
@@ -71,7 +71,7 @@ class TestLoadRecipientContact:
         session.execute = AsyncMock(return_value=_scalar_result(contact))
 
         adapter = NotificationRoutingAdapter(_mock_session_factory(session))
-        phone, tg_uid = await adapter._load_recipient_contact(session, uuid4(), "contact")
+        phone, tg_uid = await adapter._load_recipient_contact(session, uuid4(), "contact", uuid4())
 
         assert phone == "+9876543210"
         assert tg_uid == "tg_456"
@@ -83,7 +83,7 @@ class TestLoadRecipientContact:
 
         adapter = NotificationRoutingAdapter(_mock_session_factory(session))
         with pytest.raises(NotificationRoutingError, match=r"Contact .* not found"):
-            await adapter._load_recipient_contact(session, uuid4(), "contact")
+            await adapter._load_recipient_contact(session, uuid4(), "contact", uuid4())
 
 
 # ---------------------------------------------------------------------------

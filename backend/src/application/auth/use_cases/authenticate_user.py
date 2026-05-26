@@ -6,8 +6,8 @@ from src.application.auth.commands import AuthenticateUser
 from src.application.auth.dtos import AuthResult
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.auth.ports import PasswordHasher
+from src.domain.auth.ports import TokenServicePort as JwtService
 from src.domain.shared.exceptions import AuthenticationError
-from src.infrastructure.auth.jwt_service import JwtService
 
 
 class AuthenticateUserUseCase:

@@ -46,7 +46,10 @@ async def get_current_user(
     if not sub:
         raise AuthenticationError("Token missing subject")
 
-    user_id = UUID(sub)
+    try:
+        user_id = UUID(sub)
+    except ValueError:
+        raise AuthenticationError("Invalid token subject")  # noqa: B904
     user = await uow.users.get_by_id(user_id)
     if user is None or not user.is_active:
         raise AuthenticationError("User no longer exists or is disabled")
