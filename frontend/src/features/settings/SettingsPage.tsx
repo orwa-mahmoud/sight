@@ -64,7 +64,7 @@ export function SettingsPage() {
     initialValues: { provider: "", model: "", api_key: "", max_tokens: 1024, temperature: 0.3 },
   });
   const embForm = useForm({ initialValues: { model: "", api_key: "", dimensions: 1536 } });
-  const waForm = useForm({ initialValues: { phone_number_id: "", access_token: "", verify_token: "" } });
+  const waForm = useForm({ initialValues: { phone_number_id: "", access_token: "", verify_token: "", app_secret: "" } });
   const tgForm = useForm({ initialValues: { bot_token: "", webhook_secret: "" } });
   const botForm = useForm({ initialValues: { name: "", welcome_message: "", language: "" } });
 
@@ -108,7 +108,7 @@ export function SettingsPage() {
     llm_temperature: 0.3, embedding_provider: "", embedding_model: "",
     embedding_api_key_masked: "", embedding_dimensions: 1536,
     whatsapp_phone_number_id: null, whatsapp_access_token_masked: null,
-    whatsapp_verify_token_masked: null, telegram_bot_token_masked: null,
+    whatsapp_verify_token_masked: null, whatsapp_app_secret_masked: null, telegram_bot_token_masked: null,
     telegram_webhook_secret_masked: null, bot_name: "", bot_welcome_message: "", bot_language: "",
   };
 
@@ -237,6 +237,7 @@ export function SettingsPage() {
                   ...(v.phone_number_id ? { phone_number_id: v.phone_number_id } : {}),
                   ...(v.access_token ? { access_token: v.access_token } : {}),
                   ...(v.verify_token ? { verify_token: v.verify_token } : {}),
+                  ...(v.app_secret ? { app_secret: v.app_secret } : {}),
                 });
               })}
             >
@@ -263,6 +264,15 @@ export function SettingsPage() {
                       : "Not set"
                   }
                   {...waForm.getInputProps("verify_token")}
+                />
+                <PasswordInput
+                  label="App Secret"
+                  description={
+                    config.whatsapp_app_secret_masked
+                      ? `Current: ${config.whatsapp_app_secret_masked}`
+                      : "Not set — required for webhook signature verification"
+                  }
+                  {...waForm.getInputProps("app_secret")}
                 />
                 <Card withBorder p="sm" bg="gray.0" radius="sm">
                   <Text size="xs" c="dimmed">

@@ -42,4 +42,6 @@ class SaveThreadMessageUseCase:
         await self._uow.messages.save(message)
         conversation.touch()
         await self._uow.conversations.save(conversation)
+        self._uow.track(conversation)
+        self._uow.track(message)
         return SaveMessageResult(message_id=message.id, conversation_id=conversation.id)

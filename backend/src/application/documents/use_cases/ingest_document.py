@@ -80,6 +80,7 @@ class IngestDocumentUseCase:
             await self._uow.documents.save(doc)
             raise
 
+        self._uow.track(doc)
         return _to_dto(doc)
 
 

@@ -22,4 +22,5 @@ class CloseQuestionUseCase:
 
         question.close()
         await self._uow.questions.save(question)
+        self._uow.track(question)
         return to_dto(question)

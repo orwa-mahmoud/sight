@@ -25,3 +25,4 @@ class RecordTokenUsageUseCase:
             channel=cmd.channel,
         )
         await self._uow.token_usages.save(usage)
+        self._uow.track(usage)
