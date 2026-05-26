@@ -45,6 +45,7 @@ const CONFIG: TenantConfigResponse = {
   whatsapp_phone_number_id: "123456",
   whatsapp_access_token_masked: "EAA****",
   whatsapp_verify_token_masked: "vt****",
+  whatsapp_app_secret_masked: null,
   telegram_bot_token_masked: "bot****",
   telegram_webhook_secret_masked: "ws****",
   bot_name: "FD Bot",
@@ -397,6 +398,7 @@ describe("SettingsPage", () => {
       whatsapp_phone_number_id: null,
       whatsapp_access_token_masked: null,
       whatsapp_verify_token_masked: null,
+  whatsapp_app_secret_masked: null,
       telegram_bot_token_masked: null,
       telegram_webhook_secret_masked: null,
     });
@@ -518,6 +520,7 @@ describe("SettingsPage", () => {
       ...CONFIG,
       whatsapp_access_token_masked: null,
       whatsapp_verify_token_masked: null,
+  whatsapp_app_secret_masked: null,
       telegram_bot_token_masked: null,
       telegram_webhook_secret_masked: null,
     });

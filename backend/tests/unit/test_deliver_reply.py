@@ -66,9 +66,9 @@ async def test_deliver_reply_whatsapp_sends() -> None:
     uow.contacts.get_by_id = AsyncMock(return_value=contact)
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
 
-    with patch("src.infrastructure.channels.whatsapp.WhatsAppAdapter") as wa_cls:
+    with patch("src.infrastructure.channels.cache.get_whatsapp_adapter") as mock_get_wa:
         wa_instance = AsyncMock()
-        wa_cls.return_value = wa_instance
+        mock_get_wa.return_value = wa_instance
         await _deliver_reply(dto, uow)
         wa_instance.send_text.assert_awaited_once_with("+971501234567", "Thanks!")
 
@@ -80,7 +80,8 @@ async def test_deliver_reply_telegram_sends() -> None:
     dto = _make_dto(contact_id=cid, channel="telegram", tenant_id=tid)
 
     contact = MagicMock()
-    contact.phone = "123456789"
+    contact.phone = "+971501234567"
+    contact.telegram_user_id = "123456789"
     config = MagicMock()
     config.whatsapp_access_token = None
     config.telegram_bot_token = "bot-token"
@@ -89,9 +90,9 @@ async def test_deliver_reply_telegram_sends() -> None:
     uow.contacts.get_by_id = AsyncMock(return_value=contact)
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
 
-    with patch("src.infrastructure.channels.telegram.TelegramAdapter") as tg_cls:
+    with patch("src.infrastructure.channels.cache.get_telegram_adapter") as mock_get_tg:
         tg_instance = AsyncMock()
-        tg_cls.return_value = tg_instance
+        mock_get_tg.return_value = tg_instance
         await _deliver_reply(dto, uow)
         tg_instance.send_text.assert_awaited_once()
 

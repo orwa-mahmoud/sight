@@ -86,7 +86,13 @@ async def _handle_whatsapp_post(
                 logger.warning("whatsapp.webhook.invalid_signature", tenant_id=tenant_id_raw)
                 return 403
 
-            adapter = WhatsAppAdapter(tenant_config=config)
+            from src.infrastructure.channels.cache import get_whatsapp_adapter  # noqa: PLC0415
+
+            adapter = await get_whatsapp_adapter(
+                str(tid),
+                phone_number_id=config.whatsapp_phone_number_id or "",
+                access_token=config.whatsapp_access_token or "",
+            )
             incoming = await adapter.parse_incoming(payload)
 
             if not incoming.text or not incoming.sender_phone:

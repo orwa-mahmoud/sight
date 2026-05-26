@@ -11,6 +11,7 @@ export interface TenantConfigResponse {
   whatsapp_phone_number_id: string | null;
   whatsapp_access_token_masked: string | null;
   whatsapp_verify_token_masked: string | null;
+  whatsapp_app_secret_masked: string | null;
   telegram_bot_token_masked: string | null;
   telegram_webhook_secret_masked: string | null;
   bot_name: string;

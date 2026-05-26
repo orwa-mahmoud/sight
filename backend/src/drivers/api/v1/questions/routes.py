@@ -55,16 +55,22 @@ async def _deliver_reply(dto: object, uow: UnitOfWorkDep) -> None:
             return
 
         channel = ConversationChannel(dto.channel)
-        if channel == ConversationChannel.WHATSAPP and config.whatsapp_access_token:
-            from src.infrastructure.channels.whatsapp import WhatsAppAdapter  # noqa: PLC0415
+        if channel == ConversationChannel.WHATSAPP and config.whatsapp_access_token and contact.phone:
+            from src.infrastructure.channels.cache import get_whatsapp_adapter  # noqa: PLC0415
 
-            wa = WhatsAppAdapter(tenant_config=config)
+            wa = await get_whatsapp_adapter(
+                str(dto.tenant_id),
+                phone_number_id=config.whatsapp_phone_number_id or "",
+                access_token=config.whatsapp_access_token or "",
+            )
             await wa.send_text(contact.phone, dto.owner_reply)
         elif channel == ConversationChannel.TELEGRAM and config.telegram_bot_token:
-            from src.infrastructure.channels.telegram import TelegramAdapter  # noqa: PLC0415
+            tg_recipient = getattr(contact, "telegram_user_id", None) or contact.phone
+            if tg_recipient:
+                from src.infrastructure.channels.cache import get_telegram_adapter  # noqa: PLC0415
 
-            tg = TelegramAdapter(tenant_config=config)  # type: ignore[arg-type]
-            await tg.send_text(contact.phone, dto.owner_reply)
+                tg = await get_telegram_adapter(str(dto.tenant_id), tenant_config=config)
+                await tg.send_text(tg_recipient, dto.owner_reply)
     except Exception:
         logger.warning("question.reply_delivery.failed", question_id=str(dto.id), exc_info=True)
 
