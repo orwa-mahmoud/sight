@@ -6,6 +6,7 @@ export const api = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   timeout: 30_000,
+  withCredentials: true,
 });
 
 const TOKEN_KEY = "frontdesk_access_token";

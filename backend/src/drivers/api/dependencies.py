@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,12 +34,18 @@ def get_uow(session: Annotated[AsyncSession, Depends(get_session)]) -> UnitOfWor
     return UnitOfWork(session)
 
 
+_COOKIE_NAME = "frontdesk_token"
+
+
 async def get_current_user(
+    request: Request,
     token: Annotated[str | None, Depends(_oauth2_scheme)],
     uow: Annotated[UnitOfWork, Depends(get_uow)],
 ) -> User:
     if not token:
-        raise AuthenticationError("Missing bearer token")
+        token = request.cookies.get(_COOKIE_NAME)
+    if not token:
+        raise AuthenticationError("Missing authentication")
 
     payload = get_jwt_service().decode(token)
     sub = payload.get("sub")

@@ -14,8 +14,8 @@ from src.drivers.api.dependencies import get_current_user
 @pytest.mark.asyncio
 async def test_get_current_user_missing_token() -> None:
     uow = MagicMock()
-    with pytest.raises(AuthenticationError, match="Missing bearer token"):
-        await get_current_user(token=None, uow=uow)
+    with pytest.raises(AuthenticationError, match="Missing authentication"):
+        await get_current_user(request=MagicMock(cookies={}), token=None, uow=uow)
 
 
 @pytest.mark.asyncio
@@ -26,7 +26,7 @@ async def test_get_current_user_missing_sub_claim() -> None:
 
     with patch("src.drivers.api.dependencies.get_jwt_service", return_value=mock_jwt):
         with pytest.raises(AuthenticationError, match="Token missing subject"):
-            await get_current_user(token="some.jwt.token", uow=uow)
+            await get_current_user(request=MagicMock(cookies={}), token="some.jwt.token", uow=uow)
 
 
 @pytest.mark.asyncio
@@ -41,7 +41,7 @@ async def test_get_current_user_user_not_found() -> None:
 
     with patch("src.drivers.api.dependencies.get_jwt_service", return_value=mock_jwt):
         with pytest.raises(AuthenticationError, match="no longer exists"):
-            await get_current_user(token="tok", uow=uow)
+            await get_current_user(request=MagicMock(cookies={}), token="tok", uow=uow)
 
 
 @pytest.mark.asyncio
@@ -59,7 +59,7 @@ async def test_get_current_user_inactive_user() -> None:
 
     with patch("src.drivers.api.dependencies.get_jwt_service", return_value=mock_jwt):
         with pytest.raises(AuthenticationError, match="no longer exists"):
-            await get_current_user(token="tok", uow=uow)
+            await get_current_user(request=MagicMock(cookies={}), token="tok", uow=uow)
 
 
 @pytest.mark.asyncio
@@ -76,5 +76,5 @@ async def test_get_current_user_happy_path() -> None:
     mock_jwt.decode.return_value = {"sub": str(uid)}
 
     with patch("src.drivers.api.dependencies.get_jwt_service", return_value=mock_jwt):
-        result = await get_current_user(token="tok", uow=uow)
+        result = await get_current_user(request=MagicMock(cookies={}), token="tok", uow=uow)
     assert result is user
