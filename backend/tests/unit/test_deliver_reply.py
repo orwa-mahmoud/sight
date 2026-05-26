@@ -22,7 +22,7 @@ def _make_dto(
         id=uuid4(),
         conversation_id=uuid4(),
         channel=channel or "",
-        contact_id=contact_id or uuid4(),
+        contact_id=contact_id,
         question_text="Help?",
         ai_answer_attempt="Trying...",
         status="resolved",
@@ -48,6 +48,7 @@ async def test_deliver_reply_no_contact_returns_early() -> None:
     dto = _make_dto(contact_id=None)
     uow = MagicMock()
     await _deliver_reply(dto, uow)
+    uow.contacts.get_by_id.assert_not_called()
 
 
 @pytest.mark.asyncio

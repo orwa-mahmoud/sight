@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from src.ai.concurrency import ThreadLock
+    from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory
 
 import structlog
 
@@ -39,7 +40,6 @@ from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationRole
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole
 from src.domain.shared.exceptions import InvalidOperationError
-from src.infrastructure.llm.client import LangChainLLMClient
 from src.infrastructure.rag.embedder import OpenAIEmbedder
 from src.infrastructure.rag.retriever import HybridRetriever
 
@@ -115,11 +115,8 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         messages.append(LLMMessage(role=LLMMessageRole.USER, content=inp.message))
 
     # ── 4. Build LLM client + retriever from tenant config ────────
-    llm = LangChainLLMClient(
-        provider=tenant_config.llm_provider.value,
-        model=tenant_config.llm_model,
-        api_key=tenant_config.llm_api_key,
-    )
+
+    llm = _get_llm_factory().get_or_build(inp.tenant_id, tenant_config)
     embedding_key = tenant_config.embedding_api_key or tenant_config.llm_api_key
     embedder = OpenAIEmbedder(
         api_key=embedding_key,
@@ -255,6 +252,18 @@ async def _save_agent_messages(
             request_id=request_id,
         )
     )
+
+
+_llm_factory: TenantLLMClientFactory | None = None
+
+
+def _get_llm_factory() -> TenantLLMClientFactory:
+    global _llm_factory  # noqa: PLW0603
+    if _llm_factory is None:
+        from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory  # noqa: PLC0415
+
+        _llm_factory = TenantLLMClientFactory()
+    return _llm_factory
 
 
 _redis_client: object | None = None

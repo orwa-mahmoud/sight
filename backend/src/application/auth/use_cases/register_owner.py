@@ -68,6 +68,7 @@ class RegisterOwnerUseCase:
             role=UserTenantRole.OWNER,
         )
         await self._uow.user_tenants.save(link)
+        self._uow.track(link)
 
         config = TenantConfig.create_default(tenant_id=tenant.id)
         await self._uow.tenant_configs.save(config)
