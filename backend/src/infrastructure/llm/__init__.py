@@ -1,6 +1,5 @@
-"""LLM infrastructure — concrete provider adapter + token utilities."""
+"""LLM infrastructure — concrete provider adapter."""
 
 from src.infrastructure.llm.client import LangChainLLMClient
-from src.infrastructure.llm.token_counter import count_tokens
 
-__all__ = ["LangChainLLMClient", "count_tokens"]
+__all__ = ["LangChainLLMClient"]
