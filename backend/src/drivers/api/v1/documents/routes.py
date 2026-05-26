@@ -39,11 +39,14 @@ async def _load_tenant_config(tenant_id: UUID, uow: UnitOfWork) -> TenantConfig:
     return config
 
 
+_EMBEDDING_DIMENSIONS = 1536
+
+
 def _build_embedder(config: TenantConfig) -> OpenAIEmbedder:
     return OpenAIEmbedder(
         api_key=config.embedding_api_key or config.llm_api_key,
         model=config.embedding_model,
-        dimensions=config.embedding_dimensions,
+        dimensions=_EMBEDDING_DIMENSIONS,
     )
 
 

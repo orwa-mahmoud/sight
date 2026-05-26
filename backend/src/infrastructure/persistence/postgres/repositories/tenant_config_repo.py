@@ -42,7 +42,6 @@ class PostgresTenantConfigRepository:
         model.embedding_provider = config.embedding_provider
         model.embedding_model = config.embedding_model
         model.embedding_api_key = encrypt_value(config.embedding_api_key)
-        model.embedding_dimensions = config.embedding_dimensions
         model.whatsapp_phone_number_id = config.whatsapp_phone_number_id
         model.whatsapp_access_token = encrypt_value(config.whatsapp_access_token or "")
         model.whatsapp_verify_token = config.whatsapp_verify_token
@@ -73,7 +72,6 @@ class PostgresTenantConfigRepository:
             embedding_provider=c.embedding_provider,
             embedding_model=c.embedding_model,
             embedding_api_key=encrypt_value(c.embedding_api_key),
-            embedding_dimensions=c.embedding_dimensions,
             whatsapp_phone_number_id=c.whatsapp_phone_number_id,
             whatsapp_access_token=encrypt_value(c.whatsapp_access_token or ""),
             whatsapp_verify_token=c.whatsapp_verify_token,
@@ -100,7 +98,6 @@ class PostgresTenantConfigRepository:
             embedding_provider=m.embedding_provider,
             embedding_model=m.embedding_model,
             embedding_api_key=decrypt_value(m.embedding_api_key),
-            embedding_dimensions=m.embedding_dimensions,
             whatsapp_phone_number_id=m.whatsapp_phone_number_id,
             whatsapp_access_token=decrypt_value(m.whatsapp_access_token or "") or None,
             whatsapp_verify_token=m.whatsapp_verify_token,

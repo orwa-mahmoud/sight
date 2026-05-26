@@ -7,7 +7,6 @@ export interface TenantConfigResponse {
   embedding_provider: string;
   embedding_model: string;
   embedding_api_key_masked: string;
-  embedding_dimensions: number;
   whatsapp_phone_number_id: string | null;
   whatsapp_access_token_masked: string | null;
   whatsapp_verify_token_masked: string | null;

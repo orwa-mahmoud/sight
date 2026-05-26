@@ -6,8 +6,9 @@ from uuid import UUID
 
 from fastapi import APIRouter
 
-from src.domain.shared.exceptions import AuthenticationError, EntityNotFoundError
+from src.domain.shared.exceptions import AuthenticationError, AuthorizationError, EntityNotFoundError
 from src.domain.tenant_config.entities import TenantConfig
+from src.domain.users.value_objects import UserTenantRole
 from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
 from src.drivers.api.v1.settings.schemas import (
     TenantConfigResponse,
@@ -21,10 +22,14 @@ from src.drivers.api.v1.settings.schemas import (
 router = APIRouter(prefix="/settings", tags=["settings"])
 
 
-async def _resolve_config(current_user: CurrentUser, uow: UnitOfWorkDep) -> tuple[UUID, TenantConfig]:
+async def _resolve_config(
+    current_user: CurrentUser, uow: UnitOfWorkDep, *, require_owner: bool = False
+) -> tuple[UUID, TenantConfig]:
     links = await uow.user_tenants.list_for_user(current_user.id)
     if not links:
         raise AuthenticationError("User is not associated with any tenant")
+    if require_owner and links[0].role != UserTenantRole.OWNER:
+        raise AuthorizationError("Only the tenant owner can modify settings")
     tenant_id = links[0].tenant_id
     config = await uow.tenant_configs.get_by_tenant_id(tenant_id)
     if config is None:
@@ -43,7 +48,6 @@ def _to_response(config: TenantConfig) -> TenantConfigResponse:
         embedding_provider=config.embedding_provider,
         embedding_model=config.embedding_model,
         embedding_api_key_masked=mask(config.embedding_api_key),
-        embedding_dimensions=config.embedding_dimensions,
         whatsapp_phone_number_id=config.whatsapp_phone_number_id,
         whatsapp_access_token_masked=mask(config.whatsapp_access_token),
         whatsapp_verify_token_masked=mask(config.whatsapp_verify_token),
@@ -68,7 +72,7 @@ async def update_llm(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
 ) -> TenantConfigResponse:
-    _, config = await _resolve_config(current_user, uow)
+    _, config = await _resolve_config(current_user, uow, require_owner=True)
     config.update_llm(
         provider=req.provider,
         model=req.model,
@@ -86,12 +90,11 @@ async def update_embedding(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
 ) -> TenantConfigResponse:
-    _, config = await _resolve_config(current_user, uow)
+    _, config = await _resolve_config(current_user, uow, require_owner=True)
     config.update_embedding(
         provider=req.provider,
         model=req.model,
         api_key=req.api_key,
-        dimensions=req.dimensions,
     )
     await uow.tenant_configs.save(config)
     return _to_response(config)
@@ -103,7 +106,7 @@ async def update_whatsapp(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
 ) -> TenantConfigResponse:
-    _, config = await _resolve_config(current_user, uow)
+    _, config = await _resolve_config(current_user, uow, require_owner=True)
     config.update_whatsapp(
         phone_number_id=req.phone_number_id,
         access_token=req.access_token,
@@ -120,7 +123,7 @@ async def update_telegram(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
 ) -> TenantConfigResponse:
-    _, config = await _resolve_config(current_user, uow)
+    _, config = await _resolve_config(current_user, uow, require_owner=True)
     config.update_telegram(
         bot_token=req.bot_token,
         webhook_secret=req.webhook_secret,
@@ -135,7 +138,7 @@ async def update_bot(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
 ) -> TenantConfigResponse:
-    _, config = await _resolve_config(current_user, uow)
+    _, config = await _resolve_config(current_user, uow, require_owner=True)
     config.update_bot(
         name=req.name,
         welcome_message=req.welcome_message,

@@ -63,7 +63,7 @@ export function SettingsPage() {
   const llmForm = useForm({
     initialValues: { provider: "", model: "", api_key: "", max_tokens: 1024, temperature: 0.3 },
   });
-  const embForm = useForm({ initialValues: { model: "", api_key: "", dimensions: 1536 } });
+  const embForm = useForm({ initialValues: { model: "", api_key: "" } });
   const waForm = useForm({ initialValues: { phone_number_id: "", access_token: "", verify_token: "", app_secret: "" } });
   const tgForm = useForm({ initialValues: { bot_token: "", webhook_secret: "" } });
   const botForm = useForm({ initialValues: { name: "", welcome_message: "", language: "" } });
@@ -79,7 +79,6 @@ export function SettingsPage() {
     });
     embForm.setValues({
       model: settingsData.embedding_model,
-      dimensions: settingsData.embedding_dimensions,
     });
     waForm.setValues({
       phone_number_id: settingsData.whatsapp_phone_number_id ?? "",
@@ -106,7 +105,7 @@ export function SettingsPage() {
   const config = settingsQuery.data ?? {
     llm_provider: "", llm_model: "", llm_api_key_masked: "", llm_max_tokens: 1024,
     llm_temperature: 0.3, embedding_provider: "", embedding_model: "",
-    embedding_api_key_masked: "", embedding_dimensions: 1536,
+    embedding_api_key_masked: "",
     whatsapp_phone_number_id: null, whatsapp_access_token_masked: null,
     whatsapp_verify_token_masked: null, whatsapp_app_secret_masked: null, telegram_bot_token_masked: null,
     telegram_webhook_secret_masked: null, bot_name: "", bot_welcome_message: "", bot_language: "",
@@ -193,7 +192,6 @@ export function SettingsPage() {
                 embeddingMutation.mutate({
                   ...(v.model ? { model: v.model } : {}),
                   ...(v.api_key ? { api_key: v.api_key } : {}),
-                  ...(v.dimensions ? { dimensions: v.dimensions } : {}),
                 });
               })}
             >
@@ -211,13 +209,6 @@ export function SettingsPage() {
                       : "Using LLM key"
                   }
                   {...embForm.getInputProps("api_key")}
-                />
-                <NumberInput
-                  label="Dimensions"
-                  min={256}
-                  max={4096}
-                  placeholder={String(config.embedding_dimensions)}
-                  {...embForm.getInputProps("dimensions")}
                 />
                 <Button type="submit" loading={embeddingMutation.isPending}>
                   Save embedding config

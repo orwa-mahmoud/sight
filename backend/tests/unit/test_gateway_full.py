@@ -161,7 +161,6 @@ async def test_gateway_no_token_usage_when_zero_tokens() -> None:
     mock_config.llm_max_tokens = 1024
     mock_config.embedding_api_key = ""
     mock_config.embedding_model = "text-embedding-3-large"
-    mock_config.embedding_dimensions = 1536
 
     mock_result = AgentLoopResult(text="cached", input_tokens=0, output_tokens=0)
 

@@ -120,7 +120,7 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     embedder = OpenAIEmbedder(
         api_key=embedding_key,
         model=tenant_config.embedding_model,
-        dimensions=tenant_config.embedding_dimensions,
+        dimensions=1536,
     )
     retriever = HybridRetriever(session=uow._session, embedder=embedder)
 
