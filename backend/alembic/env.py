@@ -9,13 +9,11 @@ from __future__ import annotations
 
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-# Import settings + Base + every model module so SQLAlchemy's metadata
-# is fully populated before autogenerate runs.
-from src.config.settings import get_settings  # noqa: E402
-from src.infrastructure.persistence.postgres.models import Base  # noqa: E402
+from alembic import context
+from src.config.settings import get_settings
+from src.infrastructure.persistence.postgres.models import Base
 
 config = context.config
 if config.config_file_name is not None:

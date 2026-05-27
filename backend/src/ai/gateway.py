@@ -17,29 +17,33 @@ Every channel (WhatsApp webhook, Telegram webhook, API) calls
 from __future__ import annotations
 
 import uuid
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from src.ai.concurrency import ThreadLock
-    from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory
-
+import redis.asyncio as aioredis
 import structlog
 
+from src.ai.concurrency import ThreadLock
+from src.ai.context.checkpoint import maybe_create_checkpoint
 from src.ai.context.history import load_history
+from src.ai.context.memory import load_key_facts_context
 from src.ai.context.prompts import build_asker_system_prompt
 from src.ai.tools.escalate_question import ESCALATE_QUESTION_DEF
 from src.ai.tools.remove_key_fact import REMOVE_KEY_FACT_DEF
 from src.ai.tools.save_key_fact import SAVE_KEY_FACT_DEF
 from src.ai.tools.search_documents import SEARCH_DOCUMENTS_DEF
 from src.ai.types import AgentLoopResult, ChatInput, ChatResult
+from src.ai.utils.sender import resolve_sender
 from src.application.conversations.commands import SaveThreadMessage
 from src.application.conversations.use_cases.save_thread_message import SaveThreadMessageUseCase
 from src.application.llm_usage.commands import RecordTokenUsage
 from src.application.llm_usage.use_cases.record_token_usage import RecordTokenUsageUseCase
 from src.application.shared.unit_of_work import UnitOfWork
+from src.config.settings import get_settings
 from src.domain.conversations.value_objects import ConversationRole
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole
 from src.domain.shared.exceptions import InvalidOperationError
+from src.infrastructure.ai.graph import build_agent_graph, run_graph
+from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory
+from src.infrastructure.metrics import AGENT_INVOCATIONS_TOTAL, AGENT_TOOL_CALLS_TOTAL
 from src.infrastructure.rag.embedder import OpenAIEmbedder
 from src.infrastructure.rag.retriever import HybridRetriever
 
@@ -66,8 +70,6 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     # ── 0b. Resolve sender to a Contact ──────────────────────────
     contact_id = inp.contact_id
     if contact_id is None:
-        from src.ai.utils.sender import resolve_sender  # noqa: PLC0415
-
         contact_id = await resolve_sender(
             tenant_id=inp.tenant_id,
             channel=inp.channel,
@@ -97,8 +99,6 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     history = await load_history(thread_id=thread_id, uow=uow)
 
     # ── 3. Build prompt (with key facts if available) ───────────
-    from src.ai.context.memory import load_key_facts_context  # noqa: PLC0415
-
     system_msg, facts_context = build_asker_system_prompt(), ""
     if contact_id is not None:
         facts_context = await load_key_facts_context(
@@ -125,8 +125,6 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     retriever = HybridRetriever(session=uow._session, embedder=embedder)
 
     # ── 5. Acquire thread lock + run LangGraph agent ───────────────
-    from src.infrastructure.ai.graph import build_agent_graph, run_graph  # noqa: PLC0415
-
     lock = await _acquire_thread_lock(thread_id)
 
     try:
@@ -186,8 +184,6 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         )
 
     # ── 8. Maybe create checkpoint (structured summary) ─────────
-    from src.ai.context.checkpoint import maybe_create_checkpoint  # noqa: PLC0415
-
     await maybe_create_checkpoint(
         thread_id=thread_id,
         tenant_id=inp.tenant_id,
@@ -255,50 +251,34 @@ async def _save_agent_messages(
 
 
 def _record_agent_metrics(channel: str, result: AgentLoopResult) -> None:
-    from src.infrastructure.metrics import (  # noqa: PLC0415
-        AGENT_INVOCATIONS_TOTAL,
-        AGENT_TOOL_CALLS_TOTAL,
-    )
-
     AGENT_INVOCATIONS_TOTAL.labels(channel=channel).inc()
     for tc in result.tool_calls:
         AGENT_TOOL_CALLS_TOTAL.labels(tool_name=tc.tool_name).inc()
 
 
-_llm_factory: TenantLLMClientFactory | None = None
+class _Singletons:
+    llm_factory: TenantLLMClientFactory | None = None
+    redis_client: object | None = None
 
 
 def _get_llm_factory() -> TenantLLMClientFactory:
-    global _llm_factory  # noqa: PLW0603
-    if _llm_factory is None:
-        from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory  # noqa: PLC0415
-
-        _llm_factory = TenantLLMClientFactory()
-    return _llm_factory
-
-
-_redis_client: object | None = None
+    if _Singletons.llm_factory is None:
+        _Singletons.llm_factory = TenantLLMClientFactory()
+    return _Singletons.llm_factory
 
 
 def _get_redis_client() -> object | None:
-    global _redis_client  # noqa: PLW0603
-    if _redis_client is not None:
-        return _redis_client
+    if _Singletons.redis_client is not None:
+        return _Singletons.redis_client
     try:
-        import redis.asyncio as aioredis  # noqa: PLC0415
-
-        from src.config.settings import get_settings  # noqa: PLC0415
-
-        _redis_client = aioredis.from_url(get_settings().redis_url)
-        return _redis_client
+        _Singletons.redis_client = aioredis.from_url(get_settings().redis_url)
+        return _Singletons.redis_client
     except Exception:
         return None
 
 
 async def _acquire_thread_lock(thread_id: str) -> ThreadLock | None:
     """Acquire a Redis-based thread lock. Returns the lock or None if unavailable."""
-    from src.ai.concurrency import ThreadLock  # noqa: PLC0415
-
     client = _get_redis_client()
     if client is None:
         return None

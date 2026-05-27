@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 
+from docx import Document as DocxDocument
 from pypdf import PdfReader
 
 from src.domain.documents.value_objects import DocumentMimeType
@@ -45,8 +46,6 @@ def _parse_pdf(content: bytes) -> str:
 
 def _parse_docx(content: bytes) -> str:
     try:
-        from docx import Document as DocxDocument  # noqa: PLC0415
-
         doc = DocxDocument(io.BytesIO(content))
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
         return "\n\n".join(paragraphs)

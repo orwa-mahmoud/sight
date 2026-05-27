@@ -14,14 +14,18 @@ from src.domain.llm_usage.events import TokenUsageRecorded
 from src.domain.questions.events import QuestionResolved, QuestionSubmitted
 from src.domain.shared.events import DomainEvent
 from src.domain.tenants.events import TenantCreated
+from src.infrastructure.metrics import (
+    LLM_CALLS_TOTAL,
+    LLM_TOKENS_TOTAL,
+    QUESTIONS_RESOLVED_TOTAL,
+    QUESTIONS_SUBMITTED_TOTAL,
+)
 
 logger = structlog.get_logger()
 
 
 def _on_question_submitted(event: DomainEvent) -> None:
     assert isinstance(event, QuestionSubmitted)
-    from src.infrastructure.metrics import QUESTIONS_SUBMITTED_TOTAL  # noqa: PLC0415
-
     QUESTIONS_SUBMITTED_TOTAL.labels(channel=event.channel).inc()
     logger.info(
         "event.question_submitted",
@@ -33,8 +37,6 @@ def _on_question_submitted(event: DomainEvent) -> None:
 
 def _on_question_resolved(event: DomainEvent) -> None:
     assert isinstance(event, QuestionResolved)
-    from src.infrastructure.metrics import QUESTIONS_RESOLVED_TOTAL  # noqa: PLC0415
-
     QUESTIONS_RESOLVED_TOTAL.inc()
     logger.info(
         "event.question_resolved",
@@ -56,8 +58,6 @@ def _on_tenant_created(event: DomainEvent) -> None:
 
 def _on_token_usage_recorded(event: DomainEvent) -> None:
     assert isinstance(event, TokenUsageRecorded)
-    from src.infrastructure.metrics import LLM_CALLS_TOTAL, LLM_TOKENS_TOTAL  # noqa: PLC0415
-
     LLM_CALLS_TOTAL.labels(
         provider=event.provider,
         model=event.model,
