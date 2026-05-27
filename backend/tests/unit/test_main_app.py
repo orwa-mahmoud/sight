@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from starlette.routing import Route
 
 from src.main import create_app, lifespan
 
@@ -21,7 +22,7 @@ def test_create_app_returns_fastapi() -> None:
 def test_create_app_has_expected_routes() -> None:
     """The app should include health, v1, telegram, and whatsapp routes."""
     app = create_app()
-    paths = [r.path for r in app.routes]
+    paths = [r.path for r in app.routes if isinstance(r, Route)]
     assert "/health" in paths or any("/health" in p for p in paths)
     assert "/metrics" in paths or any("/metrics" in p for p in paths)
 
@@ -31,7 +32,7 @@ async def test_lifespan_calls_register_event_handlers() -> None:
     """The lifespan context manager should register event handlers on startup."""
     app = FastAPI()
 
-    with patch("src.bootstrap.event_handlers.register_event_handlers") as mock_reg:
+    with patch("src.main.register_event_handlers") as mock_reg:
         async with lifespan(app):
             mock_reg.assert_called_once()
 

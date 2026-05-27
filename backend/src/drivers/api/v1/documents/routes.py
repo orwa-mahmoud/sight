@@ -25,6 +25,7 @@ from src.drivers.api.v1.documents.schemas import (
 )
 from src.infrastructure.rag.chunker import RecursiveTokenChunker
 from src.infrastructure.rag.embedder import OpenAIEmbedder
+from src.infrastructure.rag.parser import DocumentParser
 from src.infrastructure.rag.retriever import HybridRetriever
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -69,8 +70,6 @@ async def upload_document(
 
     tenant_id = await resolve_tenant_id(current_user, uow)
     config = await _load_tenant_config(tenant_id, uow)
-
-    from src.infrastructure.rag.parser import DocumentParser  # noqa: PLC0415
 
     use_case = IngestDocumentUseCase(
         uow=uow,

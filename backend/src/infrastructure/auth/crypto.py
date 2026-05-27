@@ -16,19 +16,21 @@ from src.config.settings import get_settings
 
 logger = structlog.get_logger()
 
-_fernet: Fernet | None = None
 _ENC_PREFIX = "enc:"
 
 
+class _CryptoState:
+    fernet: Fernet | None = None
+
+
 def _get_fernet() -> Fernet | None:
-    global _fernet  # noqa: PLW0603
-    if _fernet is not None:
-        return _fernet
+    if _CryptoState.fernet is not None:
+        return _CryptoState.fernet
     key = get_settings().encryption_key
     if not key:
         return None
-    _fernet = Fernet(key.encode())
-    return _fernet
+    _CryptoState.fernet = Fernet(key.encode())
+    return _CryptoState.fernet
 
 
 def encrypt_value(plaintext: str) -> str:

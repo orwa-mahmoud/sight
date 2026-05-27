@@ -19,6 +19,7 @@ from src.ai.types import ChatInput
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationChannel
 from src.drivers.api.dependencies import get_session
+from src.infrastructure.channels.cache import get_whatsapp_adapter
 from src.infrastructure.channels.whatsapp import WhatsAppAdapter
 
 logger = structlog.get_logger()
@@ -85,8 +86,6 @@ async def _handle_whatsapp_post(
             if not WhatsAppAdapter.verify_signature(body, sig or "", config.whatsapp_app_secret):
                 logger.warning("whatsapp.webhook.invalid_signature", tenant_id=tenant_id_raw)
                 return 403
-
-            from src.infrastructure.channels.cache import get_whatsapp_adapter  # noqa: PLC0415
 
             adapter = await get_whatsapp_adapter(
                 str(tid),

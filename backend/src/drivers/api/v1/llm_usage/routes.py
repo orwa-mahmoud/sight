@@ -6,6 +6,7 @@ from fastapi import APIRouter
 
 from src.application.llm_usage.queries import GetTenantUsageStats
 from src.application.llm_usage.use_cases.get_usage_stats import GetTenantUsageStatsUseCase
+from src.domain.shared.exceptions import AuthenticationError
 from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
 from src.drivers.api.v1.llm_usage.schemas import UsageStatsResponse
 
@@ -21,8 +22,6 @@ async def stats(current_user: CurrentUser, uow: UnitOfWorkDep) -> UsageStatsResp
     links = await uow.user_tenants.list_for_user(current_user.id)
     if not links:
         # `get_current_user` already validates the user, but defend in depth.
-        from src.domain.shared.exceptions import AuthenticationError  # noqa: PLC0415
-
         raise AuthenticationError("User is not associated with any tenant")
     tenant_id = links[0].tenant_id
 

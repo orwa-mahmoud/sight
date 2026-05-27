@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.bootstrap.events import publish
 from src.domain.shared.entities import BaseEntity
 from src.infrastructure.persistence.postgres.repositories.chunk_repo import PostgresChunkRepository
 from src.infrastructure.persistence.postgres.repositories.contact_repo import PostgresContactRepository
@@ -103,8 +104,6 @@ class UnitOfWork:
         await self._session.rollback()
 
     def _dispatch_events(self) -> None:
-        from src.bootstrap.events import publish  # noqa: PLC0415
-
         all_events = []
         for entity in self._tracked_entities:
             all_events.extend(entity.pending_events)

@@ -15,6 +15,7 @@ import structlog
 from fastapi import APIRouter, Query, status
 
 from src.application.questions.commands import CloseQuestion, ReplyToQuestion, SubmitQuestion
+from src.application.questions.dtos import QuestionDTO
 from src.application.questions.queries import GetQuestion, ListQuestions
 from src.application.questions.use_cases.close_question import CloseQuestionUseCase
 from src.application.questions.use_cases.list_questions import (
@@ -31,6 +32,7 @@ from src.drivers.api.v1.questions.schemas import (
     ReplyRequest,
     SubmitQuestionRequest,
 )
+from src.infrastructure.channels.cache import get_telegram_adapter, get_whatsapp_adapter
 
 router = APIRouter(prefix="/questions", tags=["questions"])
 
@@ -40,8 +42,6 @@ logger = structlog.get_logger()
 
 async def _deliver_reply(dto: object, uow: UnitOfWorkDep) -> None:
     """Best-effort: send the owner's reply back to the asker via the original channel."""
-    from src.application.questions.dtos import QuestionDTO  # noqa: PLC0415
-
     assert isinstance(dto, QuestionDTO)
     if not dto.owner_reply or not dto.contact_id or not dto.channel:
         return
@@ -56,8 +56,6 @@ async def _deliver_reply(dto: object, uow: UnitOfWorkDep) -> None:
 
         channel = ConversationChannel(dto.channel)
         if channel == ConversationChannel.WHATSAPP and config.whatsapp_access_token and contact.phone:
-            from src.infrastructure.channels.cache import get_whatsapp_adapter  # noqa: PLC0415
-
             wa = await get_whatsapp_adapter(
                 str(dto.tenant_id),
                 phone_number_id=config.whatsapp_phone_number_id or "",
@@ -67,8 +65,6 @@ async def _deliver_reply(dto: object, uow: UnitOfWorkDep) -> None:
         elif channel == ConversationChannel.TELEGRAM and config.telegram_bot_token:
             tg_recipient = getattr(contact, "telegram_user_id", None) or contact.phone
             if tg_recipient:
-                from src.infrastructure.channels.cache import get_telegram_adapter  # noqa: PLC0415
-
                 tg = await get_telegram_adapter(str(dto.tenant_id), tenant_config=config)
                 await tg.send_text(tg_recipient, dto.owner_reply)
     except Exception:
@@ -76,8 +72,6 @@ async def _deliver_reply(dto: object, uow: UnitOfWorkDep) -> None:
 
 
 def _to_response(dto: object) -> QuestionResponse:
-    from src.application.questions.dtos import QuestionDTO  # noqa: PLC0415
-
     assert isinstance(dto, QuestionDTO)
     return QuestionResponse(
         id=dto.id,

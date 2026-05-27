@@ -47,9 +47,9 @@ async def test_gateway_full_flow_with_mocked_graph(client: None) -> None:
     )
 
     with (
-        patch("src.infrastructure.ai.graph.build_agent_graph") as mock_build,
-        patch("src.infrastructure.ai.graph.run_graph", new_callable=AsyncMock, return_value=mock_result),
-        patch("src.ai.context.checkpoint.maybe_create_checkpoint", new_callable=AsyncMock),
+        patch("src.ai.gateway.build_agent_graph") as mock_build,
+        patch("src.ai.gateway.run_graph", new_callable=AsyncMock, return_value=mock_result),
+        patch("src.ai.gateway.maybe_create_checkpoint", new_callable=AsyncMock),
     ):
         mock_build.return_value = MagicMock()
 
@@ -120,9 +120,9 @@ async def test_gateway_with_tool_calls(client: None) -> None:
     )
 
     with (
-        patch("src.infrastructure.ai.graph.build_agent_graph") as mock_build,
-        patch("src.infrastructure.ai.graph.run_graph", new_callable=AsyncMock, return_value=mock_result),
-        patch("src.ai.context.checkpoint.maybe_create_checkpoint", new_callable=AsyncMock),
+        patch("src.ai.gateway.build_agent_graph") as mock_build,
+        patch("src.ai.gateway.run_graph", new_callable=AsyncMock, return_value=mock_result),
+        patch("src.ai.gateway.maybe_create_checkpoint", new_callable=AsyncMock),
     ):
         mock_build.return_value = MagicMock()
 
@@ -175,10 +175,10 @@ async def test_gateway_no_token_usage_when_zero_tokens() -> None:
     with (
         patch("src.ai.gateway.SaveThreadMessageUseCase", return_value=mock_save_uc),
         patch("src.ai.gateway.load_history", new_callable=AsyncMock, return_value=[]),
-        patch("src.ai.context.memory.load_key_facts_context", new_callable=AsyncMock, return_value=""),
-        patch("src.infrastructure.ai.graph.build_agent_graph") as mock_build,
-        patch("src.infrastructure.ai.graph.run_graph", new_callable=AsyncMock, return_value=mock_result),
-        patch("src.ai.context.checkpoint.maybe_create_checkpoint", new_callable=AsyncMock),
+        patch("src.ai.gateway.load_key_facts_context", new_callable=AsyncMock, return_value=""),
+        patch("src.ai.gateway.build_agent_graph") as mock_build,
+        patch("src.ai.gateway.run_graph", new_callable=AsyncMock, return_value=mock_result),
+        patch("src.ai.gateway.maybe_create_checkpoint", new_callable=AsyncMock),
         patch("src.ai.gateway.RecordTokenUsageUseCase") as mock_record,
     ):
         mock_build.return_value = MagicMock()

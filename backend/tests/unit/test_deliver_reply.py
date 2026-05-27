@@ -67,7 +67,7 @@ async def test_deliver_reply_whatsapp_sends() -> None:
     uow.contacts.get_by_id = AsyncMock(return_value=contact)
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
 
-    with patch("src.infrastructure.channels.cache.get_whatsapp_adapter") as mock_get_wa:
+    with patch("src.drivers.api.v1.questions.routes.get_whatsapp_adapter") as mock_get_wa:
         wa_instance = AsyncMock()
         mock_get_wa.return_value = wa_instance
         await _deliver_reply(dto, uow)
@@ -91,7 +91,7 @@ async def test_deliver_reply_telegram_sends() -> None:
     uow.contacts.get_by_id = AsyncMock(return_value=contact)
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
 
-    with patch("src.infrastructure.channels.cache.get_telegram_adapter") as mock_get_tg:
+    with patch("src.drivers.api.v1.questions.routes.get_telegram_adapter") as mock_get_tg:
         tg_instance = AsyncMock()
         mock_get_tg.return_value = tg_instance
         await _deliver_reply(dto, uow)

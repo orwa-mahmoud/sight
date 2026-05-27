@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.rag.ports import EmbeddingPort, RerankerPort
 from src.domain.rag.value_objects import RetrievedChunk
+from src.infrastructure.metrics import RAG_RETRIEVALS_TOTAL
 from src.infrastructure.persistence.postgres.models.chunk import ChunkModel
 from src.infrastructure.rag.reranker import PassThroughReranker
 
@@ -38,8 +39,6 @@ class HybridRetriever:
         tenant_id: UUID,
         top_k: int = 8,
     ) -> list[RetrievedChunk]:
-        from src.infrastructure.metrics import RAG_RETRIEVALS_TOTAL  # noqa: PLC0415
-
         query = query.strip()
         if not query:
             return []

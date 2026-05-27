@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import InvalidOperationError
+from src.domain.shared.utils import is_valid_slug
 from src.domain.tenants.events import TenantActivated, TenantCreated, TenantRenamed, TenantSuspended
 from src.domain.tenants.value_objects import TenantStatus
 
@@ -22,8 +23,6 @@ class Tenant(BaseEntity):
 
     @classmethod
     def create(cls, *, name: str, slug: str) -> Tenant:
-        from src.domain.shared.utils import is_valid_slug  # noqa: PLC0415
-
         clean_name = name.strip()
         clean_slug = slug.strip().lower()
         if not clean_name:
