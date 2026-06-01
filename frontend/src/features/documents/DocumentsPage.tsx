@@ -1,5 +1,12 @@
 import { Badge, Box, Button, FileButton, Group, Stack, Text, Title } from "@mantine/core";
-import { IconCircleCheck, IconFileText, IconMessageCircle, IconTrash, IconUpload } from "@tabler/icons-react";
+import {
+  IconAlertCircle,
+  IconCircleCheck,
+  IconFileText,
+  IconMessageCircle,
+  IconTrash,
+  IconUpload,
+} from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useMemo } from "react";
@@ -112,11 +119,25 @@ export function DocumentsPage() {
       {
         key: "status",
         header: t("documents.colStatus"),
-        accessor: (d) => (
-          <Badge color={STATUS_COLOR[d.status] ?? "gray"} variant="light">
-            {d.status}
-          </Badge>
-        ),
+        accessor: (d) => {
+          const badge = (
+            <Badge color={STATUS_COLOR[d.status] ?? "gray"} variant="light">
+              {d.status}
+            </Badge>
+          );
+          if (d.status === "failed" && d.error) {
+            return (
+              <Group gap={6} wrap="nowrap" align="center">
+                <IconAlertCircle size={14} color="var(--mantine-color-red-6)" />
+                {badge}
+                <Text size="xs" c="red" lineClamp={1} maw={220} title={d.error}>
+                  {d.error}
+                </Text>
+              </Group>
+            );
+          }
+          return badge;
+        },
       },
       {
         key: "chunk_count",

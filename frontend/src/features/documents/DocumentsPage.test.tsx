@@ -101,6 +101,23 @@ describe("DocumentsPage", () => {
     });
   });
 
+  it("surfaces the ingestion error reason for failed documents", async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [
+        {
+          ...DOC_LIST[0],
+          id: "df",
+          filename: "broken.pdf",
+          status: "failed",
+          error: "Unsupported encoding in PDF",
+        },
+      ],
+    });
+    render(<DocumentsPage />, { wrapper: createWrapper() });
+    await waitFor(() => expect(screen.getByText("failed")).toBeInTheDocument());
+    expect(screen.getByText("Unsupported encoding in PDF")).toBeInTheDocument();
+  });
+
   it("shows status badges", async () => {
     vi.mocked(api.get).mockResolvedValue({ data: DOC_LIST });
     render(<DocumentsPage />, { wrapper: createWrapper() });
