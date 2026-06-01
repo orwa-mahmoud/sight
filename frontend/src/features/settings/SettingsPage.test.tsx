@@ -68,6 +68,13 @@ const CONFIG: TenantConfigResponse = {
   bot_language: "en",
 };
 
+/** Open a collapsed accordion section and wait for its save button to appear. */
+async function openSection(section: string, saveLabel: string) {
+  await waitFor(() => expect(screen.getByText(section)).toBeInTheDocument());
+  fireEvent.click(screen.getByText(section));
+  await waitFor(() => expect(screen.getByText(saveLabel)).toBeInTheDocument());
+}
+
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -184,10 +191,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateEmbedding).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Embedding Configuration")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Embedding Configuration"));
-    await waitFor(() => expect(screen.getByText("Save embedding config")).toBeInTheDocument());
+    await openSection("Embedding Configuration", "Save embedding config");
 
     fireEvent.click(screen.getByText("Save embedding config"));
     await waitFor(() => {
@@ -199,10 +203,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateWhatsApp).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("WhatsApp Cloud API")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("WhatsApp Cloud API"));
-    await waitFor(() => expect(screen.getByText("Save WhatsApp config")).toBeInTheDocument());
+    await openSection("WhatsApp Cloud API", "Save WhatsApp config");
 
     fireEvent.click(screen.getByText("Save WhatsApp config"));
     await waitFor(() => expect(updateWhatsApp).toHaveBeenCalled());
@@ -212,10 +213,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateTelegram).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Telegram Bot")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Telegram Bot"));
-    await waitFor(() => expect(screen.getByText("Save Telegram config")).toBeInTheDocument());
+    await openSection("Telegram Bot", "Save Telegram config");
 
     fireEvent.click(screen.getByText("Save Telegram config"));
     await waitFor(() => expect(updateTelegram).toHaveBeenCalled());
@@ -235,10 +233,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateBot).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Bot Personality")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Bot Personality"));
-    await waitFor(() => expect(screen.getByText("Save bot config")).toBeInTheDocument());
+    await openSection("Bot Personality", "Save bot config");
 
     fireEvent.click(screen.getByText("Save bot config"));
     await waitFor(() => expect(updateBot).toHaveBeenCalled());
@@ -248,10 +243,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateWhatsApp).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("WhatsApp Cloud API")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("WhatsApp Cloud API"));
-    await waitFor(() => expect(screen.getByText("Save WhatsApp config")).toBeInTheDocument());
+    await openSection("WhatsApp Cloud API", "Save WhatsApp config");
 
     fireEvent.change(screen.getByLabelText("Access Token"), { target: { value: "EAA-new" } });
     fireEvent.change(screen.getByLabelText("Verify Token"), { target: { value: "vt-new" } });
@@ -303,10 +295,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateWhatsApp).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("WhatsApp Cloud API")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("WhatsApp Cloud API"));
-    await waitFor(() => expect(screen.getByText("Save WhatsApp config")).toBeInTheDocument());
+    await openSection("WhatsApp Cloud API", "Save WhatsApp config");
 
     fireEvent.change(screen.getByLabelText("Phone Number ID"), { target: { value: "9999" } });
     fireEvent.click(screen.getByText("Save WhatsApp config"));
@@ -323,10 +312,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateBot).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Bot Personality")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Bot Personality"));
-    await waitFor(() => expect(screen.getByText("Save bot config")).toBeInTheDocument());
+    await openSection("Bot Personality", "Save bot config");
 
     fireEvent.change(screen.getByLabelText("Bot Name"), { target: { value: "NewBot" } });
     fireEvent.click(screen.getByText("Save bot config"));
@@ -340,10 +326,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateTelegram).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Telegram Bot")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Telegram Bot"));
-    await waitFor(() => expect(screen.getByText("Save Telegram config")).toBeInTheDocument());
+    await openSection("Telegram Bot", "Save Telegram config");
 
     const botTokenInputs = screen.getAllByLabelText("Bot Token");
     fireEvent.change(botTokenInputs.at(-1)!, { target: { value: "123:NEWTOKEN" } });
@@ -361,10 +344,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateEmbedding).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Embedding Configuration")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Embedding Configuration"));
-    await waitFor(() => expect(screen.getByText("Save embedding config")).toBeInTheDocument());
+    await openSection("Embedding Configuration", "Save embedding config");
 
     const apiKeyInputs = screen.getAllByLabelText(/api key/i);
     fireEvent.change(apiKeyInputs.at(-1)!, { target: { value: "sk-new-key" } });
@@ -382,10 +362,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateBot).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Bot Personality")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Bot Personality"));
-    await waitFor(() => expect(screen.getByText("Save bot config")).toBeInTheDocument());
+    await openSection("Bot Personality", "Save bot config");
 
     fireEvent.change(screen.getByLabelText("Welcome Message"), { target: { value: "Welcome!" } });
     fireEvent.click(screen.getByText("Save bot config"));
@@ -402,10 +379,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateTelegram).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Telegram Bot")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Telegram Bot"));
-    await waitFor(() => expect(screen.getByText("Save Telegram config")).toBeInTheDocument());
+    await openSection("Telegram Bot", "Save Telegram config");
 
     const webhookInputs = screen.getAllByLabelText("Webhook Secret");
     fireEvent.change(webhookInputs.at(-1)!, { target: { value: "ws-new" } });
@@ -423,10 +397,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateEmbedding).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Embedding Configuration")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Embedding Configuration"));
-    await waitFor(() => expect(screen.getByText("Save embedding config")).toBeInTheDocument());
+    await openSection("Embedding Configuration", "Save embedding config");
 
     fireEvent.click(screen.getByText("Save embedding config"));
     await waitFor(() => {
@@ -472,10 +443,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateBot).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Bot Personality")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Bot Personality"));
-    await waitFor(() => expect(screen.getByText("Save bot config")).toBeInTheDocument());
+    await openSection("Bot Personality", "Save bot config");
 
     const langInputs = screen.getAllByLabelText("Language");
     fireEvent.click(langInputs.at(-1)!);
@@ -492,10 +460,7 @@ describe("SettingsPage", () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateEmbedding).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
-    await waitFor(() => expect(screen.getByText("Embedding Configuration")).toBeInTheDocument());
-
-    fireEvent.click(screen.getByText("Embedding Configuration"));
-    await waitFor(() => expect(screen.getByText("Save embedding config")).toBeInTheDocument());
+    await openSection("Embedding Configuration", "Save embedding config");
 
     const modelInputs = screen.getAllByLabelText("Model");
     fireEvent.change(modelInputs.at(-1)!, { target: { value: "ada-002" } });
