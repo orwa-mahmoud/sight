@@ -142,6 +142,7 @@
     "yourReply": "Your reply",
     "reply": "Reply",
     "close": "Close",
+    "confirmCloseTitle": "Close question",
     "confirmClose": "Are you sure you want to close this question?",
     "replyModalTitle": "Reply to question",
     "replyPlaceholder": "Type the reply you'd like the AI to relay back to the asker…",

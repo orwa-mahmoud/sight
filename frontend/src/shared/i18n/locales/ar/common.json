@@ -142,6 +142,7 @@
     "yourReply": "ردّك",
     "reply": "رد",
     "close": "إغلاق",
+    "confirmCloseTitle": "إغلاق السؤال",
     "confirmClose": "هل أنت متأكد من إغلاق هذا السؤال؟",
     "replyModalTitle": "الرد على السؤال",
     "replyPlaceholder": "اكتب الرد الذي تريد أن يُبلّغه الذكاء الاصطناعي للسائل…",
