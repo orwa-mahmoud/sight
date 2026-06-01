@@ -77,11 +77,16 @@ describe("DataTable (frontend source)", () => {
     expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
   });
 
-  it("toggles sort on a sortable header", () => {
+  it("cycles sort asc → desc → none on a sortable header", () => {
     renderTable();
-    fireEvent.click(screen.getByRole("button", { name: /Name/ }));
-    const header = screen.getByRole("columnheader", { name: /Name/ });
-    expect(header).toHaveAttribute("aria-sort", "ascending");
+    const button = () => screen.getByRole("button", { name: /Name/ });
+    const header = () => screen.getByRole("columnheader", { name: /Name/ });
+    fireEvent.click(button());
+    expect(header()).toHaveAttribute("aria-sort", "ascending");
+    fireEvent.click(button());
+    expect(header()).toHaveAttribute("aria-sort", "descending");
+    fireEvent.click(button());
+    expect(header()).not.toHaveAttribute("aria-sort");
   });
 
   it("runs a row action", () => {

@@ -1,6 +1,6 @@
-import { render, screen, act } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { describe, it, expect, beforeEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import i18n, { dirFor } from "@shared/i18n";
 import { LanguageSwitcher } from "@shared/components/LanguageSwitcher";
@@ -35,5 +35,21 @@ describe("i18n", () => {
       </MantineProvider>,
     );
     expect(screen.getByLabelText("Language")).toBeInTheDocument();
+  });
+
+  it("switches language when an option is chosen from the menu", async () => {
+    render(
+      <MantineProvider>
+        <LanguageSwitcher />
+      </MantineProvider>,
+    );
+    fireEvent.click(screen.getByLabelText("Language"));
+    const arabic = await screen.findByText("العربية");
+    fireEvent.click(arabic);
+    await waitFor(() => expect(i18n.resolvedLanguage).toBe("ar"));
+  });
+
+  afterEach(async () => {
+    await i18n.changeLanguage("en");
   });
 });
