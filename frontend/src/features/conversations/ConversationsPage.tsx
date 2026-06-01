@@ -14,7 +14,7 @@ import { IconMessageCircle } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 
-import { api } from "../../core/api/client";
+import { api } from "@core/api/client";
 
 interface ConversationSummary {
   id: string;

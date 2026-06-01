@@ -1,4 +1,4 @@
-import { api } from "../../core/api/client";
+import { api } from "@core/api/client";
 import type { Question, QuestionStatus } from "./types";
 
 export async function listQuestions(status?: QuestionStatus): Promise<Question[]> {

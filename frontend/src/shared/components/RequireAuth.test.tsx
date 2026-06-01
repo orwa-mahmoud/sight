@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { AuthContext } from "../../auth/context";
+import { AuthContext } from "@auth/context";
 import { RequireAuth } from "./RequireAuth";
 
 describe("RequireAuth", () => {

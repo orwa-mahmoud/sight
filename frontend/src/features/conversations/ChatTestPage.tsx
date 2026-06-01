@@ -3,7 +3,7 @@ import { notifications } from "@mantine/notifications";
 import { IconSend } from "@tabler/icons-react";
 import { useState } from "react";
 
-import { api } from "../../core/api/client";
+import { api } from "@core/api/client";
 
 interface ChatMessage {
   id: string;

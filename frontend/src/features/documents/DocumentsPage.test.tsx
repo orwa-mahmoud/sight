@@ -5,7 +5,7 @@ import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
-vi.mock("../../core/api/client", () => ({
+vi.mock("@core/api/client", () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock("../../core/api/client", () => ({
   clearToken: vi.fn(),
 }));
 
-import { api } from "../../core/api/client";
+import { api } from "@core/api/client";
 import { DocumentsPage } from "./DocumentsPage";
 
 function createWrapper() {

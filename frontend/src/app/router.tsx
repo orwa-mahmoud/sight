@@ -1,16 +1,16 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import { LoginPage } from "../auth/LoginPage";
-import { RegisterPage } from "../auth/RegisterPage";
-import { ChatTestPage } from "../features/conversations/ChatTestPage";
-import { ConversationsPage } from "../features/conversations/ConversationsPage";
-import { DocumentsPage } from "../features/documents/DocumentsPage";
-import { InboxPage } from "../features/escalations/InboxPage";
-import { UsagePage } from "../features/llm-usage/UsagePage";
-import { SettingsPage } from "../features/settings/SettingsPage";
-import { ProtectedShell } from "../shared/components/AppShell";
-import { ErrorBoundary } from "../shared/components/ErrorBoundary";
-import { RequireAuth } from "../shared/components/RequireAuth";
+import { LoginPage } from "@auth/LoginPage";
+import { RegisterPage } from "@auth/RegisterPage";
+import { ChatTestPage } from "@features/conversations/ChatTestPage";
+import { ConversationsPage } from "@features/conversations/ConversationsPage";
+import { DocumentsPage } from "@features/documents/DocumentsPage";
+import { InboxPage } from "@features/escalations/InboxPage";
+import { UsagePage } from "@features/llm-usage/UsagePage";
+import { SettingsPage } from "@features/settings/SettingsPage";
+import { ProtectedShell } from "@shared/components/AppShell";
+import { ErrorBoundary } from "@shared/components/ErrorBoundary";
+import { RequireAuth } from "@shared/components/RequireAuth";
 
 export function AppRoutes() {
   return (

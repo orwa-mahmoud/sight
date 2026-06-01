@@ -119,9 +119,11 @@ All icons from `@tabler/icons-react`. Standard size: 18 for inline/nav, 14 for b
 
 ### Imports
 
-- Relative imports within same module (`./api`, `./types`)
-- Path-based imports across modules (`../../core/api/client`)
-- No path aliases configured
+- **Relative imports within the same module** (`./api`, `./types`)
+- **Alias imports across modules** — `@app/* @auth/* @core/* @features/* @shared/* @test/*`
+  (e.g. `@core/api/client`, `@shared/components/AppShell`). Never `../../` across
+  modules. Aliases are configured in `tsconfig.app.json` (paths) and mirrored in
+  `vite.config.ts` + `vitest.config.ts` (resolve.alias) — keep all three in sync.
 
 ### Four-State Rendering
 

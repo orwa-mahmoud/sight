@@ -1,4 +1,4 @@
-import { api } from "../../core/api/client";
+import { api } from "@core/api/client";
 import type { TenantConfigResponse } from "./types";
 
 export interface UpdateLLMPayload {

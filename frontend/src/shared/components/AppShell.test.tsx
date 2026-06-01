@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { AuthContext, type AuthContextValue } from "../../auth/context";
+import { AuthContext, type AuthContextValue } from "@auth/context";
 import { ProtectedShell } from "./AppShell";
 
 const USER_WITH_NAME = {

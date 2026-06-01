@@ -3,7 +3,7 @@ import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import { theme } from "../app/theme";
+import { theme } from "@app/theme";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 

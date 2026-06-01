@@ -1,4 +1,4 @@
-import { api } from "../core/api/client";
+import { api } from "@core/api/client";
 import type { MeResponse, RegisterRequest, TokenResponse } from "./types";
 
 export async function login(email: string, password: string): Promise<TokenResponse> {

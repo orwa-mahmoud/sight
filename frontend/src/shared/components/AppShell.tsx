@@ -22,7 +22,7 @@ import {
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-import { useAuth } from "../../auth/useAuth";
+import { useAuth } from "@auth/useAuth";
 
 const NAV_ITEMS: Array<{ label: string; to: string; icon: ReactNode }> = [
   { label: "Inbox", to: "/", icon: <IconQuestionMark size={18} stroke={1.6} /> },

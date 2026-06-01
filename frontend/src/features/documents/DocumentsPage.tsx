@@ -18,7 +18,7 @@ import { IconCircleCheck, IconFileText, IconUpload } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 
-import { api } from "../../core/api/client";
+import { api } from "@core/api/client";
 
 interface DocumentSummary {
   id: string;

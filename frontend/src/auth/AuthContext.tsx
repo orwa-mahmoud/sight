@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import { setUnauthorizedHandler } from "../core/api/client";
+import { setUnauthorizedHandler } from "@core/api/client";
 import * as authApi from "./api";
 import { AuthContext, type AuthContextValue } from "./context";
 import type { MeResponse } from "./types";

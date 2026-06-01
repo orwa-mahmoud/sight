@@ -4,7 +4,7 @@ import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
-vi.mock("../core/api/client", () => ({
+vi.mock("@core/api/client", () => ({
   setUnauthorizedHandler: vi.fn(),
 }));
 
