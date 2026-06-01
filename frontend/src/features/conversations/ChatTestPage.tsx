@@ -55,9 +55,19 @@ interface DocumentLite {
   filename: string;
 }
 
+interface BotConfigLite {
+  bot_name: string;
+  bot_welcome_message: string;
+}
+
 async function listDocuments(): Promise<DocumentLite[]> {
   const { data } = await api.get<DocumentLite[]>("/api/v1/documents");
   return data;
+}
+
+async function getBotConfig(): Promise<BotConfigLite> {
+  const { data } = await api.get<BotConfigLite>("/api/v1/settings");
+  return { bot_name: data.bot_name, bot_welcome_message: data.bot_welcome_message };
 }
 
 export function ChatTestPage() {
@@ -67,6 +77,11 @@ export function ChatTestPage() {
   const [sending, setSending] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+
+  // The bot's configured greeting, previewed in the empty state so the owner
+  // sees exactly how their bot opens a conversation.
+  const botConfigQuery = useQuery({ queryKey: ["bot-config"], queryFn: getBotConfig });
+  const welcomeMessage = botConfigQuery.data?.bot_welcome_message?.trim();
 
   // Map document_id → filename so retrieved sources show the real file name.
   const documentsQuery = useQuery({ queryKey: ["documents"], queryFn: listDocuments });
@@ -163,6 +178,16 @@ export function ChatTestPage() {
       <Card withBorder radius="md" p={0} style={{ height: "60vh", display: "flex", flexDirection: "column" }}>
         <ScrollArea style={{ flex: 1 }} p="md" viewportRef={viewportRef}>
           <Stack gap="sm" role="log" aria-live="polite">
+            {messages.length === 0 && welcomeMessage && (
+              <Card withBorder radius="md" p="sm" bg="coral.0" mr="auto" maw="80%">
+                <Text size="xs" fw={600} c="coral.7" mb={4}>
+                  {botConfigQuery.data?.bot_name?.trim() || t("chat.ai")}
+                </Text>
+                <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+                  {welcomeMessage}
+                </Text>
+              </Card>
+            )}
             {messages.length === 0 && (
               <Stack align="center" gap="md" py="xl">
                 <Text c="dimmed" ta="center">

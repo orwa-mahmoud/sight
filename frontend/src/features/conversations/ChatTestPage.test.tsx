@@ -234,6 +234,18 @@ describe("ChatTestPage", () => {
     );
   });
 
+  it("previews the configured bot greeting in the empty state", async () => {
+    vi.mocked(api.get).mockImplementation((url: string) => {
+      if (url === "/api/v1/settings") {
+        return Promise.resolve({ data: { bot_name: "Aria", bot_welcome_message: "Hi! I'm Aria." } });
+      }
+      return Promise.resolve({ data: [] });
+    });
+    render(wrap(<ChatTestPage />));
+    await waitFor(() => expect(screen.getByText("Hi! I'm Aria.")).toBeInTheDocument());
+    expect(screen.getByText("Aria")).toBeInTheDocument();
+  });
+
   it("nudges the owner to upload documents when none exist", async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     render(wrap(<ChatTestPage />));
