@@ -246,6 +246,14 @@ describe("ChatTestPage", () => {
     expect(screen.getByText("Aria")).toBeInTheDocument();
   });
 
+  it("warns when some documents are still processing", async () => {
+    vi.mocked(api.get).mockResolvedValue({
+      data: [{ id: "d1", filename: "a.pdf", status: "ingesting" }],
+    });
+    render(wrap(<ChatTestPage />));
+    await waitFor(() => expect(screen.getByText(/still processing/i)).toBeInTheDocument());
+  });
+
   it("nudges the owner to upload documents when none exist", async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [] });
     render(wrap(<ChatTestPage />));
