@@ -195,3 +195,60 @@ async def test_gateway_no_token_usage_when_zero_tokens() -> None:
 
     # RecordTokenUsageUseCase should NOT have been instantiated
     mock_record.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_gateway_applies_temperature_and_bot_personality() -> None:
+    """The tenant's temperature + bot personality must reach the graph build and prompt."""
+    mock_config = MagicMock()
+    mock_config.llm_api_key = "sk-test"
+    mock_config.llm_provider = LLMProvider.OPENAI
+    mock_config.llm_model = "gpt-4o-mini"
+    mock_config.llm_max_tokens = 1024
+    mock_config.llm_temperature = 0.7
+    mock_config.embedding_api_key = ""
+    mock_config.embedding_model = "text-embedding-3-large"
+    mock_config.bot_name = "Aria"
+    mock_config.bot_language = "Arabic"
+    mock_config.bot_welcome_message = ""
+
+    mock_result = AgentLoopResult(text="hi", input_tokens=1, output_tokens=1)
+
+    uow = MagicMock()
+    uow.tenant_configs = MagicMock()
+    uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=mock_config)
+    uow.flush = AsyncMock()
+
+    mock_save_uc = MagicMock()
+    mock_save_uc.execute = AsyncMock(return_value=MagicMock(conversation_id=uuid4()))
+
+    mock_record_uc = MagicMock()
+    mock_record_uc.execute = AsyncMock()
+
+    with (
+        patch("src.ai.gateway.SaveThreadMessageUseCase", return_value=mock_save_uc),
+        patch("src.ai.gateway.load_history", new_callable=AsyncMock, return_value=[]),
+        patch("src.ai.gateway.load_key_facts_context", new_callable=AsyncMock, return_value=""),
+        patch("src.ai.gateway.build_agent_graph") as mock_build,
+        patch("src.ai.gateway.run_graph", new_callable=AsyncMock, return_value=mock_result) as mock_run,
+        patch("src.ai.gateway.maybe_create_checkpoint", new_callable=AsyncMock),
+        patch("src.ai.gateway.RecordTokenUsageUseCase", return_value=mock_record_uc),
+    ):
+        mock_build.return_value = MagicMock()
+        await chat_with_agent(
+            ChatInput(
+                message="hi",
+                tenant_id=uuid4(),
+                channel=ConversationChannel.API,
+                sender_identifier="x@y.com",
+            ),
+            uow=uow,
+        )
+
+    # Bug #5: temperature (and max_tokens) threaded into the graph build.
+    assert mock_build.call_args.kwargs["temperature"] == pytest.approx(0.7)
+    assert mock_build.call_args.kwargs["max_tokens"] == 1024
+    # Bug #6: bot personality reached the system prompt.
+    system_text = mock_run.call_args.kwargs["messages"][0].content
+    assert "Aria" in system_text
+    assert "Arabic" in system_text
