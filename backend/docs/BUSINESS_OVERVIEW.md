@@ -49,10 +49,15 @@ Businesses meet visitors where they already are:
 - **WhatsApp** — Meta Cloud API integration with signature verification and rich media support
 - **Telegram** — Bot API with phone number resolution for contact identity
 - **Direct API** — REST endpoint for embedding chat on websites or custom integrations
+- **In-dashboard test console** — owners chat with their own assistant directly in the
+  dashboard (runs the full agent pipeline as the `api` channel), so they can verify how
+  the AI answers from their uploaded documents without configuring WhatsApp or Telegram
+  first. The view shows the retrieved source documents, escalation status, response
+  latency, and per-reply token usage.
 
 Each channel maintains its own conversation thread. The AI has long-term memory per contact, so preferences carry across sessions regardless of channel.
 
-**Business value:** One assistant covers all visitor touchpoints.
+**Business value:** One assistant covers all visitor touchpoints — and owners can test it end-to-end before going live.
 
 ### 3. Knowledge Base (RAG)
 
