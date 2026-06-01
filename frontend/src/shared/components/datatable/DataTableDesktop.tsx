@@ -4,6 +4,7 @@ import { useRef } from "react";
 
 import { useStaggerIn } from "@shared/animations/stagger";
 
+import { renderCell } from "./renderCell";
 import type { ColumnDef, RowAction, SortDirection } from "./types";
 
 export interface DataTableDesktopProps<TRow> {
@@ -17,14 +18,6 @@ export interface DataTableDesktopProps<TRow> {
   readonly emptyText: string;
   readonly tableLabel?: string;
   readonly onRunAction: (action: RowAction<TRow>, row: TRow) => void;
-}
-
-function renderCell<TRow>(column: ColumnDef<TRow>, row: TRow) {
-  if (column.Cell) return <column.Cell row={row} />;
-  if (column.accessor) return column.accessor(row);
-  const value =
-    typeof row === "object" && row !== null ? (row as Record<string, unknown>)[column.key] : undefined;
-  return value === null || value === undefined ? "" : String(value);
 }
 
 export function DataTableDesktop<TRow>({
