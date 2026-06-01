@@ -1,8 +1,9 @@
 """ReplyToQuestion — owner answers, status moves to RESOLVED.
 
-A `QuestionResolved` event fires; in the channels phase, a policy
-subscribes to it and dispatches the reply back to the asker via the
-original channel.
+A `QuestionResolved` event fires (handled in bootstrap for metrics/logging).
+The reply is delivered back to the asker over the original channel by the
+route handler's best-effort `_deliver_reply` after this use case returns —
+delivery is an adapter concern and stays out of the application layer.
 """
 
 from __future__ import annotations
