@@ -53,7 +53,10 @@ interface ChatApiResponse {
 interface DocumentLite {
   id: string;
   filename: string;
+  status: string;
 }
+
+const PROCESSING_STATUSES = new Set(["uploaded", "ingesting"]);
 
 interface BotConfigLite {
   bot_name: string;
@@ -141,7 +144,9 @@ export function ChatTestPage() {
   };
 
   const suggestions = [t("chat.suggest1"), t("chat.suggest2"), t("chat.suggest3")];
-  const hasNoDocuments = documentsQuery.isSuccess && documentsQuery.data.length === 0;
+  const docs = documentsQuery.data ?? [];
+  const hasNoDocuments = documentsQuery.isSuccess && docs.length === 0;
+  const processingCount = docs.filter((d) => PROCESSING_STATUSES.has(d.status)).length;
 
   return (
     <Stack>
@@ -172,6 +177,12 @@ export function ChatTestPage() {
           <Anchor component={Link} to="/documents" fw={600}>
             {t("chat.noDocsCta")}
           </Anchor>
+        </Alert>
+      )}
+
+      {processingCount > 0 && (
+        <Alert variant="light" color="yellow" icon={<IconInfoCircle size={18} />}>
+          {t("chat.docsProcessing", { n: processingCount })}
         </Alert>
       )}
 

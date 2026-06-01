@@ -84,7 +84,8 @@
     "noDocsBody": "The AI will answer from general knowledge only. Upload files so it can ground replies in your content and cite sources here.",
     "noDocsCta": "Upload documents",
     "tokens": "{{n}} tokens",
-    "viewInInbox": "View in inbox →"
+    "viewInInbox": "View in inbox →",
+    "docsProcessing": "{{n}} document(s) are still processing and won't be searchable yet."
   },
   "conversations": {
     "title": "Conversations",
