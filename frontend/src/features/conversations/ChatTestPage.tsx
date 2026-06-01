@@ -2,6 +2,7 @@ import { Button, Card, Group, ScrollArea, Stack, Text, Textarea, Title } from "@
 import { notifications } from "@mantine/notifications";
 import { IconSend } from "@tabler/icons-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { api } from "@core/api/client";
 
@@ -19,6 +20,7 @@ interface ChatApiResponse {
 }
 
 export function ChatTestPage() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -43,10 +45,10 @@ export function ChatTestPage() {
         { id: crypto.randomUUID(), role: "assistant", content: data.response },
       ]);
       if (data.escalated) {
-        notifications.show({ color: "orange", message: "Question escalated to the owner inbox." });
+        notifications.show({ color: "orange", message: t("chat.escalated") });
       }
     } catch {
-      notifications.show({ color: "red", message: "Could not get a response. Check Settings → LLM." });
+      notifications.show({ color: "red", message: t("chat.error") });
     } finally {
       setSending(false);
     }
@@ -55,9 +57,9 @@ export function ChatTestPage() {
   return (
     <Stack>
       <div>
-        <Title order={2}>Chat (test mode)</Title>
+        <Title order={2}>{t("chat.title")}</Title>
         <Text c="dimmed" size="sm">
-          Talk to your AI front desk as if you were an asker. Uses the agent loop with RAG + escalation.
+          {t("chat.subtitle")}
         </Text>
       </div>
 
@@ -66,7 +68,7 @@ export function ChatTestPage() {
           <Stack gap="sm" role="log" aria-live="polite">
             {messages.length === 0 && (
               <Text c="dimmed" ta="center" py="xl">
-                Send a message to test the agent pipeline.
+                {t("chat.empty")}
               </Text>
             )}
             {messages.map((m) => (
@@ -81,7 +83,7 @@ export function ChatTestPage() {
                 maw="80%"
               >
                 <Text size="xs" fw={600} c={m.role === "user" ? "dimmed" : "coral.7"} mb={4}>
-                  {m.role === "user" ? "You" : "AI"}
+                  {m.role === "user" ? t("chat.you") : t("chat.ai")}
                 </Text>
                 <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
                   {m.content}
@@ -93,7 +95,7 @@ export function ChatTestPage() {
         <Group p="md" style={{ borderTop: "1px solid var(--mantine-color-gray-3)" }}>
           <Textarea
             style={{ flex: 1 }}
-            placeholder="Type a message..."
+            placeholder={t("chat.placeholder")}
             autosize
             minRows={1}
             maxRows={4}
@@ -110,10 +112,10 @@ export function ChatTestPage() {
             onClick={() => void send()}
             loading={sending}
             disabled={sending}
-            aria-label="Send message"
+            aria-label={t("chat.sendAria")}
             leftSection={<IconSend size={16} />}
           >
-            Send
+            {t("chat.send")}
           </Button>
         </Group>
       </Card>
