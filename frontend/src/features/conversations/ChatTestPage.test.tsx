@@ -185,7 +185,12 @@ describe("ChatTestPage", () => {
 
     await waitFor(() => expect(screen.getByText("From your guide")).toBeInTheDocument());
     expect(screen.getByText("Sources:")).toBeInTheDocument();
-    expect(screen.getByText("guide.pdf")).toBeInTheDocument();
+    const sourceBadge = screen.getByText("guide.pdf");
+    expect(sourceBadge).toBeInTheDocument();
+
+    // Snippet is keyboard/tap accessible: revealed on click (not hover-only).
+    fireEvent.click(sourceBadge);
+    await waitFor(() => expect(screen.getByText("the answer text")).toBeInTheDocument());
   });
 
   it("falls back to a short id when the document filename is unknown", async () => {

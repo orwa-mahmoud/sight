@@ -7,6 +7,7 @@ import {
   Card,
   Group,
   Loader,
+  Popover,
   ScrollArea,
   Stack,
   Text,
@@ -276,17 +277,26 @@ export function ChatTestPage() {
                       {t("chat.sources")}:
                     </Text>
                     {m.sources.map((s) => (
-                      <Tooltip key={s.document_id} label={s.snippet} multiline maw={320} withArrow>
-                        <Badge
-                          size="sm"
-                          variant="outline"
-                          color="gray"
-                          leftSection={<IconFileText size={12} />}
-                          style={{ cursor: "help", textTransform: "none" }}
-                        >
-                          {documentName(s.document_id)}
-                        </Badge>
-                      </Tooltip>
+                      <Popover key={s.document_id} width={320} position="top" withArrow shadow="md">
+                        <Popover.Target>
+                          <Badge
+                            size="sm"
+                            variant="outline"
+                            color="gray"
+                            component="button"
+                            type="button"
+                            leftSection={<IconFileText size={12} />}
+                            style={{ cursor: "pointer", textTransform: "none" }}
+                          >
+                            {documentName(s.document_id)}
+                          </Badge>
+                        </Popover.Target>
+                        <Popover.Dropdown>
+                          <Text size="xs" style={{ whiteSpace: "pre-wrap" }}>
+                            {s.snippet}
+                          </Text>
+                        </Popover.Dropdown>
+                      </Popover>
                     ))}
                   </Group>
                 )}
