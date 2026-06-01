@@ -160,6 +160,16 @@ All in `domain/shared/exceptions.py` (shared, not per-context):
 
 `drivers/api/responses.py` maps `DomainError` -> HTTP. Use cases raise domain exceptions -- **never** `HTTPException`.
 
+### Localized error messages (EN/AR)
+
+`DomainError` takes an optional `code` (e.g. `raise AuthenticationError("Invalid
+email or password", code="auth.invalid_credentials")`). English stays the source
+`message`; `drivers/api/i18n.py` holds **only non-English overrides** keyed by
+code, and `domain_error_handler` translates `detail` per request from
+`Accept-Language`. Missing code/locale → the English message (so existing
+responses never change). To localize a new error: add a `code` at the raise site
+and an `ar` entry in `i18n.py`. Domain stays language-agnostic (no i18n imports).
+
 ## CQRS
 
 **Commands and queries** are frozen dataclasses with typed fields. Never `data: dict`.

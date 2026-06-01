@@ -26,7 +26,7 @@ tracks token usage per tenant with full cost accountability.
 | Layer | Tech |
 |-------|------|
 | Backend | Python 3.13 · FastAPI · LangGraph · PostgreSQL 17 + pgvector |
-| Frontend | React 19 · Mantine 9 · TypeScript · Vite · TanStack Query |
+| Frontend | React 19 · Mantine 9 · TypeScript · Vite · TanStack Query · i18n (EN/AR + RTL) |
 | AI | Hybrid RAG (vector + BM25 + RRF) · per-turn LangGraph orchestration |
 | Channels | WhatsApp Cloud API · Telegram Bot API |
 | Observability | Prometheus metrics · structlog · request ID tracing |
@@ -68,6 +68,19 @@ cd frontend
 npm install
 npm run dev    # http://localhost:5173 (Vite proxies /api + /webhooks to :8000)
 ```
+
+## Frontend highlights
+
+- **Bilingual UI (English + Arabic) with full RTL** — language switcher in the
+  app shell, self-hosted Arabic font, layout mirrors via Mantine's
+  `DirectionProvider`. Backend API error messages localize via `Accept-Language`.
+- **Light / dark mode** toggle.
+- **Unified DataTable** — one mode-agnostic table over a `TableSource` contract
+  (client-side *or* server-paginated), with sort, search, a filter drawer +
+  removable chips, responsive desktop/mobile, URL-synced state, row actions with
+  confirm modals, and reduced-motion-aware entrance animations.
+- **Route-level code splitting**, path aliases, typed config, Prettier + strict
+  TypeScript/ESLint.
 
 ## Notes & current limitations
 
