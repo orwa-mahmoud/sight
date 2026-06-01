@@ -65,9 +65,18 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+const PROCESSING_STATUSES = new Set(["uploaded", "ingesting"]);
+
 export function DocumentsPage() {
   const { t } = useTranslation();
-  const documentsQuery = useQuery({ queryKey: ["documents"], queryFn: listDocuments });
+  // Poll while any document is still processing so it flips to "ready"
+  // (or "failed") in the UI without a manual refresh.
+  const documentsQuery = useQuery({
+    queryKey: ["documents"],
+    queryFn: listDocuments,
+    refetchInterval: (query) =>
+      query.state.data?.some((d) => PROCESSING_STATUSES.has(d.status)) ? 4000 : false,
+  });
 
   const uploadMutation = useMutationWithNotification({
     mutationFn: uploadDocument,
