@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -24,43 +23,25 @@ from src.drivers.api.v1.health.routes import router as health_router
 from src.drivers.api.v1.router import v1_router
 from src.drivers.api.webhooks.telegram import router as telegram_webhook_router
 from src.drivers.api.webhooks.whatsapp import router as whatsapp_webhook_router
-from src.infrastructure.persistence.postgres.database import async_session_factory
-from src.infrastructure.persistence.postgres.repositories.outbox_repo import OutboxRepository
 
 logger = structlog.get_logger()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Application startup / shutdown lifecycle."""
+    """Application startup / shutdown lifecycle.
+
+    Domain-event side effects are dispatched synchronously in-process by the
+    Unit of Work after each successful commit (see `bootstrap/events.py`). The
+    durable `outbox_events` table + `OutboxRepository` are available for a
+    future relay-based dispatcher but are not yet wired into the commit path,
+    so there is no background relay task to start here.
+    """
     register_event_handlers()
     settings = get_settings()
     logger.info("app.startup", env=settings.app_env, name=settings.app_name)
-
-    outbox_task = asyncio.create_task(_outbox_relay_loop())
     yield
-    outbox_task.cancel()
     logger.info("app.shutdown")
-
-
-async def _outbox_relay_loop() -> None:
-    """Background loop that polls outbox_events and dispatches undelivered events."""
-    while True:
-        try:
-            async with async_session_factory() as session:
-                repo = OutboxRepository(session)
-                pending = await repo.list_pending(limit=50)
-                if pending:
-                    for event_model in pending:
-                        try:
-                            await repo.mark_delivered(event_model.id)
-                        except Exception:
-                            logger.warning("outbox.relay.mark_failed", event_id=str(event_model.id), exc_info=True)
-                    await session.commit()
-                    logger.debug("outbox.relay.dispatched", count=len(pending))
-        except Exception:
-            logger.warning("outbox.relay.error", exc_info=True)
-        await asyncio.sleep(5)
 
 
 def create_app() -> FastAPI:

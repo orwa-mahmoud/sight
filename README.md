@@ -33,6 +33,25 @@ tracks token usage per tenant with full cost accountability.
 
 ## Quick start
 
+### Docker (recommended)
+
+Requires Docker + Docker Compose. Brings up Postgres (with pgvector), Redis,
+the backend, and the frontend.
+
+```bash
+cp .env.docker.example .env.docker
+# Edit .env.docker: set JWT_SECRET_KEY and ENCRYPTION_KEY (commands are in the file).
+docker compose up --build
+# Frontend: http://localhost:3000   API: http://localhost:8000
+```
+
+The backend container applies database migrations on startup, so the schema is
+ready on first boot. The frontend is served by nginx, which reverse-proxies
+`/api` and `/webhooks` to the backend — so the app talks to the API over the
+same origin (no CORS, and the auth cookie stays first-party).
+
+### Local (without Docker)
+
 Requires PostgreSQL 17 with pgvector, Python 3.13 with `uv`, Node 22+.
 
 ```bash
@@ -47,8 +66,22 @@ uv run uvicorn src.main:app --reload --port 8000
 # Frontend
 cd frontend
 npm install
-npm run dev    # http://localhost:5173
+npm run dev    # http://localhost:5173 (Vite proxies /api + /webhooks to :8000)
 ```
+
+## Notes & current limitations
+
+- **Authentication is cookie-based.** Login/register set an httpOnly
+  `frontdesk_token` cookie (the SPA never stores the JWT in JS, so it is not
+  exposed to XSS). The API also accepts a `Bearer` token for programmatic
+  clients (curl, scripts, the test suite).
+- **One tenant per user (v1).** A user is currently resolved to their first
+  tenant membership. Multi-tenant *data isolation* is fully enforced
+  server-side, but a per-user tenant switcher is not built yet.
+- **`/auth/refresh` is a sliding-session re-issue**, not a separate
+  refresh-token grant: it mints a fresh access token for the already
+  authenticated user. The `JWT_REFRESH_TOKEN_EXPIRE_DAYS` setting is reserved
+  for a future refresh-token flow.
 
 ## Documentation
 

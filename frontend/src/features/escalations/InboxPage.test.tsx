@@ -149,7 +149,7 @@ describe("InboxPage", () => {
     });
 
     const replyButtons = screen.getAllByText("Reply");
-    fireEvent.click(replyButtons[0]);
+    fireEvent.click(replyButtons[0]!);
 
     await waitFor(() => {
       expect(screen.getByText("Reply to question")).toBeInTheDocument();
@@ -160,7 +160,7 @@ describe("InboxPage", () => {
   it("calls closeQuestion on Close click when confirmed", async () => {
     vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
-    vi.mocked(closeQuestion).mockResolvedValue({ ...QUESTIONS[0], status: "closed" });
+    vi.mocked(closeQuestion).mockResolvedValue({ ...QUESTIONS[0]!, status: "closed" });
     render(<InboxPage />, { wrapper: createWrapper() });
 
     await waitFor(() => {
@@ -168,7 +168,7 @@ describe("InboxPage", () => {
     });
 
     const closeButtons = screen.getAllByText("Close");
-    fireEvent.click(closeButtons[0]);
+    fireEvent.click(closeButtons[0]!);
 
     await waitFor(() => {
       expect(closeQuestion).toHaveBeenCalledWith("q1");
@@ -186,7 +186,7 @@ describe("InboxPage", () => {
     });
 
     const closeButtons = screen.getAllByText("Close");
-    fireEvent.click(closeButtons[0]);
+    fireEvent.click(closeButtons[0]!);
 
     expect(closeQuestion).not.toHaveBeenCalled();
     vi.mocked(globalThis.confirm).mockRestore();
@@ -212,12 +212,12 @@ describe("InboxPage", () => {
 
   it("sends reply via modal", async () => {
     vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
-    vi.mocked(replyToQuestion).mockResolvedValue({ ...QUESTIONS[0], status: "resolved", owner_reply: "We open at 9." });
+    vi.mocked(replyToQuestion).mockResolvedValue({ ...QUESTIONS[0]!, status: "resolved", owner_reply: "We open at 9." });
     render(<InboxPage />, { wrapper: createWrapper() });
 
     await waitFor(() => expect(screen.getByText("What are your hours?")).toBeInTheDocument());
 
-    fireEvent.click(screen.getAllByText("Reply")[0]);
+    fireEvent.click(screen.getAllByText("Reply")[0]!);
     await waitFor(() => expect(screen.getByPlaceholderText(/type the reply/i)).toBeInTheDocument());
 
     fireEvent.change(screen.getByPlaceholderText(/type the reply/i), {
@@ -232,7 +232,7 @@ describe("InboxPage", () => {
 
   it("shows raw channel name for unknown channels", async () => {
     const unknownChannelQ: Question = {
-      ...QUESTIONS[0], id: "q9", channel: "sms",
+      ...QUESTIONS[0]!, id: "q9", channel: "sms",
     };
     vi.mocked(listQuestions).mockResolvedValue([unknownChannelQ]);
     render(<InboxPage />, { wrapper: createWrapper() });
@@ -251,7 +251,7 @@ describe("InboxPage", () => {
     render(<InboxPage />, { wrapper: createWrapper() });
 
     await waitFor(() => expect(screen.getByText("What are your hours?")).toBeInTheDocument());
-    fireEvent.click(screen.getAllByText("Reply")[0]);
+    fireEvent.click(screen.getAllByText("Reply")[0]!);
     await waitFor(() => expect(screen.getByPlaceholderText(/type the reply/i)).toBeInTheDocument());
 
     fireEvent.change(screen.getByPlaceholderText(/type the reply/i), { target: { value: "reply text" } });
@@ -267,7 +267,7 @@ describe("InboxPage", () => {
     render(<InboxPage />, { wrapper: createWrapper() });
 
     await waitFor(() => expect(screen.getByText("What are your hours?")).toBeInTheDocument());
-    fireEvent.click(screen.getAllByText("Close")[0]);
+    fireEvent.click(screen.getAllByText("Close")[0]!);
 
     await waitFor(() => expect(closeQuestion).toHaveBeenCalled());
     vi.mocked(globalThis.confirm).mockRestore();
@@ -293,7 +293,7 @@ describe("InboxPage", () => {
     render(<InboxPage />, { wrapper: createWrapper() });
     await waitFor(() => expect(screen.getByText("What are your hours?")).toBeInTheDocument());
 
-    fireEvent.click(screen.getAllByText("Close")[0]);
+    fireEvent.click(screen.getAllByText("Close")[0]!);
     await waitFor(() => expect(closeQuestion).toHaveBeenCalledWith("q1"));
     vi.mocked(globalThis.confirm).mockRestore();
   });

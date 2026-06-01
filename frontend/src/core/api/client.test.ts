@@ -1,27 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { AxiosError, type AxiosResponse } from "axios";
-import { api, getToken, setToken, clearToken } from "./client";
-
-describe("token management", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  it("returns null when no token set", () => {
-    expect(getToken()).toBeNull();
-  });
-
-  it("stores and retrieves a token", () => {
-    setToken("abc");
-    expect(getToken()).toBe("abc");
-  });
-
-  it("clears the token", () => {
-    setToken("abc");
-    clearToken();
-    expect(getToken()).toBeNull();
-  });
-});
+import { api, setUnauthorizedHandler } from "./client";
 
 describe("api instance", () => {
   it("has correct timeout", () => {
@@ -31,60 +10,45 @@ describe("api instance", () => {
   it("has JSON content type", () => {
     expect(api.defaults.headers["Content-Type"]).toBe("application/json");
   });
-});
 
-describe("request interceptor", () => {
-  beforeEach(() => {
-    localStorage.clear();
+  it("sends credentials so the auth cookie travels with every request", () => {
+    expect(api.defaults.withCredentials).toBe(true);
   });
 
-  it("attaches Bearer token when token exists", async () => {
-    setToken("jwt-123");
-    let capturedAuth: string | undefined;
-    api.defaults.adapter = async (config) => {
-      capturedAuth = config.headers?.Authorization as string | undefined;
-      return { data: {}, status: 200, statusText: "OK", headers: {}, config } as AxiosResponse;
-    };
-    await api.get("/test");
-    expect(capturedAuth).toBe("Bearer jwt-123");
-  });
-
-  it("omits Authorization header when no token", async () => {
-    let capturedAuth: string | undefined;
-    api.defaults.adapter = async (config) => {
-      capturedAuth = config.headers?.Authorization as string | undefined;
-      return { data: {}, status: 200, statusText: "OK", headers: {}, config } as AxiosResponse;
-    };
-    await api.get("/test");
-    expect(capturedAuth).toBeUndefined();
+  it("defaults to a same-origin (relative) base URL when VITE_API_URL is unset", async () => {
+    vi.stubEnv("VITE_API_URL", undefined);
+    vi.resetModules();
+    const { api: freshApi } = await import("./client");
+    expect(freshApi.defaults.baseURL).toBe("");
+    vi.unstubAllEnvs();
   });
 });
 
 describe("response interceptor", () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  it("clears token on 401 response", async () => {
-    setToken("will-be-cleared");
+  it("invokes the unauthorized handler on a 401 response", async () => {
+    const onUnauthorized = vi.fn();
+    setUnauthorizedHandler(onUnauthorized);
     api.defaults.adapter = async (config) => {
       throw new AxiosError("401", "ERR_BAD_REQUEST", config, null, {
         status: 401, data: {}, headers: {}, statusText: "Unauthorized", config,
       } as AxiosResponse);
     };
     await api.get("/protected").catch(() => {});
-    expect(getToken()).toBeNull();
+    expect(onUnauthorized).toHaveBeenCalledOnce();
+    setUnauthorizedHandler(null);
   });
 
-  it("keeps token on non-401 error", async () => {
-    setToken("stays");
+  it("does not invoke the unauthorized handler on a non-401 error", async () => {
+    const onUnauthorized = vi.fn();
+    setUnauthorizedHandler(onUnauthorized);
     api.defaults.adapter = async (config) => {
       throw new AxiosError("500", "ERR_BAD_RESPONSE", config, null, {
         status: 500, data: {}, headers: {}, statusText: "Error", config,
       } as AxiosResponse);
     };
     await api.get("/error").catch(() => {});
-    expect(getToken()).toBe("stays");
+    expect(onUnauthorized).not.toHaveBeenCalled();
+    setUnauthorizedHandler(null);
   });
 
   it("passes successful responses through", async () => {

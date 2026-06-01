@@ -262,7 +262,7 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(screen.getByText("Save LLM config")).toBeInTheDocument());
 
     const llmPanel = container.querySelector("[data-active='true'] .mantine-Accordion-panel");
-    const modelInput = llmPanel?.querySelector("input[data-path='model']") ?? screen.getAllByLabelText("Model")[0];
+    const modelInput = llmPanel?.querySelector("input[data-path='model']") ?? screen.getAllByLabelText("Model")[0]!;
     fireEvent.change(modelInput, { target: { value: "gpt-4o" } });
     fireEvent.click(screen.getByText("Save LLM config"));
 
@@ -412,7 +412,7 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(screen.getByText("Save LLM config")).toBeInTheDocument());
 
     const providerInputs = screen.getAllByLabelText("Provider");
-    fireEvent.click(providerInputs[0]);
+    fireEvent.click(providerInputs[0]!);
     await waitFor(() => expect(screen.getByText("Anthropic")).toBeInTheDocument());
     fireEvent.click(screen.getByText("Anthropic"));
     fireEvent.click(screen.getByText("Save LLM config"));

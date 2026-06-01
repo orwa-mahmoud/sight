@@ -5,21 +5,19 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
 vi.mock("../core/api/client", () => ({
-  getToken: vi.fn(),
-  setToken: vi.fn(),
-  clearToken: vi.fn(),
+  setUnauthorizedHandler: vi.fn(),
 }));
 
 vi.mock("./api", () => ({
   login: vi.fn(),
   register: vi.fn(),
   me: vi.fn(),
+  logout: vi.fn(),
 }));
 
 import { AuthProvider } from "./AuthContext";
 import { useAuth } from "./useAuth";
 import * as authApi from "./api";
-import { getToken, setToken, clearToken } from "../core/api/client";
 
 const ME_RESPONSE = {
   id: "u1",
@@ -93,29 +91,20 @@ describe("AuthProvider", () => {
     vi.clearAllMocks();
   });
 
-  it("sets user to null when no token exists", async () => {
-    vi.mocked(getToken).mockReturnValue(null);
+  it("sets user to null when there is no valid session", async () => {
+    vi.mocked(authApi.me).mockRejectedValue(new Error("unauthorized"));
     render(wrap(<TestConsumer />));
     await waitFor(() => expect(screen.getByText("no-user")).toBeInTheDocument());
   });
 
-  it("loads current user when token exists", async () => {
-    vi.mocked(getToken).mockReturnValue("existing-jwt");
+  it("loads the current user when the session cookie is valid", async () => {
     vi.mocked(authApi.me).mockResolvedValue(ME_RESPONSE);
     render(wrap(<TestConsumer />));
     await waitFor(() => expect(screen.getByText("user:test@example.com")).toBeInTheDocument());
   });
 
-  it("clears token and sets null user when me() fails", async () => {
-    vi.mocked(getToken).mockReturnValue("bad-jwt");
-    vi.mocked(authApi.me).mockRejectedValue(new Error("unauthorized"));
-    render(wrap(<TestConsumer />));
-    await waitFor(() => expect(screen.getByText("no-user")).toBeInTheDocument());
-    expect(clearToken).toHaveBeenCalled();
-  });
-
-  it("login sets token and loads user", async () => {
-    vi.mocked(getToken).mockReturnValue(null);
+  it("login authenticates then loads the user", async () => {
+    vi.mocked(authApi.me).mockRejectedValueOnce(new Error("unauthorized"));
     vi.mocked(authApi.login).mockResolvedValue({
       access_token: "new-jwt", token_type: "bearer", user_id: "u1", tenant_id: "t1",
     });
@@ -124,17 +113,16 @@ describe("AuthProvider", () => {
     render(wrap(<LoginConsumer />));
     await waitFor(() => expect(screen.getByText("no-user")).toBeInTheDocument());
 
-    vi.mocked(getToken).mockReturnValue("new-jwt");
     await act(async () => {
       screen.getByText("login").click();
     });
 
     await waitFor(() => expect(screen.getByText("user:test@example.com")).toBeInTheDocument());
-    expect(setToken).toHaveBeenCalledWith("new-jwt");
+    expect(authApi.login).toHaveBeenCalledWith("a@b.com", "password");
   });
 
-  it("register sets token and loads user", async () => {
-    vi.mocked(getToken).mockReturnValue(null);
+  it("register authenticates then loads the user", async () => {
+    vi.mocked(authApi.me).mockRejectedValueOnce(new Error("unauthorized"));
     vi.mocked(authApi.register).mockResolvedValue({
       access_token: "reg-jwt", token_type: "bearer", user_id: "u2", tenant_id: "t2",
     });
@@ -143,18 +131,17 @@ describe("AuthProvider", () => {
     render(wrap(<RegisterConsumer />));
     await waitFor(() => expect(screen.getByText("no-user")).toBeInTheDocument());
 
-    vi.mocked(getToken).mockReturnValue("reg-jwt");
     await act(async () => {
       screen.getByText("register").click();
     });
 
     await waitFor(() => expect(screen.getByText("user:test@example.com")).toBeInTheDocument());
-    expect(setToken).toHaveBeenCalledWith("reg-jwt");
+    expect(authApi.register).toHaveBeenCalled();
   });
 
-  it("logout clears token and sets user to null", async () => {
-    vi.mocked(getToken).mockReturnValue("jwt");
+  it("logout clears the user and calls the logout endpoint", async () => {
     vi.mocked(authApi.me).mockResolvedValue(ME_RESPONSE);
+    vi.mocked(authApi.logout).mockResolvedValue();
 
     render(wrap(<LogoutConsumer />));
     await waitFor(() => expect(screen.getByText("user:test@example.com")).toBeInTheDocument());
@@ -163,7 +150,7 @@ describe("AuthProvider", () => {
       screen.getByText("logout").click();
     });
 
-    expect(clearToken).toHaveBeenCalled();
+    expect(authApi.logout).toHaveBeenCalled();
     await waitFor(() => expect(screen.getByText("no-user")).toBeInTheDocument());
   });
 });

@@ -74,6 +74,9 @@ async def me(current_user: CurrentUser, uow: UnitOfWorkDep) -> MeResponse:
 
 @router.post("/refresh")
 async def refresh(current_user: CurrentUser, uow: UnitOfWorkDep, response: Response) -> TokenResponse:
+    # Sliding-session re-issue: mint a fresh access token for the already
+    # authenticated user. This is NOT a refresh-token grant — there is no
+    # long-lived refresh token yet (JWT_REFRESH_TOKEN_EXPIRE_DAYS is reserved).
     uc = RefreshTokenUseCase(uow=uow, jwt_service=get_jwt_service())
     result = await uc.execute(current_user.id)
     _set_auth_cookie(response, result.access_token)

@@ -55,15 +55,19 @@ Two categories only. No Redux, no Zustand.
 
 ## Auth Flow
 
-- **Bootstrap:** AuthProvider mounts -> `getToken()` -> `authApi.me()` -> `setUser()`
-- **Login:** form submit -> `authApi.login()` -> `setToken(access_token)` -> `loadCurrentUser()`
-- **Logout:** `clearToken()` -> `setUser(null)` -> RequireAuth redirects to `/login`
-- **401:** Axios response interceptor -> `clearToken()` -> RequireAuth redirects
-- **Token:** `frontdesk_access_token` in localStorage
+Cookie-based. The backend sets an httpOnly `frontdesk_token` cookie on
+login/register; the SPA never reads or stores the JWT (no localStorage = no XSS
+token theft). `axios` is configured with `withCredentials: true` so the cookie
+travels with every request.
+
+- **Bootstrap:** AuthProvider mounts -> `authApi.me()` (cookie sent automatically) -> `setUser()`; a 401 just means "not logged in".
+- **Login:** form submit -> `authApi.login()` (server sets cookie) -> `loadCurrentUser()`
+- **Logout:** `setUser(null)` -> `authApi.logout()` (server clears cookie) -> RequireAuth redirects to `/login`
+- **401:** Axios response interceptor -> registered unauthorized handler -> `setUser(null)` -> RequireAuth redirects
 
 ## API Client (`src/core/api/client.ts`)
 
-Axios instance, `baseURL: VITE_API_URL` (default `http://localhost:8000`), timeout 30s. Request interceptor injects `Bearer <token>`. Response interceptor clears token on 401 (promise propagates to TanStack Query). Helpers: `getToken()`, `setToken(t)`, `clearToken()`.
+Axios instance, `baseURL: VITE_API_URL ?? ""` (same-origin relative by default), `withCredentials: true`, timeout 30s. In dev the Vite server proxies `/api` + `/webhooks` to the backend; in Docker nginx reverse-proxies them — so requests are same-origin everywhere and the auth cookie stays first-party. Response interceptor invokes a registered handler on 401 (promise still propagates to TanStack Query). Helper: `setUnauthorizedHandler(fn)`.
 
 ## Feature Module Pattern
 

@@ -137,7 +137,7 @@ describe("DocumentsPage", () => {
     });
 
     const deleteButtons = screen.getAllByText("Delete");
-    fireEvent.click(deleteButtons[0]);
+    fireEvent.click(deleteButtons[0]!);
 
     await waitFor(() => {
       expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d1");
@@ -155,7 +155,7 @@ describe("DocumentsPage", () => {
     });
 
     const deleteButtons = screen.getAllByText("Delete");
-    fireEvent.click(deleteButtons[0]);
+    fireEvent.click(deleteButtons[0]!);
 
     expect(api.delete).not.toHaveBeenCalled();
     vi.mocked(globalThis.confirm).mockRestore();
@@ -238,7 +238,7 @@ describe("DocumentsPage", () => {
     render(<DocumentsPage />, { wrapper: createWrapper() });
     await waitFor(() => expect(screen.getAllByText("Delete")).toHaveLength(2));
 
-    fireEvent.click(screen.getAllByText("Delete")[0]);
+    fireEvent.click(screen.getAllByText("Delete")[0]!);
 
     await waitFor(() => {
       expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d1");

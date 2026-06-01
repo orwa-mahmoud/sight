@@ -1,8 +1,14 @@
 """Outbox event model — transactional outbox for domain events.
 
-Events written in the same transaction as the entity change. A relay
-job (Celery beat or polling) reads pending rows and publishes them
-to the event bus, then marks them as delivered.
+Intended pattern: events are written in the same transaction as the entity
+change; a relay job (polling or Celery beat) reads pending rows, publishes
+them to the event bus, then marks them delivered.
+
+NOTE: This table is a ready-to-use component (exercised by
+`tests/unit/test_outbox_repo.py`) but is NOT yet wired into the commit path.
+Today the Unit of Work dispatches domain events synchronously in-process via
+the blinker bus (`bootstrap/events.py`) after each commit. Wiring the outbox
+in would make dispatch durable across process crashes — see the backlog.
 """
 
 from __future__ import annotations

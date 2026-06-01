@@ -7,6 +7,7 @@ the tenant's configured secret. Replies are sent via the TelegramAdapter
 
 from __future__ import annotations
 
+import hmac
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -67,7 +68,8 @@ async def _handle_telegram_post(tid: UUID, body: dict[str, Any], secret_header: 
             if config is None:
                 return 404
 
-            if not config.telegram_webhook_secret or secret_header != config.telegram_webhook_secret:
+            expected_secret = config.telegram_webhook_secret
+            if not expected_secret or not secret_header or not hmac.compare_digest(secret_header, expected_secret):
                 logger.warning("telegram.webhook.auth_failed", tenant_id=tenant_id_raw)
                 return 403
 

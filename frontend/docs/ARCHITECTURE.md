@@ -56,10 +56,13 @@
 Page component
   └─ useQuery / useMutation  (TanStack Query)
        └─ feature api.ts     (typed wrapper)
-            └─ api instance   (core/api/client.ts — Axios)
-                 ├─ request interceptor → injects Bearer token
-                 └─ response interceptor → clears token on 401
+            └─ api instance   (core/api/client.ts — Axios, withCredentials)
+                 └─ response interceptor → on 401 calls the unauthorized handler
 ```
+
+The auth JWT travels as an httpOnly cookie (set by the backend), so there is
+no request interceptor injecting a token — `withCredentials: true` sends the
+cookie automatically.
 
 ---
 
@@ -85,9 +88,9 @@ src/
 │
 ├── core/
 │   └── api/
-│       └── client.ts             # Axios instance, token helpers (get/set/clear),
-│                                 #   request interceptor (Bearer injection),
-│                                 #   response interceptor (401 → clearToken)
+│       └── client.ts             # Axios instance (withCredentials), relative
+│                                 #   baseURL, response interceptor (401 →
+│                                 #   unauthorized handler), setUnauthorizedHandler
 │
 ├── features/                     # One folder per business feature
 │   ├── escalations/              # Owner inbox (the differentiating page)
@@ -155,15 +158,18 @@ the single source of truth for authentication state.
 
 ## 5. Auth Flow
 
+Cookie-based. The backend sets an httpOnly `frontdesk_token` cookie on
+login/register, so the SPA never reads or stores the JWT (no localStorage =
+no XSS token theft). `axios` runs with `withCredentials: true`, so the cookie
+is sent on every request automatically.
+
 ### Bootstrap (page load)
 
 ```
 AuthProvider mounts
-  └─ loadCurrentUser()
-       ├─ getToken() → null? → setUser(null), done
-       └─ getToken() → has token
-            ├─ authApi.me() → success → setUser(response)
-            └─ authApi.me() → failure → clearToken(), setUser(null)
+  └─ authApi.me()   (cookie sent automatically)
+       ├─ success → setUser(response)
+       └─ failure (401 = not logged in) → setUser(null)
 ```
 
 ### Login
@@ -171,8 +177,7 @@ AuthProvider mounts
 ```
 LoginPage form submit
   └─ auth.login(email, password)
-       ├─ authApi.login() → TokenResponse
-       ├─ setToken(access_token) → localStorage
+       ├─ authApi.login()  → backend sets the httpOnly cookie
        └─ loadCurrentUser() → authApi.me() → setUser()
 ```
 
@@ -180,20 +185,21 @@ LoginPage form submit
 
 ```
 auth.logout()
-  ├─ clearToken() → localStorage.removeItem
-  └─ setUser(null) → triggers RequireAuth redirect
+  ├─ setUser(null) → triggers RequireAuth redirect
+  └─ authApi.logout() → backend clears the cookie
 ```
 
 ### Token storage
 
-| Key                        | Storage        | Value        |
-| -------------------------- | -------------- | ------------ |
-| `frontdesk_access_token`   | localStorage   | JWT string   |
+The JWT lives only in the httpOnly `frontdesk_token` cookie, managed by the
+backend and inaccessible to JavaScript. The SPA keeps no token in
+localStorage or memory.
 
 ### 401 handling
 
-The Axios response interceptor catches any `401` and calls `clearToken()`.
-On the next React render cycle, `RequireAuth` sees `user === null` and
+The Axios response interceptor catches any `401` and calls the handler
+registered via `setUnauthorizedHandler` (AuthProvider registers one that does
+`setUser(null)`). On the next render, `RequireAuth` sees `user === null` and
 redirects to `/login`.
 
 ### RequireAuth guard
@@ -218,30 +224,29 @@ potential post-login redirect.
 
 ```ts
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:8000",
+  baseURL: import.meta.env.VITE_API_URL ?? "",   // same-origin relative
   headers: { "Content-Type": "application/json" },
   timeout: 30_000,
+  withCredentials: true,                          // send the auth cookie
 });
 ```
 
-### Request interceptor
-
-Injects `Authorization: Bearer <token>` on every request when a token
-exists in localStorage.
+The default base URL is empty (same-origin relative). In dev the Vite server
+proxies `/api` + `/webhooks` to the backend; in Docker nginx reverse-proxies
+them — so requests are same-origin everywhere and the auth cookie stays
+first-party. Set `VITE_API_URL` only to point at a different origin.
 
 ### Response interceptor
 
-On `401`: calls `clearToken()`. The rejected promise propagates to the
-calling code (TanStack Query marks the query as errored, or the mutation's
-`onError` fires).
+On `401`: calls the handler registered via `setUnauthorizedHandler`. The
+rejected promise still propagates to the calling code (TanStack Query marks
+the query as errored, or the mutation's `onError` fires).
 
-### Token helpers
+### Helpers
 
-| Function       | Purpose                                  |
-| -------------- | ---------------------------------------- |
-| `getToken()`   | Read from `localStorage`                 |
-| `setToken(t)`  | Write to `localStorage`                  |
-| `clearToken()` | Remove from `localStorage`               |
+| Function                      | Purpose                                                    |
+| ----------------------------- | ---------------------------------------------------------- |
+| `setUnauthorizedHandler(fn)`  | Register the callback fired when any response returns 401  |
 
 ---
 
@@ -396,9 +401,7 @@ vi.mock("../../core/api/client", () => ({
     interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
     defaults: { headers: {} },
   },
-  getToken: () => "tok",
-  setToken: vi.fn(),
-  clearToken: vi.fn(),
+  setUnauthorizedHandler: vi.fn(),
 }));
 ```
 
@@ -460,8 +463,9 @@ by hand. When the backend adds or renames a field, the corresponding
 ### API prefix
 
 All backend endpoints live under `/api/v1/`. Feature API files use
-the shared Axios instance which has `baseURL` set to
-`VITE_API_URL` (default `http://localhost:8000`).
+the shared Axios instance whose `baseURL` defaults to `""` (same-origin
+relative); `/api` is proxied to the backend by Vite in dev and by nginx in
+Docker.
 
 ### Endpoint mapping
 
