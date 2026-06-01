@@ -14,6 +14,22 @@ vi.mock("./api", () => ({
   updateBot: vi.fn(),
 }));
 
+vi.mock("@auth/useAuth", () => ({
+  useAuth: () => ({
+    user: {
+      id: "u1",
+      email: "o@acme.com",
+      full_name: "O",
+      is_active: true,
+      tenant: { id: "tenant-123", slug: "acme", name: "Acme", role: "owner" },
+    },
+    loading: false,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+  }),
+}));
+
 import { getSettings, updateLLM, updateEmbedding, updateWhatsApp, updateTelegram, updateBot } from "./api";
 import { SettingsPage } from "./SettingsPage";
 import type { TenantConfigResponse } from "./types";
@@ -78,6 +94,14 @@ describe("SettingsPage", () => {
       expect(screen.getByText("Settings")).toBeInTheDocument();
       expect(screen.getByText(/configure your llm provider/i)).toBeInTheDocument();
     });
+  });
+
+  it("shows webhook URLs with the real tenant id", async () => {
+    vi.mocked(getSettings).mockResolvedValue(CONFIG);
+    render(<SettingsPage />, { wrapper: createWrapper() });
+    await waitFor(() => expect(screen.getByText("WhatsApp Cloud API")).toBeInTheDocument());
+    expect(screen.getByText(/tenant-123\/whatsapp$/)).toBeInTheDocument();
+    expect(screen.getByText(/tenant-123\/telegram$/)).toBeInTheDocument();
   });
 
   it("renders all accordion sections", async () => {

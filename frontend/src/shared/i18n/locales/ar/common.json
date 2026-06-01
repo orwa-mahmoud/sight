@@ -196,6 +196,8 @@
     "appSecret": "سر التطبيق",
     "appSecretNotSet": "غير مُعيّن — مطلوب للتحقق من توقيع الـ webhook",
     "webhookUrl": "رابط الـ webhook:",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
     "saveWhatsapp": "حفظ إعدادات واتساب",
     "botToken": "رمز الروبوت",
     "botTokenNotSet": "غير مُعيّن — احصل عليه من @BotFather",
