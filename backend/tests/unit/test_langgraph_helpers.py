@@ -6,7 +6,46 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, Tool
 
 from src.ai.types import ToolDef
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole, LLMToolCall
-from src.infrastructure.ai.graph import _from_lc_messages, _to_ai_message, _to_lc_messages, _to_openai_schema
+from src.infrastructure.ai.graph import (
+    _FALLBACK_REPLY,
+    _final_reply_text,
+    _from_lc_messages,
+    _to_ai_message,
+    _to_lc_messages,
+    _to_openai_schema,
+)
+
+
+def test_final_reply_text_returns_assistant_content() -> None:
+    msgs = [HumanMessage(content="hi"), AIMessage(content="Hello there!")]
+    assert _final_reply_text(msgs) == "Hello there!"
+
+
+def test_final_reply_text_falls_back_on_empty_messages() -> None:
+    assert _final_reply_text([]) == _FALLBACK_REPLY
+
+
+def test_final_reply_text_falls_back_when_last_message_is_blank() -> None:
+    # Iteration cap hit: the final AI message still carries tool calls and the
+    # content is empty — the asker must not receive a blank reply.
+    msgs = [
+        HumanMessage(content="do something"),
+        AIMessage(content="", tool_calls=[{"name": "search_documents", "args": {}, "id": "t1"}]),
+    ]
+    assert _final_reply_text(msgs) == _FALLBACK_REPLY
+
+
+def test_final_reply_text_falls_back_on_whitespace_only() -> None:
+    msgs = [AIMessage(content="   \n  ")]
+    assert _final_reply_text(msgs) == _FALLBACK_REPLY
+
+
+def test_final_reply_text_coerces_non_string_content() -> None:
+    # LangChain can carry list-style content blocks; they must stringify, not crash.
+    msgs = [AIMessage(content=[{"type": "text", "text": "block"}])]
+    result = _final_reply_text(msgs)
+    assert isinstance(result, str)
+    assert result != _FALLBACK_REPLY
 
 
 def test_to_lc_messages_all_roles() -> None:

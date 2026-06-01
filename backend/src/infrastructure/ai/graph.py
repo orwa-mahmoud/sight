@@ -37,6 +37,29 @@ logger = structlog.get_logger()
 
 _MAX_ITERATIONS = 5
 
+# Sent to the asker when the agent loop ends without a usable reply — e.g. the
+# model hit the iteration cap while still requesting tools (its last message
+# carries tool calls and empty content). Better a graceful message than a blank.
+_FALLBACK_REPLY = (
+    "I'm sorry — I couldn't put together a complete answer just now. "
+    "Could you rephrase your question, or I can pass this to a team member?"
+)
+
+
+def _final_reply_text(messages: Sequence[BaseMessage]) -> str:
+    """Extract the assistant's final reply text, with a safe fallback.
+
+    The loop can terminate on the iteration cap while the last LLM message
+    still carries tool calls and empty content; returning that empty string
+    would send the asker a blank reply. Fall back to a graceful message.
+    """
+    if not messages:
+        return _FALLBACK_REPLY
+    last = messages[-1]
+    content = last.content if isinstance(last, AIMessage) else str(last.content)
+    text = content if isinstance(content, str) else str(content)
+    return text if text.strip() else _FALLBACK_REPLY
+
 
 class AgentState(TypedDict):
     messages: list[BaseMessage]
@@ -176,11 +199,8 @@ async def run_graph(
 
     final_state = await compiled.ainvoke(initial_state)
 
-    last_msg = final_state["messages"][-1]
-    text = last_msg.content if isinstance(last_msg, AIMessage) else str(last_msg.content)
-
     return AgentLoopResult(
-        text=text if isinstance(text, str) else str(text),
+        text=_final_reply_text(final_state["messages"]),
         tool_calls=final_state["tool_calls_made"],
         input_tokens=final_state["total_input_tokens"],
         output_tokens=final_state["total_output_tokens"],
