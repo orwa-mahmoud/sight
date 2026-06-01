@@ -25,6 +25,8 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { openConfirm } from "@shared/utils/confirm";
+
 import { closeQuestion, listQuestions, replyToQuestion } from "./api";
 import type { Question, QuestionStatus } from "./types";
 
@@ -193,11 +195,16 @@ export function InboxPage() {
                     <Button
                       size="xs"
                       variant="default"
-                      onClick={() => {
-                        if (globalThis.confirm(t("inbox.confirmClose"))) {
-                          closeMutation.mutate(q.id);
-                        }
-                      }}
+                      onClick={() =>
+                        openConfirm({
+                          title: t("inbox.confirmCloseTitle"),
+                          message: t("inbox.confirmClose"),
+                          confirmLabel: t("inbox.close"),
+                          cancelLabel: t("common.cancel"),
+                          danger: true,
+                          onConfirm: () => closeMutation.mutate(q.id),
+                        })
+                      }
                       loading={closeMutation.isPending && closeMutation.variables === q.id}
                     >
                       {t("inbox.close")}
