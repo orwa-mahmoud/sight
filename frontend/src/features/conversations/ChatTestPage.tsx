@@ -37,6 +37,7 @@ interface ChatMessage {
   sources?: ChatSource[];
   escalated?: boolean;
   latencyMs?: number;
+  totalTokens?: number;
 }
 
 interface ChatApiResponse {
@@ -45,6 +46,8 @@ interface ChatApiResponse {
   escalated: boolean;
   request_id: string;
   sources?: ChatSource[];
+  input_tokens?: number;
+  output_tokens?: number;
 }
 
 interface DocumentLite {
@@ -103,6 +106,7 @@ export function ChatTestPage() {
           sources: data.sources,
           escalated: data.escalated,
           latencyMs,
+          totalTokens: (data.input_tokens ?? 0) + (data.output_tokens ?? 0),
         },
       ]);
       if (data.escalated) {
@@ -210,6 +214,7 @@ export function ChatTestPage() {
                     <Text size="xs" c="dimmed" ml="auto">
                       {(m.latencyMs / 1000).toFixed(m.latencyMs < 1000 ? 2 : 1)}
                       {t("chat.secondsSuffix")}
+                      {m.totalTokens ? ` · ${t("chat.tokens", { n: m.totalTokens })}` : ""}
                     </Text>
                   )}
                 </Group>

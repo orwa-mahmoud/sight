@@ -44,6 +44,8 @@ class ChatResult:
     escalated: bool = False  # true if a Question was submitted
     request_id: str = ""
     sources: list[ChatSource] = field(default_factory=list)
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 @dataclass(frozen=True, kw_only=True)

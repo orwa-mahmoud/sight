@@ -262,6 +262,26 @@ describe("ChatTestPage", () => {
     expect(screen.getByText(/^\d+\.\d+s$/)).toBeInTheDocument();
   });
 
+  it("shows token usage when the response includes token counts", async () => {
+    vi.mocked(api.post).mockResolvedValue({
+      data: {
+        response: "counted reply",
+        thread_id: "t1",
+        escalated: false,
+        request_id: "r1",
+        input_tokens: 120,
+        output_tokens: 30,
+      },
+    });
+    render(wrap(<ChatTestPage />));
+
+    fireEvent.change(screen.getByPlaceholderText("Type a message..."), { target: { value: "q" } });
+    fireEvent.click(screen.getByText("Send"));
+
+    await waitFor(() => expect(screen.getByText("counted reply")).toBeInTheDocument());
+    expect(screen.getByText(/150 tokens/)).toBeInTheDocument();
+  });
+
   it("resets the conversation", async () => {
     vi.mocked(api.post).mockResolvedValue({
       data: { response: "reply", thread_id: "t1", escalated: false, request_id: "r1" },

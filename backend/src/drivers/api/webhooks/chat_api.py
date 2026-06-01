@@ -36,6 +36,8 @@ class ChatResponse(BaseModel):
     escalated: bool
     request_id: str
     sources: list[ChatSourceOut] = []
+    input_tokens: int = 0
+    output_tokens: int = 0
 
 
 @router.post("")
@@ -64,4 +66,6 @@ async def chat(request: Request, req: ChatRequest, current_user: CurrentUser, uo
         escalated=result.escalated,
         request_id=result.request_id,
         sources=[ChatSourceOut(document_id=s.document_id, snippet=s.snippet, score=s.score) for s in result.sources],
+        input_tokens=result.input_tokens,
+        output_tokens=result.output_tokens,
     )

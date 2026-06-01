@@ -60,7 +60,14 @@ async def test_chat_happy_path() -> None:
     uow = _make_uow(links=[link])
     req = ChatRequest(message="hello there")
 
-    mock_result = ChatResult(response="Hi!", thread_id="t-1", escalated=False, request_id="r-1")
+    mock_result = ChatResult(
+        response="Hi!",
+        thread_id="t-1",
+        escalated=False,
+        request_id="r-1",
+        input_tokens=120,
+        output_tokens=30,
+    )
 
     with patch("src.drivers.api.webhooks.chat_api.chat_with_agent", new_callable=AsyncMock, return_value=mock_result):
         resp = await chat(request=_mock_request(), req=req, current_user=user, uow=uow)
@@ -69,6 +76,8 @@ async def test_chat_happy_path() -> None:
     assert resp.thread_id == "t-1"
     assert resp.escalated is False
     assert resp.request_id == "r-1"
+    assert resp.input_tokens == 120
+    assert resp.output_tokens == 30
 
 
 @pytest.mark.asyncio

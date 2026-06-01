@@ -203,6 +203,8 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         escalated=escalated,
         request_id=request_id,
         sources=_extract_sources(result),
+        input_tokens=result.input_tokens,
+        output_tokens=result.output_tokens,
     )
 
 
