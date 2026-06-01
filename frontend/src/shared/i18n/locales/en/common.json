@@ -23,5 +23,13 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "save": "Save"
+  },
+  "table": {
+    "loadMore": "Load more",
+    "rangeOfTotal": "{{from}}–{{to}} of {{total}}",
+    "perPage": "Per page",
+    "perPageN": "{{n}} / page",
+    "loadError": "Could not load data",
+    "retryAction": "Retry"
   }
 }

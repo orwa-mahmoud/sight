@@ -23,5 +23,13 @@
     "delete": "حذف",
     "cancel": "إلغاء",
     "save": "حفظ"
+  },
+  "table": {
+    "loadMore": "تحميل المزيد",
+    "rangeOfTotal": "{{from}}–{{to}} من {{total}}",
+    "perPage": "لكل صفحة",
+    "perPageN": "{{n}} / صفحة",
+    "loadError": "تعذّر تحميل البيانات",
+    "retryAction": "إعادة المحاولة"
   }
 }

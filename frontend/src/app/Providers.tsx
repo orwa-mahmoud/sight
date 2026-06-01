@@ -6,6 +6,7 @@ import "@fontsource/ibm-plex-sans-arabic/600.css";
 import "@shared/i18n";
 
 import { DirectionProvider, MantineProvider } from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -49,12 +50,14 @@ export function Providers({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <DirectionGate>
       <MantineProvider theme={theme} defaultColorScheme="auto">
-        <Notifications position="top-right" />
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <AuthProvider>{children}</AuthProvider>
-          </BrowserRouter>
-        </QueryClientProvider>
+        <ModalsProvider>
+          <Notifications position="top-right" />
+          <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+              <AuthProvider>{children}</AuthProvider>
+            </BrowserRouter>
+          </QueryClientProvider>
+        </ModalsProvider>
       </MantineProvider>
     </DirectionGate>
   );
