@@ -233,6 +233,21 @@ describe("ChatTestPage", () => {
     );
   });
 
+  it("nudges the owner to upload documents when none exist", async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: [] });
+    render(wrap(<ChatTestPage />));
+    await waitFor(() => expect(screen.getByText("No documents uploaded yet")).toBeInTheDocument());
+    expect(screen.getByRole("link", { name: "Upload documents" })).toHaveAttribute("href", "/documents");
+  });
+
+  it("does not nudge to upload when documents exist", async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: [{ id: "d1", filename: "a.pdf" }] });
+    render(wrap(<ChatTestPage />));
+    // Give the documents query a tick to resolve, then assert the banner is absent.
+    await waitFor(() => expect(screen.getByText("Chat (test mode)")).toBeInTheDocument());
+    expect(screen.queryByText("No documents uploaded yet")).not.toBeInTheDocument();
+  });
+
   it("shows the response latency on the AI message", async () => {
     vi.mocked(api.post).mockResolvedValue({
       data: { response: "timed reply", thread_id: "t1", escalated: false, request_id: "r1" },

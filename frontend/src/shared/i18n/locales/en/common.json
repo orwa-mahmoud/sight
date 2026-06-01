@@ -79,7 +79,10 @@
     "suggest2": "Where are you located?",
     "suggest3": "Do you offer refunds?",
     "thinking": "Thinking…",
-    "secondsSuffix": "s"
+    "secondsSuffix": "s",
+    "noDocsTitle": "No documents uploaded yet",
+    "noDocsBody": "The AI will answer from general knowledge only. Upload files so it can ground replies in your content and cite sources here.",
+    "noDocsCta": "Upload documents"
   },
   "conversations": {
     "title": "Conversations",
