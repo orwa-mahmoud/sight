@@ -20,22 +20,26 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
 import { useAuth } from "@auth/useAuth";
+import { ColorSchemeToggle } from "@shared/components/ColorSchemeToggle";
+import { LanguageSwitcher } from "@shared/components/LanguageSwitcher";
 
-const NAV_ITEMS: Array<{ label: string; to: string; icon: ReactNode }> = [
-  { label: "Inbox", to: "/", icon: <IconQuestionMark size={18} stroke={1.6} /> },
-  { label: "Chat (test)", to: "/chat", icon: <IconMessageCircle size={18} stroke={1.6} /> },
-  { label: "Conversations", to: "/conversations", icon: <IconMessageCircle size={18} stroke={1.6} /> },
-  { label: "Documents", to: "/documents", icon: <IconFileText size={18} stroke={1.6} /> },
-  { label: "Usage & cost", to: "/usage", icon: <IconChartBar size={18} stroke={1.6} /> },
-  { label: "Settings", to: "/settings", icon: <IconSettings size={18} stroke={1.6} /> },
+const NAV_ITEMS: Array<{ labelKey: string; to: string; icon: ReactNode }> = [
+  { labelKey: "nav.inbox", to: "/", icon: <IconQuestionMark size={18} stroke={1.6} /> },
+  { labelKey: "nav.chatTest", to: "/chat", icon: <IconMessageCircle size={18} stroke={1.6} /> },
+  { labelKey: "nav.conversations", to: "/conversations", icon: <IconMessageCircle size={18} stroke={1.6} /> },
+  { labelKey: "nav.documents", to: "/documents", icon: <IconFileText size={18} stroke={1.6} /> },
+  { labelKey: "nav.usage", to: "/usage", icon: <IconChartBar size={18} stroke={1.6} /> },
+  { labelKey: "nav.settings", to: "/settings", icon: <IconSettings size={18} stroke={1.6} /> },
 ];
 
 export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   return (
     <MantineAppShell
@@ -66,7 +70,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
           e.currentTarget.style.left = "-9999px";
         }}
       >
-        Skip to content
+        {t("common.skipToContent")}
       </a>
       <MantineAppShell.Header>
         <Group h="100%" px="md" justify="space-between">
@@ -100,8 +104,10 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
                 </Text>
               </Box>
             </Group>
-            <Tooltip label="Sign out">
-              <ActionIcon variant="subtle" color="gray" onClick={logout} aria-label="Sign out">
+            <LanguageSwitcher />
+            <ColorSchemeToggle />
+            <Tooltip label={t("common.signOut")}>
+              <ActionIcon variant="subtle" color="gray" onClick={logout} aria-label={t("common.signOut")}>
                 <IconLogout size={18} />
               </ActionIcon>
             </Tooltip>
@@ -117,7 +123,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
                 key={item.to}
                 component={Link}
                 to={item.to}
-                label={item.label}
+                label={t(item.labelKey)}
                 leftSection={item.icon}
                 active={
                   item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to)

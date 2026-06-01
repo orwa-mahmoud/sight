@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "inbox": "الوارد",
+    "chatTest": "المحادثة (تجريبي)",
+    "conversations": "المحادثات",
+    "documents": "المستندات",
+    "usage": "الاستخدام والتكلفة",
+    "settings": "الإعدادات"
+  },
+  "common": {
+    "signOut": "تسجيل الخروج",
+    "skipToContent": "تخطٍّ إلى المحتوى",
+    "language": "اللغة",
+    "toggleColorScheme": "تبديل نمط الألوان",
+    "search": "بحث",
+    "loading": "جارٍ التحميل",
+    "retry": "حاول التحديث.",
+    "noResults": "لا توجد نتائج",
+    "filters": "عوامل التصفية",
+    "clearFilters": "مسح عوامل التصفية",
+    "clearAll": "مسح الكل",
+    "applyFilters": "تطبيق التصفية",
+    "delete": "حذف",
+    "cancel": "إلغاء",
+    "save": "حفظ"
+  }
+}

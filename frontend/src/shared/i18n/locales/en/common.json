@@ -1,0 +1,27 @@
+{
+  "nav": {
+    "inbox": "Inbox",
+    "chatTest": "Chat (test)",
+    "conversations": "Conversations",
+    "documents": "Documents",
+    "usage": "Usage & cost",
+    "settings": "Settings"
+  },
+  "common": {
+    "signOut": "Sign out",
+    "skipToContent": "Skip to content",
+    "language": "Language",
+    "toggleColorScheme": "Toggle color scheme",
+    "search": "Search",
+    "loading": "Loading",
+    "retry": "Try refreshing.",
+    "noResults": "No results",
+    "filters": "Filters",
+    "clearFilters": "Clear filters",
+    "clearAll": "Clear all",
+    "applyFilters": "Apply filters",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save"
+  }
+}

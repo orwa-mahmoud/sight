@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import "@shared/i18n";
 
 Object.defineProperty(document, "fonts", {
   value: {
