@@ -1,9 +1,11 @@
 import {
   Accordion,
+  ActionIcon,
   Alert,
   Button,
   Card,
   Center,
+  CopyButton,
   Group,
   Loader,
   NumberInput,
@@ -14,16 +16,51 @@ import {
   TextInput,
   Textarea,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconSettings } from "@tabler/icons-react";
+import { IconCheck, IconCopy, IconSettings } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useAuth } from "@auth/useAuth";
+
 import { getSettings, updateBot, updateEmbedding, updateLLM, updateTelegram, updateWhatsApp } from "./api";
+
+function WebhookUrlCard({
+  channel,
+  tenantId,
+}: Readonly<{ channel: "whatsapp" | "telegram"; tenantId: string }>) {
+  const { t } = useTranslation();
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const url = `${origin}/webhooks/${tenantId}/${channel}`;
+  return (
+    <Card withBorder p="sm" bg="gray.0" radius="sm">
+      <Group justify="space-between" wrap="nowrap" gap="xs">
+        <Text size="xs" c="dimmed" style={{ wordBreak: "break-all" }}>
+          {t("settings.webhookUrl")} <code>{url}</code>
+        </Text>
+        <CopyButton value={url}>
+          {({ copied, copy }) => (
+            <Tooltip label={copied ? t("settings.copied") : t("settings.copy")} withArrow>
+              <ActionIcon
+                variant="subtle"
+                color={copied ? "teal" : "gray"}
+                onClick={copy}
+                aria-label={t("settings.copy")}
+              >
+                {copied ? <IconCheck size={14} /> : <IconCopy size={14} />}
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </CopyButton>
+      </Group>
+    </Card>
+  );
+}
 
 const LLM_PROVIDERS = [
   { value: "openai", label: "OpenAI" },
@@ -55,6 +92,8 @@ function useSectionMutation<T>(fn: (p: T) => Promise<unknown>, section: string, 
 
 export function SettingsPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const tenantId = user?.tenant.id ?? "{tenant_id}";
   const settingsQuery = useQuery({ queryKey: ["settings"], queryFn: getSettings });
 
   const llmMutation = useSectionMutation(updateLLM, t("settings.llmName"), t);
@@ -286,12 +325,7 @@ export function SettingsPage() {
                   }
                   {...waForm.getInputProps("app_secret")}
                 />
-                <Card withBorder p="sm" bg="gray.0" radius="sm">
-                  <Text size="xs" c="dimmed">
-                    {t("settings.webhookUrl")}{" "}
-                    <code>https://your-domain/webhooks/&#123;tenant_id&#125;/whatsapp</code>
-                  </Text>
-                </Card>
+                <WebhookUrlCard channel="whatsapp" tenantId={tenantId} />
                 <Button type="submit" loading={whatsappMutation.isPending}>
                   {t("settings.saveWhatsapp")}
                 </Button>
@@ -331,12 +365,7 @@ export function SettingsPage() {
                   }
                   {...tgForm.getInputProps("webhook_secret")}
                 />
-                <Card withBorder p="sm" bg="gray.0" radius="sm">
-                  <Text size="xs" c="dimmed">
-                    {t("settings.webhookUrl")}{" "}
-                    <code>https://your-domain/webhooks/&#123;tenant_id&#125;/telegram</code>
-                  </Text>
-                </Card>
+                <WebhookUrlCard channel="telegram" tenantId={tenantId} />
                 <Button type="submit" loading={telegramMutation.isPending}>
                   {t("settings.saveTelegram")}
                 </Button>

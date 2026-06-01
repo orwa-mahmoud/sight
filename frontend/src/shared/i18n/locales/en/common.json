@@ -196,6 +196,8 @@
     "appSecret": "App Secret",
     "appSecretNotSet": "Not set — required for webhook signature verification",
     "webhookUrl": "Webhook URL:",
+    "copy": "Copy",
+    "copied": "Copied",
     "saveWhatsapp": "Save WhatsApp config",
     "botToken": "Bot Token",
     "botTokenNotSet": "Not set — get one from @BotFather",
