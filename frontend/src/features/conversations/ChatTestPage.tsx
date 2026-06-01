@@ -221,6 +221,19 @@ export function ChatTestPage() {
                 <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
                   {m.content}
                 </Text>
+                {m.escalated && (
+                  <Anchor
+                    component={Link}
+                    to="/inbox"
+                    size="xs"
+                    fw={600}
+                    c="orange"
+                    mt={4}
+                    display="inline-block"
+                  >
+                    {t("chat.viewInInbox")}
+                  </Anchor>
+                )}
                 {m.sources && m.sources.length > 0 && (
                   <Group gap={6} mt="xs" wrap="wrap">
                     <Text size="xs" c="dimmed" fw={600}>

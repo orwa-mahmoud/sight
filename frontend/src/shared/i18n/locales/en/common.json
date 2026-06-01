@@ -83,7 +83,8 @@
     "noDocsTitle": "No documents uploaded yet",
     "noDocsBody": "The AI will answer from general knowledge only. Upload files so it can ground replies in your content and cite sources here.",
     "noDocsCta": "Upload documents",
-    "tokens": "{{n}} tokens"
+    "tokens": "{{n}} tokens",
+    "viewInInbox": "View in inbox →"
   },
   "conversations": {
     "title": "Conversations",

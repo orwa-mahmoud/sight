@@ -218,6 +218,7 @@ describe("ChatTestPage", () => {
     fireEvent.click(screen.getByText("Send"));
 
     await waitFor(() => expect(screen.getByText("Escalated to inbox")).toBeInTheDocument());
+    expect(screen.getByRole("link", { name: /view in inbox/i })).toHaveAttribute("href", "/inbox");
   });
 
   it("sends a suggested prompt from the empty state", async () => {
