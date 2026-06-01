@@ -56,7 +56,14 @@ class OpenAIEmbedder:
                 input=list(batch),
                 dimensions=self._dimensions,
             )
-            all_embeddings.extend(d.embedding for d in response.data)
+            # The API may not return items in request order — sort by index so
+            # each embedding lines up with its source chunk.
+            ordered = sorted(response.data, key=lambda d: d.index)
+            all_embeddings.extend(d.embedding for d in ordered)
+        if len(all_embeddings) != len(cleaned):
+            raise InvalidOperationError(
+                f"Embedding provider returned {len(all_embeddings)} vectors for {len(cleaned)} chunks."
+            )
         return all_embeddings
 
     async def embed_query(self, text: str) -> list[float]:
