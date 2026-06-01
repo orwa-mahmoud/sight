@@ -1,14 +1,4 @@
-import {
-  Anchor,
-  Button,
-  Card,
-  Group,
-  PasswordInput,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Anchor, Button, Card, Group, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useState } from "react";

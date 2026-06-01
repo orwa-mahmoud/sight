@@ -16,7 +16,7 @@ function prefersReducedMotion(): boolean {
 export function useStaggerIn(
   scope: RefObject<HTMLElement | null>,
   selector: string,
-  deps: readonly unknown[]
+  deps: readonly unknown[],
 ): void {
   useGSAP(
     () => {
@@ -38,6 +38,6 @@ export function useStaggerIn(
         /* animation is non-essential — never break rendering */
       }
     },
-    { scope, dependencies: [...deps] }
+    { scope, dependencies: [...deps] },
   );
 }

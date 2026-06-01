@@ -38,7 +38,10 @@ export function ChatTestPage() {
       if (data.thread_id && !threadId) {
         setThreadId(data.thread_id);
       }
-      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "assistant", content: data.response }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), role: "assistant", content: data.response },
+      ]);
       if (data.escalated) {
         notifications.show({ color: "orange", message: "Question escalated to the owner inbox." });
       }
@@ -103,7 +106,13 @@ export function ChatTestPage() {
               }
             }}
           />
-          <Button onClick={() => void send()} loading={sending} disabled={sending} aria-label="Send message" leftSection={<IconSend size={16} />}>
+          <Button
+            onClick={() => void send()}
+            loading={sending}
+            disabled={sending}
+            aria-label="Send message"
+            leftSection={<IconSend size={16} />}
+          >
             Send
           </Button>
         </Group>

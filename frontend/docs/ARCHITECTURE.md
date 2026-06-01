@@ -7,19 +7,19 @@
 
 ## 1. Stack
 
-| Layer         | Library                           | Version |
-| ------------- | --------------------------------- | ------- |
-| UI framework  | React                             | 19      |
-| Component lib | Mantine                           | 9       |
-| Language       | TypeScript                        | 6       |
-| Build tool    | Vite                              | 8       |
-| Server state  | TanStack Query (React Query)      | 5       |
-| Routing       | React Router                      | 7       |
-| HTTP client   | Axios                             | 1       |
-| Icons         | @tabler/icons-react               | 3       |
-| Date handling | dayjs                             | 1       |
-| Test runner   | Vitest                            | 4       |
-| Test utils    | @testing-library/react            | 16      |
+| Layer         | Library                      | Version |
+| ------------- | ---------------------------- | ------- |
+| UI framework  | React                        | 19      |
+| Component lib | Mantine                      | 9       |
+| Language      | TypeScript                   | 6       |
+| Build tool    | Vite                         | 8       |
+| Server state  | TanStack Query (React Query) | 5       |
+| Routing       | React Router                 | 7       |
+| HTTP client   | Axios                        | 1       |
+| Icons         | @tabler/icons-react          | 3       |
+| Date handling | dayjs                        | 1       |
+| Test runner   | Vitest                       | 4       |
+| Test utils    | @testing-library/react       | 16      |
 
 ---
 
@@ -207,8 +207,8 @@ redirects to `/login`.
 ```tsx
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
-  if (loading)  return <Loader />;
-  if (!user)    return <Navigate to="/login" />;
+  if (loading) return <Loader />;
+  if (!user) return <Navigate to="/login" />;
   return children;
 }
 ```
@@ -224,10 +224,10 @@ potential post-login redirect.
 
 ```ts
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "",   // same-origin relative
+  baseURL: import.meta.env.VITE_API_URL ?? "", // same-origin relative
   headers: { "Content-Type": "application/json" },
   timeout: 30_000,
-  withCredentials: true,                          // send the auth cookie
+  withCredentials: true, // send the auth cookie
 });
 ```
 
@@ -244,9 +244,9 @@ the query as errored, or the mutation's `onError` fires).
 
 ### Helpers
 
-| Function                      | Purpose                                                    |
-| ----------------------------- | ---------------------------------------------------------- |
-| `setUnauthorizedHandler(fn)`  | Register the callback fired when any response returns 401  |
+| Function                     | Purpose                                                   |
+| ---------------------------- | --------------------------------------------------------- |
+| `setUnauthorizedHandler(fn)` | Register the callback fired when any response returns 401 |
 
 ---
 
@@ -275,13 +275,13 @@ features/<name>/
 
 ### Feature inventory
 
-| Feature          | Folder          | API file | Types file | Pages                           |
-| ---------------- | --------------- | -------- | ---------- | ------------------------------- |
-| Escalations      | `escalations/`  | Yes      | Yes        | InboxPage                       |
-| Conversations    | `conversations/`| No (inline) | No (inline) | ConversationsPage, ChatTestPage |
-| Documents        | `documents/`    | No (inline) | No (inline) | DocumentsPage                  |
-| LLM Usage        | `llm-usage/`    | No (inline) | No (inline) | UsagePage                       |
-| Settings         | `settings/`     | Yes      | Yes        | SettingsPage                    |
+| Feature       | Folder           | API file    | Types file  | Pages                           |
+| ------------- | ---------------- | ----------- | ----------- | ------------------------------- |
+| Escalations   | `escalations/`   | Yes         | Yes         | InboxPage                       |
+| Conversations | `conversations/` | No (inline) | No (inline) | ConversationsPage, ChatTestPage |
+| Documents     | `documents/`     | No (inline) | No (inline) | DocumentsPage                   |
+| LLM Usage     | `llm-usage/`     | No (inline) | No (inline) | UsagePage                       |
+| Settings      | `settings/`      | Yes         | Yes         | SettingsPage                    |
 
 ---
 
@@ -294,17 +294,17 @@ All routes are defined in a single `AppRoutes` component using React Router's
 
 ### Route table
 
-| Path              | Component           | Auth | Layout          |
-| ----------------- | ------------------- | ---- | --------------- |
-| `/login`          | LoginPage           | No   | None            |
-| `/register`       | RegisterPage        | No   | None            |
-| `/`               | InboxPage           | Yes  | ProtectedShell  |
-| `/conversations`  | ConversationsPage   | Yes  | ProtectedShell  |
-| `/documents`      | DocumentsPage       | Yes  | ProtectedShell  |
-| `/usage`          | UsagePage           | Yes  | ProtectedShell  |
-| `/chat`           | ChatTestPage        | Yes  | ProtectedShell  |
-| `/settings`       | SettingsPage        | Yes  | ProtectedShell  |
-| `*`               | Redirect to `/`     | --   | --              |
+| Path             | Component         | Auth | Layout         |
+| ---------------- | ----------------- | ---- | -------------- |
+| `/login`         | LoginPage         | No   | None           |
+| `/register`      | RegisterPage      | No   | None           |
+| `/`              | InboxPage         | Yes  | ProtectedShell |
+| `/conversations` | ConversationsPage | Yes  | ProtectedShell |
+| `/documents`     | DocumentsPage     | Yes  | ProtectedShell |
+| `/usage`         | UsagePage         | Yes  | ProtectedShell |
+| `/chat`          | ChatTestPage      | Yes  | ProtectedShell |
+| `/settings`      | SettingsPage      | Yes  | ProtectedShell |
+| `*`              | Redirect to `/`   | --   | --             |
 
 ### Protected route pattern
 
@@ -340,11 +340,11 @@ Color palette, component patterns, naming conventions, and styling reference:
 
 ### Tools
 
-| Tool                      | Purpose                              |
-| ------------------------- | ------------------------------------ |
-| Vitest                    | Test runner, assertions, mocking     |
-| @testing-library/react    | Render components, query the DOM     |
-| @testing-library/jest-dom | Custom matchers (toBeInTheDocument)  |
+| Tool                      | Purpose                             |
+| ------------------------- | ----------------------------------- |
+| Vitest                    | Test runner, assertions, mocking    |
+| @testing-library/react    | Render components, query the DOM    |
+| @testing-library/jest-dom | Custom matchers (toBeInTheDocument) |
 
 ### Test setup
 
@@ -365,7 +365,9 @@ Wraps components in the provider stack needed for tests:
 ```tsx
 <MantineProvider theme={theme}>
   <Notifications />
-  <QueryClientProvider client={queryClient}>  // retry: false
+  <QueryClientProvider client={queryClient}>
+    {" "}
+    // retry: false
     <MemoryRouter>{children}</MemoryRouter>
   </QueryClientProvider>
 </MantineProvider>
@@ -469,14 +471,14 @@ Docker.
 
 ### Endpoint mapping
 
-| Frontend feature | Backend endpoints                                   |
-| ---------------- | --------------------------------------------------- |
-| Auth             | `POST /api/v1/auth/login`, `/register`, `GET /me`   |
-| Escalations      | `GET /api/v1/questions`, `POST .../reply`, `.../close` |
-| Conversations    | `GET /api/v1/conversations`, `.../daily-summary`     |
-| Documents        | `GET/POST/DELETE /api/v1/documents`                  |
-| LLM Usage        | `GET /api/v1/llm-usage/stats`                        |
-| Chat             | `POST /api/v1/chat`                                  |
+| Frontend feature | Backend endpoints                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| Auth             | `POST /api/v1/auth/login`, `/register`, `GET /me`                                                 |
+| Escalations      | `GET /api/v1/questions`, `POST .../reply`, `.../close`                                            |
+| Conversations    | `GET /api/v1/conversations`, `.../daily-summary`                                                  |
+| Documents        | `GET/POST/DELETE /api/v1/documents`                                                               |
+| LLM Usage        | `GET /api/v1/llm-usage/stats`                                                                     |
+| Chat             | `POST /api/v1/chat`                                                                               |
 | Settings         | `GET /api/v1/settings`, `PUT .../llm`, `.../embedding`, `.../whatsapp`, `.../telegram`, `.../bot` |
 
 ---

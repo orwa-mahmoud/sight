@@ -192,11 +192,7 @@ export function InboxPage() {
                 </Box>
                 {q.status === "submitted" && (
                   <Stack gap="xs">
-                    <Button
-                      size="xs"
-                      leftSection={<IconSend size={14} />}
-                      onClick={() => openReply(q)}
-                    >
+                    <Button size="xs" leftSection={<IconSend size={14} />} onClick={() => openReply(q)}>
                       Reply
                     </Button>
                     <Button
@@ -246,9 +242,7 @@ export function InboxPage() {
                 Cancel
               </Button>
               <Button
-                onClick={() =>
-                  active && replyMutation.mutate({ id: active.id, reply: replyText.trim() })
-                }
+                onClick={() => active && replyMutation.mutate({ id: active.id, reply: replyText.trim() })}
                 loading={replyMutation.isPending}
                 disabled={replyText.trim().length === 0}
               >

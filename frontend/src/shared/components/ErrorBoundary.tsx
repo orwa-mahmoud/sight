@@ -33,10 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <Alert color="red" title="Something went wrong" maw={480}>
             An unexpected error occurred. Please try again.
           </Alert>
-          <Button
-            variant="light"
-            onClick={() => this.setState({ hasError: false })}
-          >
+          <Button variant="light" onClick={() => this.setState({ hasError: false })}>
             Retry
           </Button>
         </Stack>

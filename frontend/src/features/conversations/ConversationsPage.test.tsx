@@ -73,12 +73,18 @@ describe("ConversationsPage", () => {
       return {
         data: [
           {
-            id: "c1", thread_id: "thread-abc-123", channel: "whatsapp",
-            last_message_at: "2026-01-01T10:00:00Z", created_at: "2026-01-01T09:00:00Z",
+            id: "c1",
+            thread_id: "thread-abc-123",
+            channel: "whatsapp",
+            last_message_at: "2026-01-01T10:00:00Z",
+            created_at: "2026-01-01T09:00:00Z",
           },
           {
-            id: "c2", thread_id: "thread-def-456", channel: "telegram",
-            last_message_at: null, created_at: "2026-01-01T08:00:00Z",
+            id: "c2",
+            thread_id: "thread-def-456",
+            channel: "telegram",
+            last_message_at: null,
+            created_at: "2026-01-01T08:00:00Z",
           },
         ],
       };
@@ -111,10 +117,19 @@ describe("ConversationsPage", () => {
 
   it("shows channel badge labels", async () => {
     vi.mocked(api.get).mockImplementation(async (url: string) => {
-      if (url.includes("daily-summary")) return { data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 } };
+      if (url.includes("daily-summary"))
+        return {
+          data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 },
+        };
       return {
         data: [
-          { id: "c1", thread_id: "t1", channel: "whatsapp", last_message_at: "2026-01-01T10:00:00Z", created_at: "2026-01-01T09:00:00Z" },
+          {
+            id: "c1",
+            thread_id: "t1",
+            channel: "whatsapp",
+            last_message_at: "2026-01-01T10:00:00Z",
+            created_at: "2026-01-01T09:00:00Z",
+          },
         ],
       };
     });
@@ -128,9 +143,20 @@ describe("ConversationsPage", () => {
   it("truncates long thread IDs", async () => {
     const longId = "a".repeat(50);
     vi.mocked(api.get).mockImplementation(async (url: string) => {
-      if (url.includes("daily-summary")) return { data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 } };
+      if (url.includes("daily-summary"))
+        return {
+          data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 },
+        };
       return {
-        data: [{ id: "c1", thread_id: longId, channel: "web", last_message_at: null, created_at: "2026-01-01T09:00:00Z" }],
+        data: [
+          {
+            id: "c1",
+            thread_id: longId,
+            channel: "web",
+            last_message_at: null,
+            created_at: "2026-01-01T09:00:00Z",
+          },
+        ],
       };
     });
     render(<ConversationsPage />, { wrapper: createWrapper() });
@@ -142,9 +168,20 @@ describe("ConversationsPage", () => {
 
   it("shows raw channel name when not in lookup map", async () => {
     vi.mocked(api.get).mockImplementation(async (url: string) => {
-      if (url.includes("daily-summary")) return { data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 } };
+      if (url.includes("daily-summary"))
+        return {
+          data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 },
+        };
       return {
-        data: [{ id: "c1", thread_id: "t1", channel: "sms", last_message_at: null, created_at: "2026-01-01T09:00:00Z" }],
+        data: [
+          {
+            id: "c1",
+            thread_id: "t1",
+            channel: "sms",
+            last_message_at: null,
+            created_at: "2026-01-01T09:00:00Z",
+          },
+        ],
       };
     });
     render(<ConversationsPage />, { wrapper: createWrapper() });

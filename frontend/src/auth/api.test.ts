@@ -38,7 +38,10 @@ describe("auth API", () => {
 
   it("me gets /api/v1/auth/me", async () => {
     const user = {
-      id: "u1", email: "a@b.com", full_name: "T", is_active: true,
+      id: "u1",
+      email: "a@b.com",
+      full_name: "T",
+      is_active: true,
       tenant: { id: "t1", slug: "t", name: "T", role: "owner" },
     };
     vi.mocked(api.get).mockResolvedValue({ data: user });

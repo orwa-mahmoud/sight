@@ -26,7 +26,7 @@ const DEFAULT_SELECTOR: PageSelector<unknown, PaginatedResponse<unknown>> = (pag
 
 /** Server-paginated {@link TableSource} built from a caller's infinite query. */
 export function useBackendData<TRow, TParams extends TableQueryParams, TPage = PaginatedResponse<TRow>>(
-  options: UseBackendDataOptions<TRow, TParams, TPage>
+  options: UseBackendDataOptions<TRow, TParams, TPage>,
 ): TableSource<TRow> {
   const { usePaginatedQuery, selectPage, baseParams, paginationMode = "auto" } = options;
 

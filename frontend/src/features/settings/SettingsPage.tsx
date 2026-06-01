@@ -21,14 +21,7 @@ import { IconSettings } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
-import {
-  getSettings,
-  updateBot,
-  updateEmbedding,
-  updateLLM,
-  updateTelegram,
-  updateWhatsApp,
-} from "./api";
+import { getSettings, updateBot, updateEmbedding, updateLLM, updateTelegram, updateWhatsApp } from "./api";
 
 const LLM_PROVIDERS = [
   { value: "openai", label: "OpenAI" },
@@ -64,7 +57,9 @@ export function SettingsPage() {
     initialValues: { provider: "", model: "", api_key: "", max_tokens: 1024, temperature: 0.3 },
   });
   const embForm = useForm({ initialValues: { model: "", api_key: "" } });
-  const waForm = useForm({ initialValues: { phone_number_id: "", access_token: "", verify_token: "", app_secret: "" } });
+  const waForm = useForm({
+    initialValues: { phone_number_id: "", access_token: "", verify_token: "", app_secret: "" },
+  });
   const tgForm = useForm({ initialValues: { bot_token: "", webhook_secret: "" } });
   const botForm = useForm({ initialValues: { name: "", welcome_message: "", language: "" } });
 
@@ -104,12 +99,23 @@ export function SettingsPage() {
   }
 
   const config = settingsQuery.data ?? {
-    llm_provider: "", llm_model: "", llm_api_key_masked: "", llm_max_tokens: 1024,
-    llm_temperature: 0.3, embedding_provider: "", embedding_model: "",
+    llm_provider: "",
+    llm_model: "",
+    llm_api_key_masked: "",
+    llm_max_tokens: 1024,
+    llm_temperature: 0.3,
+    embedding_provider: "",
+    embedding_model: "",
     embedding_api_key_masked: "",
-    whatsapp_phone_number_id: null, whatsapp_access_token_masked: null,
-    whatsapp_verify_token_masked: null, whatsapp_app_secret_masked: null, telegram_bot_token_masked: null,
-    telegram_webhook_secret_masked: null, bot_name: "", bot_welcome_message: "", bot_language: "",
+    whatsapp_phone_number_id: null,
+    whatsapp_access_token_masked: null,
+    whatsapp_verify_token_masked: null,
+    whatsapp_app_secret_masked: null,
+    telegram_bot_token_masked: null,
+    telegram_webhook_secret_masked: null,
+    bot_name: "",
+    bot_welcome_message: "",
+    bot_language: "",
   };
 
   return (
@@ -147,15 +153,13 @@ export function SettingsPage() {
                   placeholder={config.llm_provider}
                   {...llmForm.getInputProps("provider")}
                 />
-                <TextInput
-                  label="Model"
-                  placeholder={config.llm_model}
-                  {...llmForm.getInputProps("model")}
-                />
+                <TextInput label="Model" placeholder={config.llm_model} {...llmForm.getInputProps("model")} />
                 <PasswordInput
                   label="API Key"
                   placeholder="Enter new key"
-                  description={config.llm_api_key_masked ? `Current: ${config.llm_api_key_masked}` : "Not set"}
+                  description={
+                    config.llm_api_key_masked ? `Current: ${config.llm_api_key_masked}` : "Not set"
+                  }
                   {...llmForm.getInputProps("api_key")}
                 />
                 <Group grow>

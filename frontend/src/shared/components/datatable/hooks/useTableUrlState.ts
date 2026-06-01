@@ -37,7 +37,7 @@ export interface TableUrlState {
 function parseExtra(
   params: URLSearchParams,
   numberKeys: readonly string[],
-  arrayKeys: readonly string[]
+  arrayKeys: readonly string[],
 ): ExtraFilters {
   const extra: ExtraFilters = {};
   params.forEach((value, key) => {
@@ -58,7 +58,7 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
   const page = Math.max(1, Number.parseInt(params.get(PARAM.page) ?? "1", 10) || 1);
   const limit = Math.max(
     1,
-    Number.parseInt(params.get(PARAM.limit) ?? "", 10) || defaults?.limit || DEFAULT_PAGE_SIZE
+    Number.parseInt(params.get(PARAM.limit) ?? "", 10) || defaults?.limit || DEFAULT_PAGE_SIZE,
   );
   const search = params.get(PARAM.search) ?? "";
   const sortBy = params.get(PARAM.sortBy) ?? defaults?.sortBy ?? undefined;
@@ -71,7 +71,7 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
 
   const extra = useMemo(
     () => parseExtra(params, numberExtraKeys, arrayExtraKeys),
-    [params, numberExtraKeys, arrayExtraKeys]
+    [params, numberExtraKeys, arrayExtraKeys],
   );
 
   const update = useCallback(
@@ -82,15 +82,15 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
           mutate(next);
           return next;
         },
-        { replace: true }
+        { replace: true },
       );
     },
-    [setParams]
+    [setParams],
   );
 
   const setPage = useCallback(
     (next: number) => update((p) => (next > 1 ? p.set(PARAM.page, String(next)) : p.delete(PARAM.page))),
-    [update]
+    [update],
   );
 
   const setLimit = useCallback(
@@ -99,7 +99,7 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
         p.set(PARAM.limit, String(next));
         p.delete(PARAM.page);
       }),
-    [update]
+    [update],
   );
 
   const setSearch = useCallback(
@@ -109,7 +109,7 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
         else p.delete(PARAM.search);
         p.delete(PARAM.page);
       }),
-    [update]
+    [update],
   );
 
   const setSort = useCallback(
@@ -125,7 +125,7 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
         }
         p.delete(PARAM.page);
       }),
-    [update]
+    [update],
   );
 
   const setExtra = useCallback(
@@ -137,7 +137,7 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
         else p.delete(name);
         p.delete(PARAM.page);
       }),
-    [update]
+    [update],
   );
 
   const clearAll = useCallback(
@@ -149,8 +149,21 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
           }
         }
       }),
-    [update]
+    [update],
   );
 
-  return { page, limit, search, sortBy, sortDir, extra, setPage, setLimit, setSort, setSearch, setExtra, clearAll };
+  return {
+    page,
+    limit,
+    search,
+    sortBy,
+    sortDir,
+    extra,
+    setPage,
+    setLimit,
+    setSort,
+    setSearch,
+    setExtra,
+    clearAll,
+  };
 }

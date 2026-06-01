@@ -31,5 +31,5 @@ api.interceptors.response.use(
       onUnauthorized?.();
     }
     return Promise.reject(error);
-  }
+  },
 );

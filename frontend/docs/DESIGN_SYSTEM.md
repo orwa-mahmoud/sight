@@ -12,35 +12,35 @@ Component patterns, naming conventions, color palette, and styling reference for
 
 The brand color. Used for buttons, links, active states, and accent UI.
 
-| Shade | Hex       | Usage                     | Mantine Reference |
-| ----- | --------- | ------------------------- | ----------------- |
-| **0** | `#fff3ed` | Lightest background       | `coral.0`         |
-| **1** | `#ffe2d3` | Hover backgrounds         | `coral.1`         |
-| **2** | `#fdc2a7` | Light borders             | `coral.2`         |
-| **3** | `#fba076` | Badges, light accents     | `coral.3`         |
-| **4** | `#f9844c` | Medium accent             | `coral.4`         |
-| **5** | `#f87330` | Primary on dark scheme    | `coral.5`         |
-| **6** | `#f76b22` | **Primary on light scheme** (buttons, CTAs) | `coral.6` |
-| **7** | `#dc5915` | Hover on primary          | `coral.7`         |
-| **8** | `#c44e10` | Active/pressed            | `coral.8`         |
-| **9** | `#aa4109` | Darkest emphasis          | `coral.9`         |
+| Shade | Hex       | Usage                                       | Mantine Reference |
+| ----- | --------- | ------------------------------------------- | ----------------- |
+| **0** | `#fff3ed` | Lightest background                         | `coral.0`         |
+| **1** | `#ffe2d3` | Hover backgrounds                           | `coral.1`         |
+| **2** | `#fdc2a7` | Light borders                               | `coral.2`         |
+| **3** | `#fba076` | Badges, light accents                       | `coral.3`         |
+| **4** | `#f9844c` | Medium accent                               | `coral.4`         |
+| **5** | `#f87330` | Primary on dark scheme                      | `coral.5`         |
+| **6** | `#f76b22` | **Primary on light scheme** (buttons, CTAs) | `coral.6`         |
+| **7** | `#dc5915` | Hover on primary                            | `coral.7`         |
+| **8** | `#c44e10` | Active/pressed                              | `coral.8`         |
+| **9** | `#aa4109` | Darkest emphasis                            | `coral.9`         |
 
 ### Slate (Accent)
 
 Deep blue-gray for contrast: headings, sidebar active states, nav.
 
-| Shade | Hex       | Usage                     | Mantine Reference |
-| ----- | --------- | ------------------------- | ----------------- |
-| **0** | `#f3f5f8` | Lightest background       | `slate.0`         |
-| **1** | `#e3e6eb` | Subtle highlights         | `slate.1`         |
-| **2** | `#c5cbd5` | Light borders             | `slate.2`         |
-| **3** | `#a4adbd` | Muted text                | `slate.3`         |
-| **4** | `#88949f` | Secondary text            | `slate.4`         |
-| **5** | `#717f97` | Medium accent             | `slate.5`         |
-| **6** | `#67768f` | Base accent               | `slate.6`         |
-| **7** | `#566480` | Hover on accent           | `slate.7`         |
-| **8** | `#4d5a73` | Active/pressed            | `slate.8`         |
-| **9** | `#404c66` | Darkest accent            | `slate.9`         |
+| Shade | Hex       | Usage               | Mantine Reference |
+| ----- | --------- | ------------------- | ----------------- |
+| **0** | `#f3f5f8` | Lightest background | `slate.0`         |
+| **1** | `#e3e6eb` | Subtle highlights   | `slate.1`         |
+| **2** | `#c5cbd5` | Light borders       | `slate.2`         |
+| **3** | `#a4adbd` | Muted text          | `slate.3`         |
+| **4** | `#88949f` | Secondary text      | `slate.4`         |
+| **5** | `#717f97` | Medium accent       | `slate.5`         |
+| **6** | `#67768f` | Base accent         | `slate.6`         |
+| **7** | `#566480` | Hover on accent     | `slate.7`         |
+| **8** | `#4d5a73` | Active/pressed      | `slate.8`         |
+| **9** | `#404c66` | Darkest accent      | `slate.9`         |
 
 ### Primary Shade
 
@@ -52,16 +52,16 @@ Mantine picks `coral.6` (`#f76b22`) in light mode and `coral.5` (`#f87330`) in d
 
 ### Brand Color Usage
 
-| Use Case           | Mantine Prop / Value |
-| ------------------ | -------------------- |
-| Primary button     | `color="coral"` (default, as primaryColor) |
-| Accent contrast    | `color="slate"`      |
-| Success feedback   | `color="teal"`       |
-| Error feedback     | `color="red"`        |
-| Muted text         | `c="dimmed"`         |
-| Light primary bg   | `bg="coral.0"`       |
-| Hover on primary   | `coral.7`            |
-| Active on primary  | `coral.8`            |
+| Use Case          | Mantine Prop / Value                       |
+| ----------------- | ------------------------------------------ |
+| Primary button    | `color="coral"` (default, as primaryColor) |
+| Accent contrast   | `color="slate"`                            |
+| Success feedback  | `color="teal"`                             |
+| Error feedback    | `color="red"`                              |
+| Muted text        | `c="dimmed"`                               |
+| Light primary bg  | `bg="coral.0"`                             |
+| Hover on primary  | `coral.7`                                  |
+| Active on primary | `coral.8`                                  |
 
 ---
 
@@ -72,7 +72,7 @@ Mantine picks `coral.6` (`#f76b22`) in light mode and `coral.5` (`#f87330`) in d
 ### Default Radius
 
 ```ts
-defaultRadius: "md"
+defaultRadius: "md";
 ```
 
 Applies to buttons, inputs, cards, and all Mantine components that accept a `radius` prop.
@@ -197,15 +197,15 @@ const handleSubmit = form.onSubmit(async (values) => { ... });
 
 ## 4. Naming Conventions
 
-| What                | Convention                          | Example                 |
-| ------------------- | ----------------------------------- | ----------------------- |
-| Page component      | `PascalCase` + `Page` suffix        | `InboxPage`             |
-| API file            | `api.ts` in feature folder          | `escalations/api.ts`    |
-| Types file          | `types.ts` in feature folder        | `escalations/types.ts`  |
-| Test file           | Same name + `.test.tsx` / `.test.ts`| `InboxPage.test.tsx`    |
-| Hook                | `camelCase` with `use` prefix       | `useAuth`               |
-| Context             | `PascalCase` + `Context`            | `AuthContext`            |
-| Exported functions  | Named exports only                  | `export function X()`   |
+| What               | Convention                           | Example                |
+| ------------------ | ------------------------------------ | ---------------------- |
+| Page component     | `PascalCase` + `Page` suffix         | `InboxPage`            |
+| API file           | `api.ts` in feature folder           | `escalations/api.ts`   |
+| Types file         | `types.ts` in feature folder         | `escalations/types.ts` |
+| Test file          | Same name + `.test.tsx` / `.test.ts` | `InboxPage.test.tsx`   |
+| Hook               | `camelCase` with `use` prefix        | `useAuth`              |
+| Context            | `PascalCase` + `Context`             | `AuthContext`          |
+| Exported functions | Named exports only                   | `export function X()`  |
 
 ---
 
@@ -250,6 +250,6 @@ Notifications are positioned `top-right` (configured in `Providers.tsx`).
 
 ## 9. Related Docs
 
-| Doc | Purpose |
-| --- | ------- |
+| Doc                                  | Purpose                                               |
+| ------------------------------------ | ----------------------------------------------------- |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Project structure, state management, routing, testing |

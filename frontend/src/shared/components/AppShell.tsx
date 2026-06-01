@@ -42,11 +42,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
   const { t } = useTranslation();
 
   return (
-    <MantineAppShell
-      header={{ height: 56 }}
-      navbar={{ width: 240, breakpoint: "sm" }}
-      padding="lg"
-    >
+    <MantineAppShell header={{ height: 56 }} navbar={{ width: 240, breakpoint: "sm" }} padding="lg">
       <a
         href="#main-content"
         style={{
@@ -125,9 +121,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
                 to={item.to}
                 label={t(item.labelKey)}
                 leftSection={item.icon}
-                active={
-                  item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to)
-                }
+                active={item.to === "/" ? location.pathname === "/" : location.pathname.startsWith(item.to)}
               />
             ))}
           </Stack>

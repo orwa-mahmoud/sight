@@ -185,12 +185,20 @@ export function DataTable<TRow>({
         {toolbar}
       </Group>
 
-      {chips.length > 0 ? <ActiveFilterChips chips={chips} onRemove={(key) => source.setExtra(key, undefined)} /> : null}
+      {chips.length > 0 ? (
+        <ActiveFilterChips chips={chips} onRemove={(key) => source.setExtra(key, undefined)} />
+      ) : null}
 
       {body}
 
       {filters ? (
-        <Drawer opened={drawerOpen} onClose={drawer.close} title={t("common.filters")} position="right" padding="lg">
+        <Drawer
+          opened={drawerOpen}
+          onClose={drawer.close}
+          title={t("common.filters")}
+          position="right"
+          padding="lg"
+        >
           <Stack gap="md">
             {filters}
             <Group justify="space-between" mt="md">

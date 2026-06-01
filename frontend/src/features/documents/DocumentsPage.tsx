@@ -140,7 +140,7 @@ export function DocumentsPage() {
         ),
       },
     ],
-    [t]
+    [t],
   );
 
   const rowActions = useMemo<RowAction<DocumentSummary>[]>(
@@ -159,7 +159,7 @@ export function DocumentsPage() {
         },
       },
     ],
-    [t, deleteMutation]
+    [t, deleteMutation],
   );
 
   const source = useFrontendData<DocumentSummary>({
@@ -190,7 +190,10 @@ export function DocumentsPage() {
         tableLabel={t("documents.title")}
         searchPlaceholder={t("documents.searchPlaceholder")}
         toolbar={
-          <FileButton onChange={(file) => file && uploadMutation.mutate(file)} accept=".pdf,.md,.markdown,.txt,.docx">
+          <FileButton
+            onChange={(file) => file && uploadMutation.mutate(file)}
+            accept=".pdf,.md,.markdown,.txt,.docx"
+          >
             {(props) => (
               <Button {...props} leftSection={<IconUpload size={18} />} loading={uploadMutation.isPending}>
                 {t("documents.upload")}

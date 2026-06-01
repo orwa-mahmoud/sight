@@ -18,7 +18,7 @@ export function useLanguage(): UseLanguageReturn {
     (next: Language) => {
       void i18n.changeLanguage(next);
     },
-    [i18n]
+    [i18n],
   );
   return { language, dir: dirFor(language), languages: SUPPORTED_LANGUAGES, setLanguage };
 }

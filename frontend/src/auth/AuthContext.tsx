@@ -61,7 +61,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         void authApi.logout();
       },
     }),
-    [user, loading, loadCurrentUser]
+    [user, loading, loadCurrentUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

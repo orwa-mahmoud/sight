@@ -32,7 +32,7 @@ describe("i18n", () => {
     render(
       <MantineProvider>
         <LanguageSwitcher />
-      </MantineProvider>
+      </MantineProvider>,
     );
     expect(screen.getByLabelText("Language")).toBeInTheDocument();
   });

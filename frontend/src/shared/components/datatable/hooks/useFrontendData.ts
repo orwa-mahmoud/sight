@@ -54,7 +54,15 @@ function compare(a: unknown, b: unknown): number {
 
 /** In-memory {@link TableSource}: client-side search / filter / sort / paginate. */
 export function useFrontendData<TRow>(options: UseFrontendDataOptions<TRow>): TableSource<TRow> {
-  const { data, columns, searchKeys, paginationMode = "auto", isLoading = false, error = null, refetch } = options;
+  const {
+    data,
+    columns,
+    searchKeys,
+    paginationMode = "auto",
+    isLoading = false,
+    error = null,
+    refetch,
+  } = options;
 
   const isMobile = useMediaQuery(MOBILE_MEDIA_QUERY) ?? false;
   const resolvedMode: "infinite" | "paged" =
@@ -65,11 +73,13 @@ export function useFrontendData<TRow>(options: UseFrontendDataOptions<TRow>): Ta
 
   const keysToSearch = useMemo(
     () => (searchKeys?.length ? searchKeys : columns.map((c) => c.key)),
-    [searchKeys, columns]
+    [searchKeys, columns],
   );
 
   const filteredSorted = useMemo(() => {
-    const filtered = data.filter((row) => matchesSearch(row, search, keysToSearch) && matchesExtra(row, extra));
+    const filtered = data.filter(
+      (row) => matchesSearch(row, search, keysToSearch) && matchesExtra(row, extra),
+    );
     if (!sortBy) return filtered;
     const col = columns.find((c) => c.key === sortBy);
     const getVal = col?.sortValue

@@ -82,17 +82,18 @@ features/<name>/
 ```
 
 **Rules:**
+
 - One feature = one folder. Features own their API, types, and pages.
 - No cross-feature imports. Features communicate through shared infrastructure only.
 - Features with only a page (no dedicated API) inline fetch functions in the page file.
 
-| Feature | Folder | Key pages |
-| ------- | ------ | --------- |
-| Escalations | `escalations/` | InboxPage |
+| Feature       | Folder           | Key pages                       |
+| ------------- | ---------------- | ------------------------------- |
+| Escalations   | `escalations/`   | InboxPage                       |
 | Conversations | `conversations/` | ConversationsPage, ChatTestPage |
-| Documents | `documents/` | DocumentsPage |
-| LLM Usage | `llm-usage/` | UsagePage |
-| Settings | `settings/` | SettingsPage |
+| Documents     | `documents/`     | DocumentsPage                   |
+| LLM Usage     | `llm-usage/`     | UsagePage                       |
+| Settings      | `settings/`      | SettingsPage                    |
 
 ## Conventions
 
@@ -151,12 +152,12 @@ npm test            # Vitest
 - All endpoints under `/api/v1/`. Feature API files use the shared Axios instance.
 - When backend adds or renames a field, update the corresponding `types.ts` manually.
 
-| Frontend feature | Backend endpoints |
-| ---------------- | ----------------- |
-| Auth | `POST /api/v1/auth/login`, `/register`, `GET /me` |
-| Escalations | `GET /api/v1/questions`, `POST .../reply`, `.../close` |
-| Conversations | `GET /api/v1/conversations`, `.../daily-summary` |
-| Documents | `GET/POST/DELETE /api/v1/documents` |
-| LLM Usage | `GET /api/v1/llm-usage/stats` |
-| Chat | `POST /api/v1/chat` |
-| Settings | `GET /api/v1/settings`, `PUT .../llm`, `.../embedding`, `.../whatsapp`, `.../telegram`, `.../bot` |
+| Frontend feature | Backend endpoints                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| Auth             | `POST /api/v1/auth/login`, `/register`, `GET /me`                                                 |
+| Escalations      | `GET /api/v1/questions`, `POST .../reply`, `.../close`                                            |
+| Conversations    | `GET /api/v1/conversations`, `.../daily-summary`                                                  |
+| Documents        | `GET/POST/DELETE /api/v1/documents`                                                               |
+| LLM Usage        | `GET /api/v1/llm-usage/stats`                                                                     |
+| Chat             | `POST /api/v1/chat`                                                                               |
+| Settings         | `GET /api/v1/settings`, `PUT .../llm`, `.../embedding`, `.../whatsapp`, `.../telegram`, `.../bot` |

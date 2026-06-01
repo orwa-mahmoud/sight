@@ -59,13 +59,7 @@ export function PaginationFooter({
           data={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: t("table.perPageN", { n }) }))}
           comboboxProps={{ withinPortal: true }}
         />
-        <Pagination
-          size="sm"
-          total={totalPages}
-          value={page}
-          onChange={onPageChange}
-          withControls
-        />
+        <Pagination size="sm" total={totalPages} value={page} onChange={onPageChange} withControls />
       </Group>
     </Group>
   );

@@ -22,7 +22,8 @@ export interface DataTableDesktopProps<TRow> {
 function renderCell<TRow>(column: ColumnDef<TRow>, row: TRow) {
   if (column.Cell) return <column.Cell row={row} />;
   if (column.accessor) return column.accessor(row);
-  const value = typeof row === "object" && row !== null ? (row as Record<string, unknown>)[column.key] : undefined;
+  const value =
+    typeof row === "object" && row !== null ? (row as Record<string, unknown>)[column.key] : undefined;
   return value === null || value === undefined ? "" : String(value);
 }
 
@@ -53,7 +54,11 @@ export function DataTableDesktop<TRow>({
               const sorted = sortBy === col.key;
               const ariaSort = sorted ? (sortDir === "desc" ? "descending" : "ascending") : undefined;
               return (
-                <Table.Th key={col.key} style={{ width: col.width, textAlign: col.align }} aria-sort={ariaSort}>
+                <Table.Th
+                  key={col.key}
+                  style={{ width: col.width, textAlign: col.align }}
+                  aria-sort={ariaSort}
+                >
                   {col.sortable ? (
                     <UnstyledButton
                       onClick={() => onToggleSort(col.key)}

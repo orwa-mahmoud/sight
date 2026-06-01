@@ -39,14 +39,26 @@ function createWrapper() {
 
 const DOC_LIST = [
   {
-    id: "d1", filename: "guide.pdf", mime_type: "application/pdf",
-    size_bytes: 2048, status: "ready", chunk_count: 12, error: null,
-    created_at: "2026-01-01T10:00:00Z", updated_at: "2026-01-01T10:00:00Z",
+    id: "d1",
+    filename: "guide.pdf",
+    mime_type: "application/pdf",
+    size_bytes: 2048,
+    status: "ready",
+    chunk_count: 12,
+    error: null,
+    created_at: "2026-01-01T10:00:00Z",
+    updated_at: "2026-01-01T10:00:00Z",
   },
   {
-    id: "d2", filename: "notes.md", mime_type: "text/markdown",
-    size_bytes: 512, status: "ingesting", chunk_count: 0, error: null,
-    created_at: "2026-01-01T11:00:00Z", updated_at: "2026-01-01T11:00:00Z",
+    id: "d2",
+    filename: "notes.md",
+    mime_type: "text/markdown",
+    size_bytes: 512,
+    status: "ingesting",
+    chunk_count: 0,
+    error: null,
+    created_at: "2026-01-01T11:00:00Z",
+    updated_at: "2026-01-01T11:00:00Z",
   },
 ];
 
@@ -176,7 +188,7 @@ describe("DocumentsPage", () => {
       expect(api.post).toHaveBeenCalledWith(
         "/api/v1/documents",
         expect.any(FormData),
-        expect.objectContaining({ headers: { "Content-Type": "multipart/form-data" }, timeout: 120_000 })
+        expect.objectContaining({ headers: { "Content-Type": "multipart/form-data" }, timeout: 120_000 }),
       );
     });
   });

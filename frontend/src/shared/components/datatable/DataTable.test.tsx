@@ -50,7 +50,7 @@ function renderTable(props: Readonly<{ onAction?: (row: Row) => void }> = {}) {
   return render(
     <TestWrapper>
       <Harness {...props} />
-    </TestWrapper>
+    </TestWrapper>,
   );
 }
 

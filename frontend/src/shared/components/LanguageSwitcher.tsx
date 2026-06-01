@@ -23,11 +23,7 @@ export function LanguageSwitcher() {
       </Menu.Target>
       <Menu.Dropdown>
         {languages.map((lng) => (
-          <Menu.Item
-            key={lng}
-            onClick={() => setLanguage(lng)}
-            fw={lng === language ? 700 : 400}
-          >
+          <Menu.Item key={lng} onClick={() => setLanguage(lng)} fw={lng === language ? 700 : 400}>
             {LABELS[lng]}
           </Menu.Item>
         ))}

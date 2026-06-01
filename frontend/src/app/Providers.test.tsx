@@ -12,7 +12,7 @@ describe("Providers", () => {
     render(
       <Providers>
         <div>App Content</div>
-      </Providers>
+      </Providers>,
     );
     expect(screen.getByText("App Content")).toBeInTheDocument();
   });

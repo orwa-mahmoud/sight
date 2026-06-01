@@ -10,11 +10,15 @@ describe("RequireAuth", () => {
     const { container } = render(
       <MantineProvider>
         <MemoryRouter>
-          <AuthContext.Provider value={{ user: null, loading: true, login: vi.fn(), register: vi.fn(), logout: vi.fn() }}>
-            <RequireAuth><div>Protected</div></RequireAuth>
+          <AuthContext.Provider
+            value={{ user: null, loading: true, login: vi.fn(), register: vi.fn(), logout: vi.fn() }}
+          >
+            <RequireAuth>
+              <div>Protected</div>
+            </RequireAuth>
           </AuthContext.Provider>
         </MemoryRouter>
-      </MantineProvider>
+      </MantineProvider>,
     );
     expect(container.querySelector(".mantine-Loader-root")).toBeTruthy();
     expect(screen.queryByText("Protected")).not.toBeInTheDocument();
@@ -24,14 +28,23 @@ describe("RequireAuth", () => {
     render(
       <MantineProvider>
         <MemoryRouter initialEntries={["/dashboard"]}>
-          <AuthContext.Provider value={{ user: null, loading: false, login: vi.fn(), register: vi.fn(), logout: vi.fn() }}>
+          <AuthContext.Provider
+            value={{ user: null, loading: false, login: vi.fn(), register: vi.fn(), logout: vi.fn() }}
+          >
             <Routes>
-              <Route path="/dashboard" element={<RequireAuth><div>Protected</div></RequireAuth>} />
+              <Route
+                path="/dashboard"
+                element={
+                  <RequireAuth>
+                    <div>Protected</div>
+                  </RequireAuth>
+                }
+              />
               <Route path="/login" element={<div>Login Page</div>} />
             </Routes>
           </AuthContext.Provider>
         </MemoryRouter>
-      </MantineProvider>
+      </MantineProvider>,
     );
     expect(screen.queryByText("Protected")).not.toBeInTheDocument();
     expect(screen.getByText("Login Page")).toBeInTheDocument();
@@ -41,14 +54,27 @@ describe("RequireAuth", () => {
     render(
       <MantineProvider>
         <MemoryRouter>
-          <AuthContext.Provider value={{
-            user: { id: "u1", email: "a@b.com", full_name: "T", is_active: true, tenant: { id: "t1", slug: "t", name: "T", role: "owner" } },
-            loading: false, login: vi.fn(), register: vi.fn(), logout: vi.fn(),
-          }}>
-            <RequireAuth><div>Protected</div></RequireAuth>
+          <AuthContext.Provider
+            value={{
+              user: {
+                id: "u1",
+                email: "a@b.com",
+                full_name: "T",
+                is_active: true,
+                tenant: { id: "t1", slug: "t", name: "T", role: "owner" },
+              },
+              loading: false,
+              login: vi.fn(),
+              register: vi.fn(),
+              logout: vi.fn(),
+            }}
+          >
+            <RequireAuth>
+              <div>Protected</div>
+            </RequireAuth>
           </AuthContext.Provider>
         </MemoryRouter>
-      </MantineProvider>
+      </MantineProvider>,
     );
     expect(screen.getByText("Protected")).toBeInTheDocument();
   });

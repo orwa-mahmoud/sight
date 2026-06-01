@@ -15,7 +15,7 @@ describe("TenantConfigResponse type", () => {
       whatsapp_phone_number_id: null,
       whatsapp_access_token_masked: null,
       whatsapp_verify_token_masked: null,
-  whatsapp_app_secret_masked: null,
+      whatsapp_app_secret_masked: null,
       telegram_bot_token_masked: null,
       telegram_webhook_secret_masked: null,
       bot_name: "FD Bot",

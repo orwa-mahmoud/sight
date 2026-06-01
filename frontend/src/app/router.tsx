@@ -10,19 +10,21 @@ import { RequireAuth } from "@shared/components/RequireAuth";
 
 // Code-split the protected feature pages — each becomes its own chunk loaded on
 // first navigation, keeping the initial (login) bundle small.
-const InboxPage = lazy(() => import("@features/escalations/InboxPage").then((m) => ({ default: m.InboxPage })));
+const InboxPage = lazy(() =>
+  import("@features/escalations/InboxPage").then((m) => ({ default: m.InboxPage })),
+);
 const ChatTestPage = lazy(() =>
-  import("@features/conversations/ChatTestPage").then((m) => ({ default: m.ChatTestPage }))
+  import("@features/conversations/ChatTestPage").then((m) => ({ default: m.ChatTestPage })),
 );
 const ConversationsPage = lazy(() =>
-  import("@features/conversations/ConversationsPage").then((m) => ({ default: m.ConversationsPage }))
+  import("@features/conversations/ConversationsPage").then((m) => ({ default: m.ConversationsPage })),
 );
 const DocumentsPage = lazy(() =>
-  import("@features/documents/DocumentsPage").then((m) => ({ default: m.DocumentsPage }))
+  import("@features/documents/DocumentsPage").then((m) => ({ default: m.DocumentsPage })),
 );
 const UsagePage = lazy(() => import("@features/llm-usage/UsagePage").then((m) => ({ default: m.UsagePage })));
 const SettingsPage = lazy(() =>
-  import("@features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage }))
+  import("@features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
 
 function Protected({ children }: Readonly<{ children: ReactNode }>) {

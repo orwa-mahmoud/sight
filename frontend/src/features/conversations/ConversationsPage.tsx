@@ -104,7 +104,7 @@ export function ConversationsPage() {
         ),
       },
     ],
-    [t]
+    [t],
   );
 
   const source = useFrontendData<ConversationSummary>({
