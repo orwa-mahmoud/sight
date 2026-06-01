@@ -138,3 +138,15 @@ async def test_embed_query_returns_empty_when_no_results(mock_embed_docs: AsyncM
     embedder = OpenAIEmbedder(api_key=_TEST_KEY, model="text-embedding-3-large", dimensions=1536)
     result = await embedder.embed_query("hello")
     assert result == []
+
+
+@pytest.mark.asyncio
+async def test_close_releases_client_and_is_idempotent() -> None:
+    embedder = OpenAIEmbedder(api_key=_TEST_KEY, model="text-embedding-3-large", dimensions=1536)
+    await embedder.close()  # no client built yet — must be a safe no-op
+
+    mock_client = AsyncMock()
+    embedder._client = mock_client
+    await embedder.close()
+    mock_client.close.assert_awaited_once()
+    assert embedder._client is None

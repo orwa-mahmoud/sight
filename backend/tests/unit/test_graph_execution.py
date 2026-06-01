@@ -43,6 +43,24 @@ async def test_graph_text_only_response() -> None:
 
 
 @pytest.mark.asyncio
+async def test_dispatch_key_fact_requires_resolved_contact() -> None:
+    """save_key_fact/remove_key_fact must no-op with an error when contact is unresolved."""
+    from src.infrastructure.ai.graph import _dispatch_tool
+
+    result = await _dispatch_tool(
+        tool_name="save_key_fact",
+        arguments={"key": "name", "value": "Sam"},
+        tenant_id=uuid4(),
+        channel=ConversationChannel.API,
+        conversation_id=None,
+        contact_id=None,
+        retriever=AsyncMock(),
+        uow=AsyncMock(),
+    )
+    assert "error" in result
+
+
+@pytest.mark.asyncio
 async def test_graph_forwards_temperature_and_max_tokens() -> None:
     """The tenant's configured temperature + max_tokens must reach the LLM call."""
     mock_llm = AsyncMock()
