@@ -101,7 +101,12 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     history = await load_history(thread_id=thread_id, uow=uow)
 
     # ── 3. Build prompt (with key facts if available) ───────────
-    system_msg, facts_context = build_asker_system_prompt(), ""
+    system_msg = build_asker_system_prompt(
+        bot_name=tenant_config.bot_name,
+        bot_language=tenant_config.bot_language,
+        welcome_message=tenant_config.bot_welcome_message,
+    )
+    facts_context = ""
     if contact_id is not None:
         facts_context = await load_key_facts_context(
             tenant_id=inp.tenant_id,
