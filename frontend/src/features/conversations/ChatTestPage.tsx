@@ -1,5 +1,7 @@
 import {
   ActionIcon,
+  Alert,
+  Anchor,
   Badge,
   Button,
   Card,
@@ -13,10 +15,11 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconFileText, IconRefresh, IconSend } from "@tabler/icons-react";
+import { IconFileText, IconInfoCircle, IconRefresh, IconSend } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import { api } from "@core/api/client";
 import { elapsedMsSince, monotonicNow } from "@shared/utils/clock";
@@ -119,6 +122,7 @@ export function ChatTestPage() {
   };
 
   const suggestions = [t("chat.suggest1"), t("chat.suggest2"), t("chat.suggest3")];
+  const hasNoDocuments = documentsQuery.isSuccess && documentsQuery.data.length === 0;
 
   return (
     <Stack>
@@ -142,6 +146,15 @@ export function ChatTestPage() {
           </Tooltip>
         )}
       </Group>
+
+      {hasNoDocuments && (
+        <Alert variant="light" color="blue" icon={<IconInfoCircle size={18} />} title={t("chat.noDocsTitle")}>
+          {t("chat.noDocsBody")}{" "}
+          <Anchor component={Link} to="/documents" fw={600}>
+            {t("chat.noDocsCta")}
+          </Anchor>
+        </Alert>
+      )}
 
       <Card withBorder radius="md" p={0} style={{ height: "60vh", display: "flex", flexDirection: "column" }}>
         <ScrollArea style={{ flex: 1 }} p="md" viewportRef={viewportRef}>
