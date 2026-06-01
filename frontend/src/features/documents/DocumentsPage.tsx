@@ -1,7 +1,6 @@
 import { Badge, Box, Button, FileButton, Group, Stack, Text, Title } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
 import { IconCircleCheck, IconFileText, IconTrash, IconUpload } from "@tabler/icons-react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,6 +14,7 @@ import {
   type RowAction,
 } from "@shared/components/datatable";
 import { EmptyState } from "@shared/components/EmptyState";
+import { useMutationWithNotification } from "@shared/hooks/useMutationWithNotification";
 
 interface DocumentSummary {
   id: string;
@@ -63,29 +63,20 @@ function formatBytes(bytes: number): string {
 
 export function DocumentsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const documentsQuery = useQuery({ queryKey: ["documents"], queryFn: listDocuments });
 
-  const uploadMutation = useMutation({
+  const uploadMutation = useMutationWithNotification({
     mutationFn: uploadDocument,
-    onSuccess: () => {
-      notifications.show({ color: "teal", message: t("documents.uploaded") });
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-    },
-    onError: () => {
-      notifications.show({ color: "red", message: t("documents.uploadFailed") });
-    },
+    successMessage: t("documents.uploaded"),
+    errorMessage: t("documents.uploadFailed"),
+    invalidateKeys: [["documents"]],
   });
 
-  const deleteMutation = useMutation({
+  const deleteMutation = useMutationWithNotification({
     mutationFn: deleteDocument,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-      notifications.show({ message: t("documents.deleted"), color: "teal" });
-    },
-    onError: () => {
-      notifications.show({ message: t("documents.deleteFailed"), color: "red" });
-    },
+    successMessage: t("documents.deleted"),
+    errorMessage: t("documents.deleteFailed"),
+    invalidateKeys: [["documents"]],
   });
 
   const columns = useMemo<ColumnDef<DocumentSummary>[]>(
