@@ -203,6 +203,24 @@ describe("SelectFilter", () => {
     );
     expect(screen.getByDisplayValue("Ready")).toBeInTheDocument();
   });
+
+  it("coerces a non-string extra value to the option value", () => {
+    const source = { ...makeSource(), extra: { tier: 2 } as Record<string, number> };
+    render(
+      <TestWrapper>
+        <SelectFilter
+          source={source as unknown as TableSource<Row>}
+          filterKey="tier"
+          label="Tier"
+          data={[
+            { value: "1", label: "One" },
+            { value: "2", label: "Two" },
+          ]}
+        />
+      </TestWrapper>,
+    );
+    expect(screen.getByDisplayValue("Two")).toBeInTheDocument();
+  });
 });
 
 /* ── TextFilter + ActiveFilterChips ─────────────────────────────── */

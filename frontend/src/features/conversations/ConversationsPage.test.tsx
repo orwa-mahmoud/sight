@@ -208,6 +208,60 @@ describe("ConversationsPage", () => {
     expect(screen.getByText("Visitor")).toBeInTheDocument();
   });
 
+  it("shows an empty-transcript message when a conversation has no messages", async () => {
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url.includes("daily-summary")) {
+        return {
+          data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 },
+        };
+      }
+      if (url.includes("/messages")) return { data: [] };
+      return {
+        data: [
+          {
+            id: "c1",
+            thread_id: "thread-x",
+            channel: "web",
+            last_message_at: null,
+            created_at: "2026-01-01T09:00:00Z",
+          },
+        ],
+      };
+    });
+    render(<ConversationsPage />, { wrapper: createWrapper() });
+    await waitFor(() => expect(screen.getByText("thread-x")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "View transcript" }));
+    await waitFor(() =>
+      expect(screen.getByText("No messages in this conversation yet.")).toBeInTheDocument(),
+    );
+  });
+
+  it("shows a transcript error when messages fail to load", async () => {
+    vi.mocked(api.get).mockImplementation(async (url: string) => {
+      if (url.includes("daily-summary")) {
+        return {
+          data: { date: "2026-01-01", total_messages: 0, active_conversations: 0, questions_escalated: 0 },
+        };
+      }
+      if (url.includes("/messages")) throw new Error("boom");
+      return {
+        data: [
+          {
+            id: "c1",
+            thread_id: "thread-y",
+            channel: "web",
+            last_message_at: null,
+            created_at: "2026-01-01T09:00:00Z",
+          },
+        ],
+      };
+    });
+    render(<ConversationsPage />, { wrapper: createWrapper() });
+    await waitFor(() => expect(screen.getByText("thread-y")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "View transcript" }));
+    await waitFor(() => expect(screen.getByText("Could not load the transcript.")).toBeInTheDocument());
+  });
+
   it("shows raw channel name when not in lookup map", async () => {
     vi.mocked(api.get).mockImplementation(async (url: string) => {
       if (url.includes("daily-summary"))
