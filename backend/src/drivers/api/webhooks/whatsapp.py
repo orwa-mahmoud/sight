@@ -26,6 +26,10 @@ from src.infrastructure.channels.whatsapp import WhatsAppAdapter
 
 logger = structlog.get_logger()
 
+# Sent when an asker messages with non-text content (voice/image/etc.) — the v1
+# agent only handles text, but we acknowledge rather than silently ignore.
+_TEXT_ONLY_REPLY = "Sorry, I can only read text messages right now. Please type your question."
+
 router = APIRouter(tags=["webhooks"])
 
 
@@ -105,13 +109,19 @@ async def _handle_whatsapp_post(
             )
             incoming = await adapter.parse_incoming(payload)
 
-            if not incoming.text or not incoming.sender_phone:
-                return 200
+            if not incoming.sender_phone:
+                return 200  # status update / non-message webhook — nothing to do
 
             # Meta delivers webhooks at least once — skip a message we've already
             # processed so the asker isn't answered (and billed) twice.
             if await is_duplicate_message(tenant_id=tid, channel="whatsapp", message_id=incoming.message_id):
                 logger.info("whatsapp.webhook.duplicate", tenant_id=tenant_id_raw, message_id=incoming.message_id)
+                return 200
+
+            if not incoming.text:
+                # Non-text message (voice/image/etc.) — acknowledge instead of
+                # silently ignoring, so the asker isn't left wondering.
+                await adapter.send_text(incoming.sender_phone, _TEXT_ONLY_REPLY)
                 return 200
 
             result = await chat_with_agent(

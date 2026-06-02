@@ -18,11 +18,16 @@ from src.ai.gateway import chat_with_agent
 from src.ai.types import ChatInput
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationChannel
+from src.domain.tenant_config.entities import TenantConfig
 from src.drivers.api.dependencies import get_session
 from src.infrastructure.channels.cache import get_telegram_adapter
 from src.infrastructure.channels.idempotency import is_duplicate_message
 
 logger = structlog.get_logger()
+
+# Sent when an asker messages with non-text content (voice/photo/etc.) — the v1
+# agent only handles text, but we acknowledge rather than silently ignore.
+_TEXT_ONLY_REPLY = "Sorry, I can only read text messages right now. Please type your question."
 
 router = APIRouter(tags=["webhooks"])
 
@@ -60,44 +65,88 @@ def _parse_telegram_message(body: dict[str, Any]) -> tuple[str, str, str | None,
     return text, telegram_user_id, from_user.get("first_name"), chat_id, message_id
 
 
+_TELEGRAM_CONTENT_KEYS = ("voice", "audio", "photo", "video", "document", "sticker", "location")
+
+
+def _nontext_chat_id(body: dict[str, Any]) -> str | None:
+    """Chat id of an inbound message carrying non-text *content* (voice/photo/…).
+
+    Only fires for real media — empty text and service messages return None so we
+    don't reply to them.
+    """
+    message = body.get("message") or body.get("edited_message")
+    if not message or message.get("text"):
+        return None
+    if not any(key in message for key in _TELEGRAM_CONTENT_KEYS):
+        return None
+    return str(message.get("chat", {}).get("id", "")) or None
+
+
+async def _validate_telegram_request(
+    uow: UnitOfWork, tid: UUID, secret_header: str | None, tenant_id_raw: str
+) -> TenantConfig | int:
+    """Load config + verify the shared secret. Returns config or an HTTP status."""
+    config = await uow.tenant_configs.get_by_tenant_id(tid)
+    if config is None:
+        return 404
+    expected_secret = config.telegram_webhook_secret
+    if not expected_secret or not secret_header or not hmac.compare_digest(secret_header, expected_secret):
+        logger.warning("telegram.webhook.auth_failed", tenant_id=tenant_id_raw)
+        return 403
+    return config
+
+
+async def _process_telegram_text(
+    tid: UUID,
+    uow: UnitOfWork,
+    config: TenantConfig,
+    parsed: tuple[str, str, str | None, str, str],
+    tenant_id_raw: str,
+) -> None:
+    """Run the agent for a text message and send the reply back."""
+    text, telegram_user_id, sender_name, chat_id, message_id = parsed
+    # Telegram re-delivers updates until acked — skip duplicates.
+    if await is_duplicate_message(tenant_id=tid, channel="telegram", message_id=message_id):
+        logger.info("telegram.webhook.duplicate", tenant_id=tenant_id_raw, message_id=message_id)
+        return
+    result = await chat_with_agent(
+        ChatInput(
+            message=text,
+            tenant_id=tid,
+            channel=ConversationChannel.TELEGRAM,
+            sender_identifier=telegram_user_id,
+            sender_name=sender_name,
+        ),
+        uow=uow,
+    )
+    await uow.commit()
+    if config.telegram_bot_token and chat_id:
+        adapter = await get_telegram_adapter(str(tid), tenant_config=config)
+        await adapter.send_text(chat_id, result.response)
+
+
 async def _handle_telegram_post(tid: UUID, body: dict[str, Any], secret_header: str | None, tenant_id_raw: str) -> int:
     parsed = _parse_telegram_message(body)
-    if not parsed:
+    nontext_chat_id = _nontext_chat_id(body) if parsed is None else None
+    if parsed is None and nontext_chat_id is None:
         return 200
-    text, telegram_user_id, sender_name, chat_id, message_id = parsed
 
     async for session in get_session():
         uow = UnitOfWork(session)
         try:
-            config = await uow.tenant_configs.get_by_tenant_id(tid)
-            if config is None:
-                return 404
+            validated = await _validate_telegram_request(uow, tid, secret_header, tenant_id_raw)
+            if isinstance(validated, int):
+                return validated
+            config = validated
 
-            expected_secret = config.telegram_webhook_secret
-            if not expected_secret or not secret_header or not hmac.compare_digest(secret_header, expected_secret):
-                logger.warning("telegram.webhook.auth_failed", tenant_id=tenant_id_raw)
-                return 403
-
-            # Telegram re-delivers updates until acked — skip duplicates.
-            if await is_duplicate_message(tenant_id=tid, channel="telegram", message_id=message_id):
-                logger.info("telegram.webhook.duplicate", tenant_id=tenant_id_raw, message_id=message_id)
+            if parsed is None:
+                # Non-text message — acknowledge instead of silently ignoring.
+                if config.telegram_bot_token and nontext_chat_id:
+                    adapter = await get_telegram_adapter(str(tid), tenant_config=config)
+                    await adapter.send_text(nontext_chat_id, _TEXT_ONLY_REPLY)
                 return 200
 
-            result = await chat_with_agent(
-                ChatInput(
-                    message=text,
-                    tenant_id=tid,
-                    channel=ConversationChannel.TELEGRAM,
-                    sender_identifier=telegram_user_id,
-                    sender_name=sender_name,
-                ),
-                uow=uow,
-            )
-            await uow.commit()
-
-            if config.telegram_bot_token and chat_id:
-                adapter = await get_telegram_adapter(str(tid), tenant_config=config)
-                await adapter.send_text(chat_id, result.response)
+            await _process_telegram_text(tid, uow, config, parsed, tenant_id_raw)
         except Exception:
             await uow.rollback()
             logger.error("telegram.webhook.failed", tenant_id=tenant_id_raw, exc_info=True)
