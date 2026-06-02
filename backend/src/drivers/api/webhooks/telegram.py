@@ -20,6 +20,7 @@ from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationChannel
 from src.drivers.api.dependencies import get_session
 from src.infrastructure.channels.cache import get_telegram_adapter
+from src.infrastructure.channels.idempotency import is_duplicate_message
 
 logger = structlog.get_logger()
 
@@ -42,8 +43,8 @@ async def telegram_webhook(
     return Response(status_code=status)
 
 
-def _parse_telegram_message(body: dict[str, Any]) -> tuple[str, str, str | None, str] | None:
-    """Extract (text, telegram_user_id, sender_name, chat_id) or None if no actionable message."""
+def _parse_telegram_message(body: dict[str, Any]) -> tuple[str, str, str | None, str, str] | None:
+    """Extract (text, telegram_user_id, sender_name, chat_id, message_id) or None."""
     message = body.get("message") or body.get("edited_message")
     if not message:
         return None
@@ -52,14 +53,18 @@ def _parse_telegram_message(body: dict[str, Any]) -> tuple[str, str, str | None,
     text = message.get("text", "")
     if not text or not telegram_user_id:
         return None
-    return text, telegram_user_id, from_user.get("first_name"), str(message.get("chat", {}).get("id", ""))
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    raw_msg_id = message.get("message_id")
+    # message_id is unique per chat — qualify with chat_id for global uniqueness.
+    message_id = f"{chat_id}:{raw_msg_id}" if raw_msg_id is not None else ""
+    return text, telegram_user_id, from_user.get("first_name"), chat_id, message_id
 
 
 async def _handle_telegram_post(tid: UUID, body: dict[str, Any], secret_header: str | None, tenant_id_raw: str) -> int:
     parsed = _parse_telegram_message(body)
     if not parsed:
         return 200
-    text, telegram_user_id, sender_name, chat_id = parsed
+    text, telegram_user_id, sender_name, chat_id, message_id = parsed
 
     async for session in get_session():
         uow = UnitOfWork(session)
@@ -72,6 +77,11 @@ async def _handle_telegram_post(tid: UUID, body: dict[str, Any], secret_header: 
             if not expected_secret or not secret_header or not hmac.compare_digest(secret_header, expected_secret):
                 logger.warning("telegram.webhook.auth_failed", tenant_id=tenant_id_raw)
                 return 403
+
+            # Telegram re-delivers updates until acked — skip duplicates.
+            if await is_duplicate_message(tenant_id=tid, channel="telegram", message_id=message_id):
+                logger.info("telegram.webhook.duplicate", tenant_id=tenant_id_raw, message_id=message_id)
+                return 200
 
             result = await chat_with_agent(
                 ChatInput(

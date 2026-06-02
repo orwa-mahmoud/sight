@@ -37,6 +37,9 @@ class IncomingMessage:
     message_type: MessageType = MessageType.TEXT
     text: str = ""
     media_url: str = ""
+    # Provider-assigned id for the inbound message, used to de-duplicate retried
+    # webhook deliveries (empty when the provider gives none).
+    message_id: str = ""
     raw_payload: dict[str, Any] = field(default_factory=dict)
     thread_id: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)

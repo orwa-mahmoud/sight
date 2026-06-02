@@ -159,6 +159,44 @@ async def test_telegram_webhook_happy_path_with_reply() -> None:
 
 
 @pytest.mark.asyncio
+async def test_telegram_webhook_skips_duplicate_delivery() -> None:
+    tid = uuid4()
+    config = _make_config(tenant_id=tid, webhook_secret="sec", bot_token="bot-tok-123")
+
+    mock_uow = MagicMock()
+    mock_uow.tenant_configs = MagicMock()
+    mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
+    mock_uow.commit = AsyncMock()
+    mock_uow.rollback = AsyncMock()
+
+    request = MagicMock()
+    request.json = AsyncMock(return_value=_telegram_body(chat_id=99))
+
+    async def fake_get_session():  # type: ignore[no-untyped-def]
+        yield AsyncMock()
+
+    with (
+        patch("src.drivers.api.webhooks.telegram.get_session", fake_get_session),
+        patch("src.drivers.api.webhooks.telegram.UnitOfWork", return_value=mock_uow),
+        patch(
+            "src.drivers.api.webhooks.telegram.is_duplicate_message",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+        patch("src.drivers.api.webhooks.telegram.chat_with_agent", new_callable=AsyncMock) as mock_chat,
+    ):
+        resp = await telegram_webhook(
+            tenant_id=str(tid),
+            request=request,
+            x_telegram_bot_api_secret_token="sec",
+        )
+
+    # A duplicate is acknowledged (200) but never reprocessed or re-billed.
+    assert resp.status_code == 200
+    mock_chat.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_telegram_webhook_exception_rolls_back() -> None:
     tid = uuid4()
     config = _make_config(tenant_id=tid, webhook_secret="test-sec")
