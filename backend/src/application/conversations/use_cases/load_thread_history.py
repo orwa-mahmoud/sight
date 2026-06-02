@@ -16,11 +16,15 @@ class LoadThreadHistoryUseCase:
         if conversation is None:
             return []
 
-        messages = await self._uow.messages.list_for_conversation(
-            conversation.id,
-            limit=query.limit,
-            include_hidden=query.include_hidden,
-        )
+        if query.from_last_checkpoint:
+            # Bounded load: checkpoint summary (if any) + messages since it.
+            messages = await self._uow.messages.list_since_last_checkpoint(conversation.id)
+        else:
+            messages = await self._uow.messages.list_for_conversation(
+                conversation.id,
+                limit=query.limit,
+                include_hidden=query.include_hidden,
+            )
         return [
             ThreadMessageDTO(
                 id=m.id,

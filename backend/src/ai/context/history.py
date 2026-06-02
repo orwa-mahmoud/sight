@@ -32,7 +32,9 @@ async def load_history(
     limit: int | None = None,
 ) -> list[LLMMessage]:
     dtos = await LoadThreadHistoryUseCase(uow=uow).execute(
-        LoadThreadHistory(thread_id=thread_id, limit=limit, include_hidden=True)
+        # Bound context to the latest checkpoint window — older turns are captured
+        # by the checkpoint summary, so we don't resend the whole thread each time.
+        LoadThreadHistory(thread_id=thread_id, limit=limit, include_hidden=True, from_last_checkpoint=True)
     )
     messages = _build_messages(dtos)
     if messages:

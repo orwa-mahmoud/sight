@@ -56,3 +56,31 @@ async def test_load_thread_history_with_messages() -> None:
     assert len(result) == 1
     assert result[0].content == "Hello"
     assert result[0].role == "user"
+
+
+def _uow_with_conv() -> tuple[MagicMock, MagicMock]:
+    conv = MagicMock(id=uuid4())
+    uow = MagicMock()
+    uow.conversations = MagicMock()
+    uow.conversations.get_by_thread_id = AsyncMock(return_value=conv)
+    uow.messages = MagicMock()
+    uow.messages.list_for_conversation = AsyncMock(return_value=[])
+    uow.messages.list_since_last_checkpoint = AsyncMock(return_value=[])
+    return uow, conv
+
+
+@pytest.mark.asyncio
+async def test_default_load_uses_full_conversation() -> None:
+    uow, _conv = _uow_with_conv()
+    await LoadThreadHistoryUseCase(uow=uow).execute(LoadThreadHistory(thread_id="t"))
+    uow.messages.list_for_conversation.assert_awaited_once()
+    uow.messages.list_since_last_checkpoint.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_from_last_checkpoint_bounds_the_window() -> None:
+    # The agent uses this to avoid resending the whole thread every turn.
+    uow, conv = _uow_with_conv()
+    await LoadThreadHistoryUseCase(uow=uow).execute(LoadThreadHistory(thread_id="t", from_last_checkpoint=True))
+    uow.messages.list_since_last_checkpoint.assert_awaited_once_with(conv.id)
+    uow.messages.list_for_conversation.assert_not_called()
