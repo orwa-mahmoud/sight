@@ -1,4 +1,5 @@
 import { Badge, Box, Button, FileButton, Group, Stack, Text, Title } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconAlertCircle,
   IconCircleCheck,
@@ -139,11 +140,16 @@ export function DocumentsPage() {
   const uploadMutation = useMutationWithNotification({
     mutationFn: uploadDocument,
     successMessage: t("documents.uploaded"),
-    errorMessage: t("documents.uploadFailed"),
     invalidateKeys: [["documents"]],
     // A failed ingestion is still persisted as a FAILED document — refetch so the
     // owner sees it (with the error reason) right away, not just the toast.
     invalidateOnError: true,
+    // Status-aware error: a 413 means the file exceeded the size cap, not a bad type.
+    onError: (err) => {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const message = status === 413 ? t("documents.uploadTooLarge") : t("documents.uploadFailed");
+      notifications.show({ color: "red", message });
+    },
   });
 
   const deleteMutation = useMutationWithNotification({

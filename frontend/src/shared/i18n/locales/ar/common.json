@@ -127,7 +127,8 @@
     "colChunks": "الأجزاء",
     "colSize": "الحجم",
     "colUploaded": "تاريخ الرفع",
-    "filterStatus": "الحالة"
+    "filterStatus": "الحالة",
+    "uploadTooLarge": "الملف كبير جدًا. الحد الأقصى لحجم الرفع هو 25 ميغابايت."
   },
   "inbox": {
     "title": "الوارد",

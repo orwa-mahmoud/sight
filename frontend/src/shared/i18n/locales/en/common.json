@@ -127,7 +127,8 @@
     "colChunks": "Chunks",
     "colSize": "Size",
     "colUploaded": "Uploaded",
-    "filterStatus": "Status"
+    "filterStatus": "Status",
+    "uploadTooLarge": "File is too large. The maximum upload size is 25 MB."
   },
   "inbox": {
     "title": "Inbox",
