@@ -64,6 +64,10 @@ async def upload_document(
     if not file.filename:
         raise HTTPException(status_code=400, detail="Filename is required")
 
+    # Reject oversized uploads from the declared size before buffering the whole
+    # body into memory; re-check the actual bytes in case the size was unknown.
+    if file.size is not None and file.size > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="File too large (25 MB max)")
     content = await file.read()
     if len(content) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="File too large (25 MB max)")
