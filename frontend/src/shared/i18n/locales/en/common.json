@@ -85,7 +85,8 @@
     "noDocsCta": "Upload documents",
     "tokens": "{{n}} tokens",
     "viewInInbox": "View in inbox →",
-    "docsProcessing": "{{n}} document(s) are still processing and won't be searchable yet."
+    "docsProcessing": "{{n}} document(s) are still processing and won't be searchable yet.",
+    "rateLimited": "You're sending messages too fast — please wait a moment and try again."
   },
   "conversations": {
     "title": "Conversations",
