@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -12,6 +14,23 @@ from src.domain.contacts.entities import Contact
 from src.domain.key_facts.entities import KeyFact
 from src.domain.tenants.entities import Tenant
 from src.infrastructure.persistence.postgres.database import async_session_factory
+
+
+@pytest.mark.asyncio
+async def test_load_key_facts_caps_at_most_recent_50() -> None:
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+    facts = [MagicMock(key=f"k{i}", value=f"v{i}", updated_at=base + timedelta(minutes=i)) for i in range(60)]
+    uow = MagicMock()
+    uow.key_facts = MagicMock()
+    uow.key_facts.list_for_contact = AsyncMock(return_value=facts)
+
+    result = await load_key_facts_context(tenant_id=uuid4(), contact_id=uuid4(), uow=uow)
+
+    lines = result.splitlines()
+    assert lines[0] == "Known facts about this asker:"
+    assert len(lines) == 1 + 50  # header + capped facts
+    assert "k59: v59" in result  # most recent kept
+    assert "k0: v0" not in result  # oldest dropped
 
 
 @pytest.mark.integration
