@@ -18,6 +18,7 @@ import {
   DataTable,
   SelectFilter,
   useFrontendData,
+  type CellProps,
   type ColumnDef,
   type RowAction,
 } from "@shared/components/datatable";
@@ -74,6 +75,56 @@ function formatBytes(bytes: number): string {
 
 const PROCESSING_STATUSES = new Set(["uploaded", "ingesting"]);
 
+// Cell renderers are module-level components (stable identity; keeps them out of
+// the page component body per Sonar S6478).
+function FileCell({ row }: Readonly<CellProps<DocumentSummary>>) {
+  return (
+    <Group gap="xs" wrap="nowrap">
+      <IconCircleCheck
+        size={14}
+        color={row.status === "ready" ? "var(--mantine-color-teal-6)" : "var(--mantine-color-gray-4)"}
+      />
+      <Text size="sm">{row.filename}</Text>
+    </Group>
+  );
+}
+
+function StatusCell({ row }: Readonly<CellProps<DocumentSummary>>) {
+  const badge = (
+    <Badge color={STATUS_COLOR[row.status] ?? "gray"} variant="light">
+      {row.status}
+    </Badge>
+  );
+  if (row.status === "failed" && row.error) {
+    return (
+      <Group gap={6} wrap="nowrap" align="center">
+        <IconAlertCircle size={14} color="var(--mantine-color-red-6)" />
+        {badge}
+        <Text size="xs" c="red" lineClamp={1} maw={220} title={row.error}>
+          {row.error}
+        </Text>
+      </Group>
+    );
+  }
+  return badge;
+}
+
+function ChunkCountCell({ row }: Readonly<CellProps<DocumentSummary>>) {
+  return <Text size="sm">{row.chunk_count}</Text>;
+}
+
+function SizeCell({ row }: Readonly<CellProps<DocumentSummary>>) {
+  return <Text size="sm">{formatBytes(row.size_bytes)}</Text>;
+}
+
+function UploadedCell({ row }: Readonly<CellProps<DocumentSummary>>) {
+  return (
+    <Text size="sm" c="dimmed">
+      {dayjs(row.created_at).format("MMM D, HH:mm")}
+    </Text>
+  );
+}
+
 export function DocumentsPage() {
   const { t } = useTranslation();
   // Poll while any document is still processing so it flips to "ready"
@@ -106,63 +157,29 @@ export function DocumentsPage() {
         header: t("documents.colFile"),
         sortable: true,
         sortValue: (d) => d.filename,
-        accessor: (d) => (
-          <Group gap="xs" wrap="nowrap">
-            <IconCircleCheck
-              size={14}
-              color={d.status === "ready" ? "var(--mantine-color-teal-6)" : "var(--mantine-color-gray-4)"}
-            />
-            <Text size="sm">{d.filename}</Text>
-          </Group>
-        ),
+        Cell: FileCell,
       },
-      {
-        key: "status",
-        header: t("documents.colStatus"),
-        accessor: (d) => {
-          const badge = (
-            <Badge color={STATUS_COLOR[d.status] ?? "gray"} variant="light">
-              {d.status}
-            </Badge>
-          );
-          if (d.status === "failed" && d.error) {
-            return (
-              <Group gap={6} wrap="nowrap" align="center">
-                <IconAlertCircle size={14} color="var(--mantine-color-red-6)" />
-                {badge}
-                <Text size="xs" c="red" lineClamp={1} maw={220} title={d.error}>
-                  {d.error}
-                </Text>
-              </Group>
-            );
-          }
-          return badge;
-        },
-      },
+      { key: "status", header: t("documents.colStatus"), Cell: StatusCell },
       {
         key: "chunk_count",
         header: t("documents.colChunks"),
         sortable: true,
         sortValue: (d) => d.chunk_count,
-        accessor: (d) => <Text size="sm">{d.chunk_count}</Text>,
+        Cell: ChunkCountCell,
       },
       {
         key: "size_bytes",
         header: t("documents.colSize"),
         sortable: true,
         sortValue: (d) => d.size_bytes,
-        accessor: (d) => <Text size="sm">{formatBytes(d.size_bytes)}</Text>,
+        Cell: SizeCell,
       },
       {
         key: "created_at",
         header: t("documents.colUploaded"),
         sortable: true,
         sortValue: (d) => d.created_at,
-        accessor: (d) => (
-          <Text size="sm" c="dimmed">
-            {dayjs(d.created_at).format("MMM D, HH:mm")}
-          </Text>
-        ),
+        Cell: UploadedCell,
       },
     ],
     [t],

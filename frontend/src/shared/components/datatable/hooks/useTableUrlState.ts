@@ -127,13 +127,13 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
   const setSort = useCallback(
     (key: string | undefined, dir: SortDirection = "asc") =>
       update((p) => {
-        if (!key) {
-          p.delete(PARAM.sortBy);
-          p.delete(PARAM.sortDir);
-        } else {
+        if (key) {
           p.set(PARAM.sortBy, key);
           if (dir === "desc") p.set(PARAM.sortDir, "desc");
           else p.delete(PARAM.sortDir);
+        } else {
+          p.delete(PARAM.sortBy);
+          p.delete(PARAM.sortDir);
         }
         p.delete(PARAM.page);
       }),
@@ -155,10 +155,12 @@ export function useTableUrlState(options: UseTableUrlStateOptions = {}): TableUr
   const clearAll = useCallback(
     () =>
       update((p) => {
-        for (const key of [...p.keys()]) {
-          if (key.startsWith(FILTER_PREFIX) || (Object.values(PARAM) as string[]).includes(key)) {
-            p.delete(key);
-          }
+        // Snapshot keys first — deleting from a live URLSearchParams iterator skips entries.
+        const removable = [...p.keys()].filter(
+          (key) => key.startsWith(FILTER_PREFIX) || (Object.values(PARAM) as string[]).includes(key),
+        );
+        for (const key of removable) {
+          p.delete(key);
         }
       }),
     [update],

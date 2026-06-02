@@ -57,7 +57,7 @@ export function useBackendData<TRow, TParams extends TableQueryParams, TPage = P
     if (!pages || pages.length === 0) return { rows: [] as readonly TRow[], total: 0 };
     const project = selector;
     if (paged) {
-      const lastPage = pages[pages.length - 1]!;
+      const lastPage = pages.at(-1)!;
       const projected = project(lastPage);
       return { rows: projected.items, total: projected.total ?? projected.items.length };
     }

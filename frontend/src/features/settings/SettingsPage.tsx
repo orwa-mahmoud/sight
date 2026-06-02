@@ -35,7 +35,7 @@ function WebhookUrlCard({
   tenantId,
 }: Readonly<{ channel: "whatsapp" | "telegram"; tenantId: string }>) {
   const { t } = useTranslation();
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const origin = globalThis.location?.origin ?? "";
   const url = `${origin}/webhooks/${tenantId}/${channel}`;
   return (
     <Card withBorder p="sm" bg="gray.0" radius="sm">

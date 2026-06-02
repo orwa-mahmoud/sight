@@ -2,6 +2,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useMemo, useState } from "react";
 
 import { MOBILE_MEDIA_QUERY } from "../constants";
+import { stringifyCellValue } from "../stringify";
 import type { ColumnDef, ExtraFilters, PaginationMode } from "../types";
 import type { TableSource } from "./TableSource";
 import { useTableUrlState, type UseTableUrlStateOptions } from "./useTableUrlState";
@@ -23,8 +24,7 @@ export interface UseFrontendDataOptions<TRow> {
 function fieldString(row: unknown, key: string): string {
   if (typeof row !== "object" || row === null) return "";
   const value = (row as Record<string, unknown>)[key];
-  if (value === null || value === undefined) return "";
-  return (typeof value === "object" ? JSON.stringify(value) : String(value)).toLowerCase();
+  return stringifyCellValue(value).toLowerCase();
 }
 
 function matchesSearch<T>(row: T, search: string, keys: readonly string[]): boolean {
@@ -49,7 +49,7 @@ function compare(a: unknown, b: unknown): number {
   if (an) return 1;
   if (bn) return -1;
   if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b));
+  return stringifyCellValue(a).localeCompare(stringifyCellValue(b));
 }
 
 /** In-memory {@link TableSource}: client-side search / filter / sort / paginate. */

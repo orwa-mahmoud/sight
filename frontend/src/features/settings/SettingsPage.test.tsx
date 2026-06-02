@@ -68,6 +68,18 @@ const CONFIG: TenantConfigResponse = {
   bot_language: "en",
 };
 
+const EMPTY_CONFIG: TenantConfigResponse = {
+  ...CONFIG,
+  llm_api_key_masked: "",
+  embedding_api_key_masked: "",
+  whatsapp_phone_number_id: null,
+  whatsapp_access_token_masked: null,
+  whatsapp_verify_token_masked: null,
+  whatsapp_app_secret_masked: null,
+  telegram_bot_token_masked: null,
+  telegram_webhook_secret_masked: null,
+};
+
 /** Open a collapsed accordion section and wait for its save button to appear. */
 async function openSection(section: string, saveLabel: string) {
   await waitFor(() => expect(screen.getByText(section)).toBeInTheDocument());
@@ -109,6 +121,23 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(screen.getByText("WhatsApp Cloud API")).toBeInTheDocument());
     expect(screen.getByText(/tenant-123\/whatsapp$/)).toBeInTheDocument();
     expect(screen.getByText(/tenant-123\/telegram$/)).toBeInTheDocument();
+  });
+
+  it("shows 'not set' hints when credentials are absent", async () => {
+    vi.mocked(getSettings).mockResolvedValue(EMPTY_CONFIG);
+    render(<SettingsPage />, { wrapper: createWrapper() });
+    // LLM section is open by default — its API key shows the "Not set" hint.
+    await waitFor(() => expect(screen.getByText("Save LLM config")).toBeInTheDocument());
+    expect(screen.getAllByText("Not set").length).toBeGreaterThan(0);
+
+    await openSection("Embedding Configuration", "Save embedding config");
+    expect(screen.getByText("Using LLM key")).toBeInTheDocument();
+
+    await openSection("WhatsApp Cloud API", "Save WhatsApp config");
+    expect(screen.getByText("Not set — required for webhook signature verification")).toBeInTheDocument();
+
+    await openSection("Telegram Bot", "Save Telegram config");
+    expect(screen.getByText("Not set — get one from @BotFather")).toBeInTheDocument();
   });
 
   it("renders all accordion sections", async () => {

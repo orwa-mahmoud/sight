@@ -24,6 +24,7 @@ import {
   DataTable,
   SelectFilter,
   useFrontendData,
+  type CellProps,
   type ColumnDef,
   type RowAction,
 } from "@shared/components/datatable";
@@ -152,6 +153,41 @@ function StatCard({ label, value }: Readonly<{ label: string; value: string | nu
   );
 }
 
+// Cell renderers are module-level components (stable identity; keeps them out of
+// the page component body per Sonar S6478).
+function ThreadCell({ row }: Readonly<CellProps<ConversationSummary>>) {
+  return (
+    <Text size="sm" fw={500}>
+      {row.thread_id.length > 40 ? `${row.thread_id.slice(0, 40)}...` : row.thread_id}
+    </Text>
+  );
+}
+
+function ChannelCell({ row }: Readonly<CellProps<ConversationSummary>>) {
+  const { t } = useTranslation();
+  return (
+    <Badge color="gray" variant="default">
+      {channelLabel(t, row.channel)}
+    </Badge>
+  );
+}
+
+function LastMessageCell({ row }: Readonly<CellProps<ConversationSummary>>) {
+  return (
+    <Text size="sm" c="dimmed">
+      {row.last_message_at ? dayjs(row.last_message_at).format("MMM D, HH:mm") : "—"}
+    </Text>
+  );
+}
+
+function CreatedCell({ row }: Readonly<CellProps<ConversationSummary>>) {
+  return (
+    <Text size="sm" c="dimmed">
+      {dayjs(row.created_at).format("MMM D, HH:mm")}
+    </Text>
+  );
+}
+
 export function ConversationsPage() {
   const { t } = useTranslation();
   const conversationsQuery = useQuery({ queryKey: ["conversations"], queryFn: listConversations });
@@ -182,42 +218,22 @@ export function ConversationsPage() {
         header: t("conversations.colThread"),
         sortable: true,
         sortValue: (c) => c.thread_id,
-        accessor: (c) => (
-          <Text size="sm" fw={500}>
-            {c.thread_id.length > 40 ? `${c.thread_id.slice(0, 40)}...` : c.thread_id}
-          </Text>
-        ),
+        Cell: ThreadCell,
       },
-      {
-        key: "channel",
-        header: t("conversations.colChannel"),
-        accessor: (c) => (
-          <Badge color="gray" variant="default">
-            {channelLabel(t, c.channel)}
-          </Badge>
-        ),
-      },
+      { key: "channel", header: t("conversations.colChannel"), Cell: ChannelCell },
       {
         key: "last_message_at",
         header: t("conversations.colLastMessage"),
         sortable: true,
         sortValue: (c) => c.last_message_at ?? "",
-        accessor: (c) => (
-          <Text size="sm" c="dimmed">
-            {c.last_message_at ? dayjs(c.last_message_at).format("MMM D, HH:mm") : "—"}
-          </Text>
-        ),
+        Cell: LastMessageCell,
       },
       {
         key: "created_at",
         header: t("conversations.colCreated"),
         sortable: true,
         sortValue: (c) => c.created_at,
-        accessor: (c) => (
-          <Text size="sm" c="dimmed">
-            {dayjs(c.created_at).format("MMM D, HH:mm")}
-          </Text>
-        ),
+        Cell: CreatedCell,
       },
     ],
     [t],

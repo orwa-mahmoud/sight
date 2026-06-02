@@ -4,8 +4,8 @@ import type { RefObject } from "react";
 
 /** True when the user asked for reduced motion (or in non-DOM environments). */
 function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return true;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (typeof globalThis.matchMedia !== "function") return true;
+  return globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 /**
