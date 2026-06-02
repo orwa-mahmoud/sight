@@ -81,6 +81,11 @@ class IngestDocumentUseCase:
             logger.warning("ingest.failed", document_id=str(doc.id), exc_info=True)
             doc.mark_failed(reason=str(exc))
             await self._uow.documents.save(doc)
+            # Commit the terminal FAILED state before propagating. The request's
+            # session rolls back on the re-raised exception, which would otherwise
+            # discard the failed row — leaving the owner with no record of what
+            # went wrong. Committing here keeps the failure visible in the list.
+            await self._uow.commit()
             raise
 
         self._uow.track(doc)

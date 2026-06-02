@@ -32,6 +32,34 @@ async def test_upload_unsupported_file_type(client: AsyncClient) -> None:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+async def test_failed_ingestion_persists_as_failed_document(client: AsyncClient) -> None:
+    """A document that fails ingestion is recorded as FAILED (not rolled back).
+
+    Regression: the request session rolls back on the re-raised error, which used
+    to discard the failure row — leaving the owner with no record of what broke.
+    An empty file parses to zero chunks, so it fails before embedding (no API key
+    needed) and exercises the persist-the-failure path.
+    """
+    token, _, _ = await register_and_token(client)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = await client.post(
+        "/api/v1/documents",
+        headers=headers,
+        files={"file": ("empty.md", b"", "text/markdown")},
+    )
+    assert resp.status_code == 400
+
+    resp = await client.get("/api/v1/documents", headers=headers)
+    assert resp.status_code == 200
+    docs = resp.json()
+    assert len(docs) == 1
+    assert docs[0]["status"] == "failed"
+    assert docs[0]["error"]
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_upload_markdown_then_list_then_delete(client: AsyncClient) -> None:
     token, _, _ = await register_and_token(client)
     headers = {"Authorization": f"Bearer {token}"}
