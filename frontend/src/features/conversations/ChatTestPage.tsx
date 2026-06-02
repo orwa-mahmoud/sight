@@ -131,8 +131,10 @@ export function ChatTestPage() {
       if (data.escalated) {
         notifications.show({ color: "orange", message: t("chat.escalated") });
       }
-    } catch {
-      notifications.show({ color: "red", message: t("chat.error") });
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const message = status === 429 ? t("chat.rateLimited") : t("chat.error");
+      notifications.show({ color: "red", message });
     } finally {
       setSending(false);
     }

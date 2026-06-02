@@ -129,6 +129,14 @@ describe("ChatTestPage", () => {
     await waitFor(() => expect(api.post).toHaveBeenCalled());
   });
 
+  it("shows a rate-limit message on HTTP 429", async () => {
+    vi.mocked(api.post).mockRejectedValue({ response: { status: 429 } });
+    render(wrap(<ChatTestPage />));
+    fireEvent.change(screen.getByPlaceholderText("Type a message..."), { target: { value: "hi" } });
+    fireEvent.click(screen.getByText("Send"));
+    await waitFor(() => expect(screen.getByText(/sending messages too fast/i)).toBeInTheDocument());
+  });
+
   it("handles API error gracefully", async () => {
     vi.mocked(api.post).mockRejectedValue(new Error("fail"));
     render(wrap(<ChatTestPage />));
