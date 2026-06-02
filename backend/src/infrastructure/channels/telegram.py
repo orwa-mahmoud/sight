@@ -106,6 +106,9 @@ class TelegramAdapter(ChannelAdapter):
                 media_url = await self.get_file_url(file_id)
 
         chat_id = str(chat.get("id", ""))
+        raw_msg_id = message.get("message_id")
+        # message_id is unique per chat — qualify with chat_id for global uniqueness.
+        message_id = f"{chat_id}:{raw_msg_id}" if raw_msg_id is not None else ""
 
         return IncomingMessage(
             channel="telegram",
@@ -113,6 +116,7 @@ class TelegramAdapter(ChannelAdapter):
             message_type=msg_type,
             text=text,
             media_url=media_url,
+            message_id=message_id,
             raw_payload=raw_payload,
             metadata={
                 "telegram_chat_id": chat_id,

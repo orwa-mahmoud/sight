@@ -110,6 +110,7 @@ class WhatsAppAdapter(ChannelAdapter):
             message_type=msg_type,
             text=text,
             media_url=media_url,
+            message_id=msg.get("id", ""),  # wamid — stable per inbound message
             raw_payload=raw_payload,
         )
 
