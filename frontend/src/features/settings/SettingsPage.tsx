@@ -19,16 +19,11 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { IconSettings } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
-import {
-  getSettings,
-  updateBot,
-  updateEmbedding,
-  updateLLM,
-  updateTelegram,
-  updateWhatsApp,
-} from "./api";
+import { getSettings, updateBot, updateEmbedding, updateLLM, updateTelegram, updateWhatsApp } from "./api";
 
 const LLM_PROVIDERS = [
   { value: "openai", label: "OpenAI" },
@@ -37,34 +32,44 @@ const LLM_PROVIDERS = [
   { value: "google", label: "Google" },
 ];
 
-function useSectionMutation<T>(fn: (p: T) => Promise<unknown>, label: string) {
+const BOT_LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "ar", label: "Arabic" },
+  { value: "fr", label: "French" },
+  { value: "es", label: "Spanish" },
+];
+
+function useSectionMutation<T>(fn: (p: T) => Promise<unknown>, section: string, t: TFunction) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
     onSuccess: () => {
-      notifications.show({ color: "teal", message: `${label} updated.` });
+      notifications.show({ color: "teal", message: t("settings.updated", { section }) });
       qc.invalidateQueries({ queryKey: ["settings"] });
     },
     onError: () => {
-      notifications.show({ color: "red", message: `Could not update ${label.toLowerCase()}.` });
+      notifications.show({ color: "red", message: t("settings.updateError", { section }) });
     },
   });
 }
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const settingsQuery = useQuery({ queryKey: ["settings"], queryFn: getSettings });
 
-  const llmMutation = useSectionMutation(updateLLM, "LLM config");
-  const embeddingMutation = useSectionMutation(updateEmbedding, "Embedding config");
-  const whatsappMutation = useSectionMutation(updateWhatsApp, "WhatsApp config");
-  const telegramMutation = useSectionMutation(updateTelegram, "Telegram config");
-  const botMutation = useSectionMutation(updateBot, "Bot config");
+  const llmMutation = useSectionMutation(updateLLM, t("settings.llmName"), t);
+  const embeddingMutation = useSectionMutation(updateEmbedding, t("settings.embeddingName"), t);
+  const whatsappMutation = useSectionMutation(updateWhatsApp, t("settings.whatsappName"), t);
+  const telegramMutation = useSectionMutation(updateTelegram, t("settings.telegramName"), t);
+  const botMutation = useSectionMutation(updateBot, t("settings.botConfigName"), t);
 
   const llmForm = useForm({
     initialValues: { provider: "", model: "", api_key: "", max_tokens: 1024, temperature: 0.3 },
   });
   const embForm = useForm({ initialValues: { model: "", api_key: "" } });
-  const waForm = useForm({ initialValues: { phone_number_id: "", access_token: "", verify_token: "", app_secret: "" } });
+  const waForm = useForm({
+    initialValues: { phone_number_id: "", access_token: "", verify_token: "", app_secret: "" },
+  });
   const tgForm = useForm({ initialValues: { bot_token: "", webhook_secret: "" } });
   const botForm = useForm({ initialValues: { name: "", welcome_message: "", language: "" } });
 
@@ -100,25 +105,38 @@ export function SettingsPage() {
     );
   }
   if (settingsQuery.isError) {
-    return <Alert color="red">Could not load settings.</Alert>;
+    return <Alert color="red">{t("settings.loadError")}</Alert>;
   }
 
   const config = settingsQuery.data ?? {
-    llm_provider: "", llm_model: "", llm_api_key_masked: "", llm_max_tokens: 1024,
-    llm_temperature: 0.3, embedding_provider: "", embedding_model: "",
+    llm_provider: "",
+    llm_model: "",
+    llm_api_key_masked: "",
+    llm_max_tokens: 1024,
+    llm_temperature: 0.3,
+    embedding_provider: "",
+    embedding_model: "",
     embedding_api_key_masked: "",
-    whatsapp_phone_number_id: null, whatsapp_access_token_masked: null,
-    whatsapp_verify_token_masked: null, whatsapp_app_secret_masked: null, telegram_bot_token_masked: null,
-    telegram_webhook_secret_masked: null, bot_name: "", bot_welcome_message: "", bot_language: "",
+    whatsapp_phone_number_id: null,
+    whatsapp_access_token_masked: null,
+    whatsapp_verify_token_masked: null,
+    whatsapp_app_secret_masked: null,
+    telegram_bot_token_masked: null,
+    telegram_webhook_secret_masked: null,
+    bot_name: "",
+    bot_welcome_message: "",
+    bot_language: "",
   };
+
+  const current = (masked: string | null | undefined) => `${t("settings.current")} ${masked}`;
 
   return (
     <Stack>
       <Group justify="space-between">
         <div>
-          <Title order={2}>Settings</Title>
+          <Title order={2}>{t("settings.title")}</Title>
           <Text c="dimmed" size="sm">
-            Configure your LLM provider, channel tokens, and bot personality.
+            {t("settings.subtitle")}
           </Text>
         </div>
         <IconSettings size={24} stroke={1.4} />
@@ -127,7 +145,7 @@ export function SettingsPage() {
       <Accordion variant="separated" radius="md" defaultValue="llm">
         {/* ── LLM ─────────────────────────────────────────────── */}
         <Accordion.Item value="llm">
-          <Accordion.Control>LLM Configuration</Accordion.Control>
+          <Accordion.Control>{t("settings.llmSection")}</Accordion.Control>
           <Accordion.Panel>
             <form
               onSubmit={llmForm.onSubmit((v) => {
@@ -142,32 +160,34 @@ export function SettingsPage() {
             >
               <Stack>
                 <Select
-                  label="Provider"
+                  label={t("settings.provider")}
                   data={LLM_PROVIDERS}
                   placeholder={config.llm_provider}
                   {...llmForm.getInputProps("provider")}
                 />
                 <TextInput
-                  label="Model"
+                  label={t("settings.model")}
                   placeholder={config.llm_model}
                   {...llmForm.getInputProps("model")}
                 />
                 <PasswordInput
-                  label="API Key"
-                  placeholder="Enter new key"
-                  description={config.llm_api_key_masked ? `Current: ${config.llm_api_key_masked}` : "Not set"}
+                  label={t("settings.apiKey")}
+                  placeholder={t("settings.enterNewKey")}
+                  description={
+                    config.llm_api_key_masked ? current(config.llm_api_key_masked) : t("settings.notSet")
+                  }
                   {...llmForm.getInputProps("api_key")}
                 />
                 <Group grow>
                   <NumberInput
-                    label="Max tokens"
+                    label={t("settings.maxTokens")}
                     min={1}
                     max={128000}
                     placeholder={String(config.llm_max_tokens)}
                     {...llmForm.getInputProps("max_tokens")}
                   />
                   <NumberInput
-                    label="Temperature"
+                    label={t("settings.temperature")}
                     min={0}
                     max={2}
                     step={0.1}
@@ -177,7 +197,7 @@ export function SettingsPage() {
                   />
                 </Group>
                 <Button type="submit" loading={llmMutation.isPending}>
-                  Save LLM config
+                  {t("settings.saveLlm")}
                 </Button>
               </Stack>
             </form>
@@ -186,7 +206,7 @@ export function SettingsPage() {
 
         {/* ── Embedding ───────────────────────────────────────── */}
         <Accordion.Item value="embedding">
-          <Accordion.Control>Embedding Configuration</Accordion.Control>
+          <Accordion.Control>{t("settings.embeddingSection")}</Accordion.Control>
           <Accordion.Panel>
             <form
               onSubmit={embForm.onSubmit((v) => {
@@ -198,21 +218,21 @@ export function SettingsPage() {
             >
               <Stack>
                 <TextInput
-                  label="Model"
+                  label={t("settings.model")}
                   placeholder={config.embedding_model}
                   {...embForm.getInputProps("model")}
                 />
                 <PasswordInput
-                  label="API Key (leave blank to use LLM key)"
+                  label={t("settings.embApiKey")}
                   description={
                     config.embedding_api_key_masked
-                      ? `Current: ${config.embedding_api_key_masked}`
-                      : "Using LLM key"
+                      ? current(config.embedding_api_key_masked)
+                      : t("settings.usingLlmKey")
                   }
                   {...embForm.getInputProps("api_key")}
                 />
                 <Button type="submit" loading={embeddingMutation.isPending}>
-                  Save embedding config
+                  {t("settings.saveEmbedding")}
                 </Button>
               </Stack>
             </form>
@@ -221,7 +241,7 @@ export function SettingsPage() {
 
         {/* ── WhatsApp ────────────────────────────────────────── */}
         <Accordion.Item value="whatsapp">
-          <Accordion.Control>WhatsApp Cloud API</Accordion.Control>
+          <Accordion.Control>{t("settings.whatsappSection")}</Accordion.Control>
           <Accordion.Panel>
             <form
               onSubmit={waForm.onSubmit((v) => {
@@ -235,44 +255,45 @@ export function SettingsPage() {
             >
               <Stack>
                 <TextInput
-                  label="Phone Number ID"
-                  placeholder={config.whatsapp_phone_number_id || "Not set"}
+                  label={t("settings.phoneNumberId")}
+                  placeholder={config.whatsapp_phone_number_id || t("settings.notSet")}
                   {...waForm.getInputProps("phone_number_id")}
                 />
                 <PasswordInput
-                  label="Access Token"
+                  label={t("settings.accessToken")}
                   description={
                     config.whatsapp_access_token_masked
-                      ? `Current: ${config.whatsapp_access_token_masked}`
-                      : "Not set"
+                      ? current(config.whatsapp_access_token_masked)
+                      : t("settings.notSet")
                   }
                   {...waForm.getInputProps("access_token")}
                 />
                 <PasswordInput
-                  label="Verify Token"
+                  label={t("settings.verifyToken")}
                   description={
                     config.whatsapp_verify_token_masked
-                      ? `Current: ${config.whatsapp_verify_token_masked}`
-                      : "Not set"
+                      ? current(config.whatsapp_verify_token_masked)
+                      : t("settings.notSet")
                   }
                   {...waForm.getInputProps("verify_token")}
                 />
                 <PasswordInput
-                  label="App Secret"
+                  label={t("settings.appSecret")}
                   description={
                     config.whatsapp_app_secret_masked
-                      ? `Current: ${config.whatsapp_app_secret_masked}`
-                      : "Not set — required for webhook signature verification"
+                      ? current(config.whatsapp_app_secret_masked)
+                      : t("settings.appSecretNotSet")
                   }
                   {...waForm.getInputProps("app_secret")}
                 />
                 <Card withBorder p="sm" bg="gray.0" radius="sm">
                   <Text size="xs" c="dimmed">
-                    Webhook URL: <code>https://your-domain/webhooks/&#123;tenant_id&#125;/whatsapp</code>
+                    {t("settings.webhookUrl")}{" "}
+                    <code>https://your-domain/webhooks/&#123;tenant_id&#125;/whatsapp</code>
                   </Text>
                 </Card>
                 <Button type="submit" loading={whatsappMutation.isPending}>
-                  Save WhatsApp config
+                  {t("settings.saveWhatsapp")}
                 </Button>
               </Stack>
             </form>
@@ -281,7 +302,7 @@ export function SettingsPage() {
 
         {/* ── Telegram ────────────────────────────────────────── */}
         <Accordion.Item value="telegram">
-          <Accordion.Control>Telegram Bot</Accordion.Control>
+          <Accordion.Control>{t("settings.telegramSection")}</Accordion.Control>
           <Accordion.Panel>
             <form
               onSubmit={tgForm.onSubmit((v) => {
@@ -293,30 +314,31 @@ export function SettingsPage() {
             >
               <Stack>
                 <PasswordInput
-                  label="Bot Token"
+                  label={t("settings.botToken")}
                   description={
                     config.telegram_bot_token_masked
-                      ? `Current: ${config.telegram_bot_token_masked}`
-                      : "Not set — get one from @BotFather"
+                      ? current(config.telegram_bot_token_masked)
+                      : t("settings.botTokenNotSet")
                   }
                   {...tgForm.getInputProps("bot_token")}
                 />
                 <PasswordInput
-                  label="Webhook Secret"
+                  label={t("settings.webhookSecret")}
                   description={
                     config.telegram_webhook_secret_masked
-                      ? `Current: ${config.telegram_webhook_secret_masked}`
-                      : "Not set"
+                      ? current(config.telegram_webhook_secret_masked)
+                      : t("settings.notSet")
                   }
                   {...tgForm.getInputProps("webhook_secret")}
                 />
                 <Card withBorder p="sm" bg="gray.0" radius="sm">
                   <Text size="xs" c="dimmed">
-                    Webhook URL: <code>https://your-domain/webhooks/&#123;tenant_id&#125;/telegram</code>
+                    {t("settings.webhookUrl")}{" "}
+                    <code>https://your-domain/webhooks/&#123;tenant_id&#125;/telegram</code>
                   </Text>
                 </Card>
                 <Button type="submit" loading={telegramMutation.isPending}>
-                  Save Telegram config
+                  {t("settings.saveTelegram")}
                 </Button>
               </Stack>
             </form>
@@ -325,7 +347,7 @@ export function SettingsPage() {
 
         {/* ── Bot Personality ──────────────────────────────────── */}
         <Accordion.Item value="bot">
-          <Accordion.Control>Bot Personality</Accordion.Control>
+          <Accordion.Control>{t("settings.botSection")}</Accordion.Control>
           <Accordion.Panel>
             <form
               onSubmit={botForm.onSubmit((v) => {
@@ -338,30 +360,25 @@ export function SettingsPage() {
             >
               <Stack>
                 <TextInput
-                  label="Bot Name"
+                  label={t("settings.botNameLabel")}
                   placeholder={config.bot_name}
                   {...botForm.getInputProps("name")}
                 />
                 <Textarea
-                  label="Welcome Message"
+                  label={t("settings.welcomeMessage")}
                   placeholder={config.bot_welcome_message}
                   autosize
                   minRows={2}
                   {...botForm.getInputProps("welcome_message")}
                 />
                 <Select
-                  label="Language"
-                  data={[
-                    { value: "en", label: "English" },
-                    { value: "ar", label: "Arabic" },
-                    { value: "fr", label: "French" },
-                    { value: "es", label: "Spanish" },
-                  ]}
+                  label={t("settings.language")}
+                  data={BOT_LANGUAGES}
                   placeholder={config.bot_language}
                   {...botForm.getInputProps("language")}
                 />
                 <Button type="submit" loading={botMutation.isPending}>
-                  Save bot config
+                  {t("settings.saveBot")}
                 </Button>
               </Stack>
             </form>

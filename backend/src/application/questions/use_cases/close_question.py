@@ -16,9 +16,9 @@ class CloseQuestionUseCase:
     async def execute(self, cmd: CloseQuestion) -> QuestionDTO:
         question = await self._uow.questions.get_by_id(cmd.question_id)
         if question is None:
-            raise EntityNotFoundError("Question not found")
+            raise EntityNotFoundError("Question not found", code="question.not_found")
         if question.tenant_id != cmd.tenant_id:
-            raise AuthorizationError("Question does not belong to this tenant")
+            raise AuthorizationError("Question does not belong to this tenant", code="question.forbidden")
 
         question.close()
         await self._uow.questions.save(question)

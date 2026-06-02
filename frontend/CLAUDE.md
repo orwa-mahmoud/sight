@@ -53,6 +53,34 @@ Two categories only. No Redux, no Zustand.
 - **Server state -- TanStack Query:** Every API call uses `useQuery` or `useMutation`. QueryClient: `staleTime: 30_000`, `refetchOnWindowFocus: false`, `retry: 1`. Cache invalidation via `queryClient.invalidateQueries({ queryKey })`.
 - **Auth state -- React Context:** `AuthContext` holds `user | null` + `loading`. Single source of truth for auth. Consumed via `useAuth()`.
 
+## Internationalization (EN / AR / RTL)
+
+- i18next + react-i18next; resources bundled in `src/shared/i18n/locales/{en,ar}/common.json`
+  (default namespace `common`). Init is synchronous so `t()` works in app + tests.
+- Use `useTranslation()` → `t("section.key")`. **Add a key to BOTH `en` and `ar`**
+  when adding UI text — never hardcode user-facing strings.
+- Direction: `DirectionGate` (in `app/Providers.tsx`) syncs `<html dir/lang>` and
+  Mantine's `DirectionProvider` to the active language. Switcher: `LanguageSwitcher`.
+- Dark mode: `ColorSchemeToggle` (Mantine color scheme; `defaultColorScheme="auto"`).
+- Tests init i18n via `src/test/setup.ts` (imports `@shared/i18n`), so components
+  render English by default.
+
+## DataTable (`src/shared/components/datatable`)
+
+Unified, mode-agnostic table. A page builds a **`TableSource`** with
+`useFrontendData` (in-memory) or `useBackendData` (server-paginated infinite
+query), then renders `<DataTable source columns rowKey ... />`. Features: sort,
+debounced search, filter drawer + chips (generic `SelectFilter`/`TextFilter`
+bound to `source.extra`), paged + infinite modes, responsive desktop/mobile,
+URL-synced state, `RowAction`s (optional confirm modal), loading skeleton +
+empty/error states, i18n, GSAP entrance stagger. Columns are `ColumnDef<TRow>`
+(use `Cell`/`accessor`, `sortValue`, `mobileLabel`). See `DataTable.test.tsx`.
+
+## Shared hooks / utils
+
+- `useMutationWithNotification` — `useMutation` + success/error toasts + invalidation.
+- `useDebounce`, `core/config.ts` (typed env), `utils/confirm` (Mantine modal).
+
 ## Auth Flow
 
 Cookie-based. The backend sets an httpOnly `frontdesk_token` cookie on
@@ -82,17 +110,18 @@ features/<name>/
 ```
 
 **Rules:**
+
 - One feature = one folder. Features own their API, types, and pages.
 - No cross-feature imports. Features communicate through shared infrastructure only.
 - Features with only a page (no dedicated API) inline fetch functions in the page file.
 
-| Feature | Folder | Key pages |
-| ------- | ------ | --------- |
-| Escalations | `escalations/` | InboxPage |
+| Feature       | Folder           | Key pages                       |
+| ------------- | ---------------- | ------------------------------- |
+| Escalations   | `escalations/`   | InboxPage                       |
 | Conversations | `conversations/` | ConversationsPage, ChatTestPage |
-| Documents | `documents/` | DocumentsPage |
-| LLM Usage | `llm-usage/` | UsagePage |
-| Settings | `settings/` | SettingsPage |
+| Documents     | `documents/`     | DocumentsPage                   |
+| LLM Usage     | `llm-usage/`     | UsagePage                       |
+| Settings      | `settings/`      | SettingsPage                    |
 
 ## Conventions
 
@@ -119,9 +148,11 @@ All icons from `@tabler/icons-react`. Standard size: 18 for inline/nav, 14 for b
 
 ### Imports
 
-- Relative imports within same module (`./api`, `./types`)
-- Path-based imports across modules (`../../core/api/client`)
-- No path aliases configured
+- **Relative imports within the same module** (`./api`, `./types`)
+- **Alias imports across modules** — `@app/* @auth/* @core/* @features/* @shared/* @test/*`
+  (e.g. `@core/api/client`, `@shared/components/AppShell`). Never `../../` across
+  modules. Aliases are configured in `tsconfig.app.json` (paths) and mirrored in
+  `vite.config.ts` + `vitest.config.ts` (resolve.alias) — keep all three in sync.
 
 ### Four-State Rendering
 
@@ -149,12 +180,12 @@ npm test            # Vitest
 - All endpoints under `/api/v1/`. Feature API files use the shared Axios instance.
 - When backend adds or renames a field, update the corresponding `types.ts` manually.
 
-| Frontend feature | Backend endpoints |
-| ---------------- | ----------------- |
-| Auth | `POST /api/v1/auth/login`, `/register`, `GET /me` |
-| Escalations | `GET /api/v1/questions`, `POST .../reply`, `.../close` |
-| Conversations | `GET /api/v1/conversations`, `.../daily-summary` |
-| Documents | `GET/POST/DELETE /api/v1/documents` |
-| LLM Usage | `GET /api/v1/llm-usage/stats` |
-| Chat | `POST /api/v1/chat` |
-| Settings | `GET /api/v1/settings`, `PUT .../llm`, `.../embedding`, `.../whatsapp`, `.../telegram`, `.../bot` |
+| Frontend feature | Backend endpoints                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| Auth             | `POST /api/v1/auth/login`, `/register`, `GET /me`                                                 |
+| Escalations      | `GET /api/v1/questions`, `POST .../reply`, `.../close`                                            |
+| Conversations    | `GET /api/v1/conversations`, `.../daily-summary`                                                  |
+| Documents        | `GET/POST/DELETE /api/v1/documents`                                                               |
+| LLM Usage        | `GET /api/v1/llm-usage/stats`                                                                     |
+| Chat             | `POST /api/v1/chat`                                                                               |
+| Settings         | `GET /api/v1/settings`, `PUT .../llm`, `.../embedding`, `.../whatsapp`, `.../telegram`, `.../bot` |

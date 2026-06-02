@@ -30,7 +30,11 @@ describe("response interceptor", () => {
     setUnauthorizedHandler(onUnauthorized);
     api.defaults.adapter = async (config) => {
       throw new AxiosError("401", "ERR_BAD_REQUEST", config, null, {
-        status: 401, data: {}, headers: {}, statusText: "Unauthorized", config,
+        status: 401,
+        data: {},
+        headers: {},
+        statusText: "Unauthorized",
+        config,
       } as AxiosResponse);
     };
     await api.get("/protected").catch(() => {});
@@ -43,7 +47,11 @@ describe("response interceptor", () => {
     setUnauthorizedHandler(onUnauthorized);
     api.defaults.adapter = async (config) => {
       throw new AxiosError("500", "ERR_BAD_RESPONSE", config, null, {
-        status: 500, data: {}, headers: {}, statusText: "Error", config,
+        status: 500,
+        data: {},
+        headers: {},
+        statusText: "Error",
+        config,
       } as AxiosResponse);
     };
     await api.get("/error").catch(() => {});

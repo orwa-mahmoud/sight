@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import { setUnauthorizedHandler } from "../core/api/client";
+import { setUnauthorizedHandler } from "@core/api/client";
 import * as authApi from "./api";
 import { AuthContext, type AuthContextValue } from "./context";
 import type { MeResponse } from "./types";
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         void authApi.logout();
       },
     }),
-    [user, loading, loadCurrentUser]
+    [user, loading, loadCurrentUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

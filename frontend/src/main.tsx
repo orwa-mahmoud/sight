@@ -12,5 +12,5 @@ createRoot(root).render(
     <Providers>
       <AppRoutes />
     </Providers>
-  </StrictMode>
+  </StrictMode>,
 );

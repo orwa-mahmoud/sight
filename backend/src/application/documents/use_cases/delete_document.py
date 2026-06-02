@@ -15,7 +15,7 @@ class DeleteDocumentUseCase:
     async def execute(self, *, tenant_id: UUID, document_id: UUID) -> None:
         doc = await self._uow.documents.get_by_id(document_id)
         if doc is None:
-            raise EntityNotFoundError("Document not found")
+            raise EntityNotFoundError("Document not found", code="document.not_found")
         if doc.tenant_id != tenant_id:
-            raise AuthorizationError("Document does not belong to this tenant")
+            raise AuthorizationError("Document does not belong to this tenant", code="document.forbidden")
         await self._uow.documents.delete(document_id)

@@ -9,9 +9,19 @@ from __future__ import annotations
 
 
 class DomainError(Exception):
-    """Base class for all domain errors. Maps to HTTP 400 by default."""
+    """Base class for all domain errors. Maps to HTTP 400 by default.
+
+    `message` is the English text (also the developer-facing detail). An
+    optional `code` lets the API boundary translate the message for non-English
+    `Accept-Language` requests; English always uses `message`, so a missing code
+    or catalog entry simply yields the original English string.
+    """
 
     http_status: int = 400
+
+    def __init__(self, message: str = "", *, code: str | None = None) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 class EntityNotFoundError(DomainError):

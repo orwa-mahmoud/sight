@@ -251,7 +251,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save LLM config"));
 
     await waitFor(() => {
-      expect(updateLLM).toHaveBeenCalledWith(expect.objectContaining({ api_key: "sk-test-key" }), expect.anything());
+      expect(updateLLM).toHaveBeenCalledWith(
+        expect.objectContaining({ api_key: "sk-test-key" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -262,7 +265,8 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(screen.getByText("Save LLM config")).toBeInTheDocument());
 
     const llmPanel = container.querySelector("[data-active='true'] .mantine-Accordion-panel");
-    const modelInput = llmPanel?.querySelector("input[data-path='model']") ?? screen.getAllByLabelText("Model")[0]!;
+    const modelInput =
+      llmPanel?.querySelector("input[data-path='model']") ?? screen.getAllByLabelText("Model")[0]!;
     fireEvent.change(modelInput, { target: { value: "gpt-4o" } });
     fireEvent.click(screen.getByText("Save LLM config"));
 
@@ -284,7 +288,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save WhatsApp config"));
 
     await waitFor(() => {
-      expect(updateWhatsApp).toHaveBeenCalledWith(expect.objectContaining({ phone_number_id: "9999" }), expect.anything());
+      expect(updateWhatsApp).toHaveBeenCalledWith(
+        expect.objectContaining({ phone_number_id: "9999" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -319,7 +326,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save Telegram config"));
 
     await waitFor(() => {
-      expect(updateTelegram).toHaveBeenCalledWith(expect.objectContaining({ bot_token: "123:NEWTOKEN" }), expect.anything());
+      expect(updateTelegram).toHaveBeenCalledWith(
+        expect.objectContaining({ bot_token: "123:NEWTOKEN" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -337,7 +347,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save embedding config"));
 
     await waitFor(() => {
-      expect(updateEmbedding).toHaveBeenCalledWith(expect.objectContaining({ api_key: "sk-new-key" }), expect.anything());
+      expect(updateEmbedding).toHaveBeenCalledWith(
+        expect.objectContaining({ api_key: "sk-new-key" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -354,7 +367,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save bot config"));
 
     await waitFor(() => {
-      expect(updateBot).toHaveBeenCalledWith(expect.objectContaining({ welcome_message: "Welcome!" }), expect.anything());
+      expect(updateBot).toHaveBeenCalledWith(
+        expect.objectContaining({ welcome_message: "Welcome!" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -372,7 +388,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save Telegram config"));
 
     await waitFor(() => {
-      expect(updateTelegram).toHaveBeenCalledWith(expect.objectContaining({ webhook_secret: "ws-new" }), expect.anything());
+      expect(updateTelegram).toHaveBeenCalledWith(
+        expect.objectContaining({ webhook_secret: "ws-new" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -397,7 +416,7 @@ describe("SettingsPage", () => {
       whatsapp_phone_number_id: null,
       whatsapp_access_token_masked: null,
       whatsapp_verify_token_masked: null,
-  whatsapp_app_secret_masked: null,
+      whatsapp_app_secret_masked: null,
       telegram_bot_token_masked: null,
       telegram_webhook_secret_masked: null,
     });
@@ -418,7 +437,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save LLM config"));
 
     await waitFor(() => {
-      expect(updateLLM).toHaveBeenCalledWith(expect.objectContaining({ provider: "anthropic" }), expect.anything());
+      expect(updateLLM).toHaveBeenCalledWith(
+        expect.objectContaining({ provider: "anthropic" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -456,7 +478,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByText("Save embedding config"));
 
     await waitFor(() => {
-      expect(updateEmbedding).toHaveBeenCalledWith(expect.objectContaining({ model: "ada-002" }), expect.anything());
+      expect(updateEmbedding).toHaveBeenCalledWith(
+        expect.objectContaining({ model: "ada-002" }),
+        expect.anything(),
+      );
     });
   });
 
@@ -498,13 +523,12 @@ describe("SettingsPage", () => {
     await waitFor(() => expect(updateLLM).toHaveBeenCalled());
   });
 
-
   it("shows 'Not set' descriptions for empty WhatsApp tokens", async () => {
     vi.mocked(getSettings).mockResolvedValue({
       ...CONFIG,
       whatsapp_access_token_masked: null,
       whatsapp_verify_token_masked: null,
-  whatsapp_app_secret_masked: null,
+      whatsapp_app_secret_masked: null,
       telegram_bot_token_masked: null,
       telegram_webhook_secret_masked: null,
     });

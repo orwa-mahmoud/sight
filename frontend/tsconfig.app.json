@@ -9,11 +9,23 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
+    "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+
+    /* Path aliases — relative within a module, alias across modules.
+       No baseUrl (deprecated): paths resolve relative to this tsconfig. */
+    "paths": {
+      "@app/*": ["./src/app/*"],
+      "@auth/*": ["./src/auth/*"],
+      "@core/*": ["./src/core/*"],
+      "@features/*": ["./src/features/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@test/*": ["./src/test/*"]
+    },
 
     /* Linting */
     "strict": true,

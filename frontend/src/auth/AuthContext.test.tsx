@@ -4,7 +4,7 @@ import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 
-vi.mock("../core/api/client", () => ({
+vi.mock("@core/api/client", () => ({
   setUnauthorizedHandler: vi.fn(),
 }));
 
@@ -106,7 +106,10 @@ describe("AuthProvider", () => {
   it("login authenticates then loads the user", async () => {
     vi.mocked(authApi.me).mockRejectedValueOnce(new Error("unauthorized"));
     vi.mocked(authApi.login).mockResolvedValue({
-      access_token: "new-jwt", token_type: "bearer", user_id: "u1", tenant_id: "t1",
+      access_token: "new-jwt",
+      token_type: "bearer",
+      user_id: "u1",
+      tenant_id: "t1",
     });
     vi.mocked(authApi.me).mockResolvedValue(ME_RESPONSE);
 
@@ -124,7 +127,10 @@ describe("AuthProvider", () => {
   it("register authenticates then loads the user", async () => {
     vi.mocked(authApi.me).mockRejectedValueOnce(new Error("unauthorized"));
     vi.mocked(authApi.register).mockResolvedValue({
-      access_token: "reg-jwt", token_type: "bearer", user_id: "u2", tenant_id: "t2",
+      access_token: "reg-jwt",
+      token_type: "bearer",
+      user_id: "u2",
+      tenant_id: "t2",
     });
     vi.mocked(authApi.me).mockResolvedValue(ME_RESPONSE);
 

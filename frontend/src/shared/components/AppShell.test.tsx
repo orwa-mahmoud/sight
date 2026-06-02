@@ -2,21 +2,30 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { AuthContext, type AuthContextValue } from "../../auth/context";
+import { AuthContext, type AuthContextValue } from "@auth/context";
 import { ProtectedShell } from "./AppShell";
 
 const USER_WITH_NAME = {
-  id: "u1", email: "owner@acme.com", full_name: "Acme Owner", is_active: true,
+  id: "u1",
+  email: "owner@acme.com",
+  full_name: "Acme Owner",
+  is_active: true,
   tenant: { id: "t1", slug: "acme", name: "Acme Corp", role: "owner" },
 };
 
 const USER_NO_NAME = {
-  id: "u2", email: "noname@acme.com", full_name: null, is_active: true,
+  id: "u2",
+  email: "noname@acme.com",
+  full_name: null,
+  is_active: true,
   tenant: { id: "t1", slug: "acme", name: "Acme Corp", role: "owner" },
 };
 
 const base: Omit<AuthContextValue, "user"> = {
-  loading: false, login: vi.fn(), register: vi.fn(), logout: vi.fn(),
+  loading: false,
+  login: vi.fn(),
+  register: vi.fn(),
+  logout: vi.fn(),
 };
 
 function renderShell(user: typeof USER_WITH_NAME | typeof USER_NO_NAME, path = "/") {
@@ -24,10 +33,12 @@ function renderShell(user: typeof USER_WITH_NAME | typeof USER_NO_NAME, path = "
     <MantineProvider>
       <MemoryRouter initialEntries={[path]}>
         <AuthContext.Provider value={{ ...base, user }}>
-          <ProtectedShell><div>Page</div></ProtectedShell>
+          <ProtectedShell>
+            <div>Page</div>
+          </ProtectedShell>
         </AuthContext.Provider>
       </MemoryRouter>
-    </MantineProvider>
+    </MantineProvider>,
   );
 }
 
@@ -91,7 +102,10 @@ describe("ProtectedShell", () => {
 
   it("handles user with no name, no email, no tenant details", () => {
     const minimalUser = {
-      id: "u3", email: undefined, full_name: undefined, is_active: true,
+      id: "u3",
+      email: undefined,
+      full_name: undefined,
+      is_active: true,
       tenant: { id: "t1", slug: undefined, name: "X", role: undefined },
     } as unknown as typeof USER_WITH_NAME;
     renderShell(minimalUser);

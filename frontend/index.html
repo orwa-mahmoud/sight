@@ -5,6 +5,22 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Frontdesk</title>
+    <!-- Mantine color-scheme bootstrap: set the theme before first paint to avoid a flash. -->
+    <script>
+      (function () {
+        try {
+          var stored = window.localStorage.getItem("mantine-color-scheme-value");
+          var scheme = stored === "light" || stored === "dark" || stored === "auto" ? stored : "auto";
+          var computed =
+            scheme !== "auto"
+              ? scheme
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-mantine-color-scheme", computed);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

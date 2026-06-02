@@ -44,9 +44,9 @@ class RegisterOwnerUseCase:
         slug = cmd.tenant_slug.strip().lower()
 
         if await self._uow.users.get_by_email(email):
-            raise AlreadyExistsError("A user with this email already exists")
+            raise AlreadyExistsError("A user with this email already exists", code="auth.email_taken")
         if await self._uow.tenants.get_by_slug(slug):
-            raise AlreadyExistsError("Tenant slug is already taken")
+            raise AlreadyExistsError("Tenant slug is already taken", code="auth.slug_taken")
 
         user = User.create(
             email=email,

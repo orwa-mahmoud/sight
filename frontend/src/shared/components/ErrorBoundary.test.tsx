@@ -2,7 +2,7 @@ import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { theme } from "../../app/theme";
+import { theme } from "@app/theme";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 function Wrap({ children }: { readonly children: React.ReactNode }) {

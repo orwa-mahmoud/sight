@@ -31,32 +31,48 @@ function createWrapper() {
 
 const QUESTIONS: Question[] = [
   {
-    id: "q1", conversation_id: null, channel: "whatsapp",
+    id: "q1",
+    conversation_id: null,
+    channel: "whatsapp",
     contact_id: "c-uuid-sara",
     question_text: "What are your hours?",
     ai_answer_attempt: "We are open 9-5.",
-    status: "submitted", owner_reply: null,
-    replied_by_user_id: null, replied_at: null,
-    created_at: "2026-01-01T10:00:00Z", updated_at: "2026-01-01T10:00:00Z",
+    status: "submitted",
+    owner_reply: null,
+    replied_by_user_id: null,
+    replied_at: null,
+    created_at: "2026-01-01T10:00:00Z",
+    updated_at: "2026-01-01T10:00:00Z",
   },
   {
-    id: "q2", conversation_id: null, channel: "telegram",
+    id: "q2",
+    conversation_id: null,
+    channel: "telegram",
     contact_id: null,
     question_text: "Do you deliver?",
     ai_answer_attempt: null,
-    status: "submitted", owner_reply: null,
-    replied_by_user_id: null, replied_at: null,
-    created_at: "2026-01-01T11:00:00Z", updated_at: "2026-01-01T11:00:00Z",
+    status: "submitted",
+    owner_reply: null,
+    replied_by_user_id: null,
+    replied_at: null,
+    created_at: "2026-01-01T11:00:00Z",
+    updated_at: "2026-01-01T11:00:00Z",
   },
 ];
 
 const RESOLVED_QUESTION: Question = {
-  id: "q3", conversation_id: null, channel: "web",
+  id: "q3",
+  conversation_id: null,
+  channel: "web",
   contact_id: "c-uuid-ali",
-  question_text: "Price?", ai_answer_attempt: null,
-  status: "resolved", owner_reply: "It's $10.",
-  replied_by_user_id: "u1", replied_at: "2026-01-01T12:00:00Z",
-  created_at: "2026-01-01T10:00:00Z", updated_at: "2026-01-01T12:00:00Z",
+  question_text: "Price?",
+  ai_answer_attempt: null,
+  status: "resolved",
+  owner_reply: "It's $10.",
+  replied_by_user_id: "u1",
+  replied_at: "2026-01-01T12:00:00Z",
+  created_at: "2026-01-01T10:00:00Z",
+  updated_at: "2026-01-01T12:00:00Z",
 };
 
 describe("InboxPage", () => {
@@ -212,7 +228,11 @@ describe("InboxPage", () => {
 
   it("sends reply via modal", async () => {
     vi.mocked(listQuestions).mockResolvedValue(QUESTIONS);
-    vi.mocked(replyToQuestion).mockResolvedValue({ ...QUESTIONS[0]!, status: "resolved", owner_reply: "We open at 9." });
+    vi.mocked(replyToQuestion).mockResolvedValue({
+      ...QUESTIONS[0]!,
+      status: "resolved",
+      owner_reply: "We open at 9.",
+    });
     render(<InboxPage />, { wrapper: createWrapper() });
 
     await waitFor(() => expect(screen.getByText("What are your hours?")).toBeInTheDocument());
@@ -232,7 +252,9 @@ describe("InboxPage", () => {
 
   it("shows raw channel name for unknown channels", async () => {
     const unknownChannelQ: Question = {
-      ...QUESTIONS[0]!, id: "q9", channel: "sms",
+      ...QUESTIONS[0]!,
+      id: "q9",
+      channel: "sms",
     };
     vi.mocked(listQuestions).mockResolvedValue([unknownChannelQ]);
     render(<InboxPage />, { wrapper: createWrapper() });

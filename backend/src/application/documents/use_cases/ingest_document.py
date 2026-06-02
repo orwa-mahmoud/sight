@@ -37,7 +37,10 @@ class IngestDocumentUseCase:
     async def execute(self, cmd: IngestDocument) -> DocumentDTO:
         mime = DocumentMimeType.from_filename(cmd.filename)
         if mime is None:
-            raise InvalidOperationError("Unsupported file type. Allowed: PDF, DOCX, Markdown, plain text.")
+            raise InvalidOperationError(
+                "Unsupported file type. Allowed: PDF, DOCX, Markdown, plain text.",
+                code="document.unsupported_type",
+            )
 
         doc = Document.upload(
             tenant_id=cmd.tenant_id,

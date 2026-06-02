@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../../core/api/client", () => ({
+vi.mock("@core/api/client", () => ({
   api: { get: vi.fn(), put: vi.fn() },
 }));
 
-import { api } from "../../core/api/client";
+import { api } from "@core/api/client";
 import { getSettings, updateLLM, updateEmbedding, updateWhatsApp, updateTelegram, updateBot } from "./api";
 
 describe("settings API", () => {

@@ -11,11 +11,16 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from src.domain.shared.exceptions import DomainError
+from src.drivers.api.i18n import resolve_locale, translate
 
 
-def domain_error_handler(_request: Request, exc: Exception) -> JSONResponse:
+def domain_error_handler(request: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, DomainError)
+    locale = resolve_locale(request.headers.get("accept-language"))
+    message = str(exc) or "An error occurred"
+    code = exc.code or ("error.generic" if not str(exc) else None)
+    detail = translate(code, locale, default=message)
     return JSONResponse(
         status_code=exc.http_status,
-        content={"detail": str(exc) or "An error occurred"},
+        content={"detail": detail},
     )

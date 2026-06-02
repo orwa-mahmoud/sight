@@ -25,8 +25,8 @@ class ChangePasswordUseCase:
     async def execute(self, cmd: ChangePassword) -> None:
         user = await self._uow.users.get_by_id(cmd.user_id)
         if user is None:
-            raise EntityNotFoundError("User not found")
+            raise EntityNotFoundError("User not found", code="user.not_found")
         if not self._hasher.verify(cmd.old_password, user.hashed_password):
-            raise AuthenticationError("Current password is incorrect")
+            raise AuthenticationError("Current password is incorrect", code="auth.current_password_incorrect")
         user.update_password(self._hasher.hash(cmd.new_password))
         await self._uow.users.save(user)

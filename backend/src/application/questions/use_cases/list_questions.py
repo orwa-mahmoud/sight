@@ -29,7 +29,7 @@ class GetQuestionUseCase:
     async def execute(self, query: GetQuestion) -> QuestionDTO:
         question = await self._uow.questions.get_by_id(query.question_id)
         if question is None:
-            raise EntityNotFoundError("Question not found")
+            raise EntityNotFoundError("Question not found", code="question.not_found")
         if question.tenant_id != query.tenant_id:
-            raise AuthorizationError("Question does not belong to this tenant")
+            raise AuthorizationError("Question does not belong to this tenant", code="question.forbidden")
         return to_dto(question)

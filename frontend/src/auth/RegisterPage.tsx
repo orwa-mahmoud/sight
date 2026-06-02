@@ -1,22 +1,14 @@
-import {
-  Anchor,
-  Button,
-  Card,
-  Group,
-  PasswordInput,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
+import { Anchor, Button, Card, Group, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { useAuth } from "./useAuth";
 
 export function RegisterPage() {
+  const { t } = useTranslation();
   const { user, register } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
@@ -30,13 +22,10 @@ export function RegisterPage() {
       tenant_slug: "",
     },
     validate: {
-      email: (v) => (/^\S+@\S+\.\S+$/.test(v) ? null : "Enter a valid email"),
-      password: (v) => (v.length >= 8 ? null : "At least 8 characters"),
-      tenant_name: (v) => (v.trim().length > 0 ? null : "Required"),
-      tenant_slug: (v) =>
-        /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v) && v.length >= 2
-          ? null
-          : "Lowercase letters, digits, and hyphens; min 2 chars",
+      email: (v) => (/^\S+@\S+\.\S+$/.test(v) ? null : t("auth.errInvalidEmail")),
+      password: (v) => (v.length >= 8 ? null : t("auth.errPasswordMin")),
+      tenant_name: (v) => (v.trim().length > 0 ? null : t("auth.errRequired")),
+      tenant_slug: (v) => (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v) && v.length >= 2 ? null : t("auth.errSlug")),
     },
   });
 
@@ -54,7 +43,7 @@ export function RegisterPage() {
     } catch {
       notifications.show({
         color: "red",
-        message: "Could not create the account. Email or slug may already exist.",
+        message: t("auth.errRegister"),
       });
     } finally {
       setSubmitting(false);
@@ -69,41 +58,49 @@ export function RegisterPage() {
         <Stack>
           <div>
             <Title order={2} mb={4}>
-              Create your front desk
+              {t("auth.registerTitle")}
             </Title>
             <Text c="dimmed" size="sm">
-              Sets up your tenant and owner account in one step.
+              {t("auth.registerSubtitle")}
             </Text>
           </div>
 
           <form onSubmit={handleSubmit}>
             <Stack>
-              <TextInput label="Your name" placeholder="Optional" {...form.getInputProps("full_name")} />
-              <TextInput label="Email" placeholder="you@example.com" {...form.getInputProps("email")} />
-              <PasswordInput label="Password" {...form.getInputProps("password")} />
               <TextInput
-                label="Tenant display name"
-                placeholder="Acme Front Desk"
+                label={t("auth.yourName")}
+                placeholder={t("auth.optional")}
+                {...form.getInputProps("full_name")}
+              />
+              <TextInput
+                label={t("auth.email")}
+                placeholder={t("auth.emailPlaceholderYou")}
+                {...form.getInputProps("email")}
+              />
+              <PasswordInput label={t("auth.password")} {...form.getInputProps("password")} />
+              <TextInput
+                label={t("auth.tenantName")}
+                placeholder={t("auth.tenantNamePlaceholder")}
                 {...form.getInputProps("tenant_name")}
               />
               <TextInput
-                label="Tenant slug"
-                placeholder="acme"
-                description="Used as an internal identifier. Lowercase letters, digits, hyphens."
+                label={t("auth.tenantSlug")}
+                placeholder={t("auth.tenantSlugPlaceholder")}
+                description={t("auth.tenantSlugDesc")}
                 {...form.getInputProps("tenant_slug")}
               />
               <Button type="submit" loading={submitting} fullWidth>
-                Create account
+                {t("auth.createAccountBtn")}
               </Button>
             </Stack>
           </form>
 
           <Group justify="center" gap="xs">
             <Text size="sm" c="dimmed">
-              Already have an account?
+              {t("auth.haveAccount")}
             </Text>
             <Anchor component={Link} to="/login" size="sm">
-              Sign in
+              {t("auth.signIn")}
             </Anchor>
           </Group>
         </Stack>

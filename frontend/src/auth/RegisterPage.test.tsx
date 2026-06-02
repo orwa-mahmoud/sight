@@ -113,9 +113,7 @@ describe("RegisterPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /create account/i }));
 
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith(
-        expect.objectContaining({ full_name: "John" })
-      );
+      expect(mockRegister).toHaveBeenCalledWith(expect.objectContaining({ full_name: "John" }));
     });
   });
 

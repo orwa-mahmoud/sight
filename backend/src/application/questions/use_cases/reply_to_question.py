@@ -21,9 +21,9 @@ class ReplyToQuestionUseCase:
     async def execute(self, cmd: ReplyToQuestion) -> QuestionDTO:
         question = await self._uow.questions.get_by_id(cmd.question_id)
         if question is None:
-            raise EntityNotFoundError("Question not found")
+            raise EntityNotFoundError("Question not found", code="question.not_found")
         if question.tenant_id != cmd.tenant_id:
-            raise AuthorizationError("Question does not belong to this tenant")
+            raise AuthorizationError("Question does not belong to this tenant", code="question.forbidden")
 
         question.resolve(reply=cmd.reply, replied_by_user_id=cmd.replied_by_user_id)
         await self._uow.questions.save(question)

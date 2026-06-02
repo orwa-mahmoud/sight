@@ -33,11 +33,13 @@ export const theme = createTheme({
   primaryColor: "coral",
   primaryShade: { light: 6, dark: 5 },
   defaultRadius: "md",
+  // 'IBM Plex Sans Arabic' (self-hosted via @fontsource) covers Arabic glyphs
+  // for RTL; Latin text falls through to the system stack ahead of it.
   fontFamily:
-    "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif",
+    "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', 'IBM Plex Sans Arabic', sans-serif",
   headings: {
     fontFamily:
-      "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif",
+      "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Helvetica Neue', 'IBM Plex Sans Arabic', sans-serif",
     fontWeight: "600",
   },
   colors: {

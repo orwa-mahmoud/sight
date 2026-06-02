@@ -23,6 +23,7 @@ import { IconArchive, IconRefresh, IconRobot, IconSend } from "@tabler/icons-rea
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { closeQuestion, listQuestions, replyToQuestion } from "./api";
 import type { Question, QuestionStatus } from "./types";
@@ -33,21 +34,15 @@ const STATUS_COLOR: Record<QuestionStatus, string> = {
   closed: "gray",
 };
 
-const CHANNEL_LABEL: Record<string, string> = {
-  whatsapp: "WhatsApp",
-  telegram: "Telegram",
-  email: "Email",
-  web: "Web",
-  owner_dashboard: "Owner",
-  api: "API",
-};
-
 export function InboxPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<QuestionStatus | "all">("submitted");
   const [active, setActive] = useState<Question | null>(null);
   const [replyText, setReplyText] = useState("");
   const [opened, { open, close }] = useDisclosure(false);
+
+  const channelLabel = (channel: string) => t(`channels.${channel}`, { defaultValue: channel });
 
   const status = filter === "all" ? undefined : filter;
   const questionsQuery = useQuery({
@@ -59,25 +54,25 @@ export function InboxPage() {
   const replyMutation = useMutation({
     mutationFn: (vars: { id: string; reply: string }) => replyToQuestion(vars.id, vars.reply),
     onSuccess: () => {
-      notifications.show({ color: "teal", message: "Reply sent." });
+      notifications.show({ color: "teal", message: t("inbox.replySent") });
       queryClient.invalidateQueries({ queryKey: ["questions"] });
       close();
       setReplyText("");
       setActive(null);
     },
     onError: () => {
-      notifications.show({ color: "red", message: "Could not send the reply." });
+      notifications.show({ color: "red", message: t("inbox.replyError") });
     },
   });
 
   const closeMutation = useMutation({
     mutationFn: (id: string) => closeQuestion(id),
     onSuccess: () => {
-      notifications.show({ color: "gray", message: "Closed." });
+      notifications.show({ color: "gray", message: t("inbox.closed") });
       queryClient.invalidateQueries({ queryKey: ["questions"] });
     },
     onError: () => {
-      notifications.show({ color: "red", message: "Could not close." });
+      notifications.show({ color: "red", message: t("inbox.closeError") });
     },
   });
 
@@ -91,9 +86,9 @@ export function InboxPage() {
     <Stack>
       <Group justify="space-between" align="center">
         <div>
-          <Title order={2}>Inbox</Title>
+          <Title order={2}>{t("inbox.title")}</Title>
           <Text c="dimmed" size="sm">
-            Questions the AI escalated to you.
+            {t("inbox.subtitle")}
           </Text>
         </div>
         <Group>
@@ -101,17 +96,17 @@ export function InboxPage() {
             value={filter}
             onChange={(v: string) => setFilter(v as QuestionStatus | "all")}
             data={[
-              { label: "Open", value: "submitted" },
-              { label: "Resolved", value: "resolved" },
-              { label: "Closed", value: "closed" },
-              { label: "All", value: "all" },
+              { label: t("inbox.filterOpen"), value: "submitted" },
+              { label: t("inbox.filterResolved"), value: "resolved" },
+              { label: t("inbox.filterClosed"), value: "closed" },
+              { label: t("inbox.filterAll"), value: "all" },
             ]}
           />
-          <Tooltip label="Refresh">
+          <Tooltip label={t("inbox.refresh")}>
             <ActionIcon
               variant="subtle"
               onClick={() => queryClient.invalidateQueries({ queryKey: ["questions"] })}
-              aria-label="Refresh"
+              aria-label={t("inbox.refresh")}
             >
               <IconRefresh size={18} />
             </ActionIcon>
@@ -126,8 +121,8 @@ export function InboxPage() {
       )}
 
       {questionsQuery.isError && (
-        <Alert color="red" title="Could not load the inbox">
-          Try refreshing in a moment.
+        <Alert color="red" title={t("inbox.loadError")}>
+          {t("inbox.loadErrorHint")}
         </Alert>
       )}
 
@@ -136,9 +131,9 @@ export function InboxPage() {
           <Center py="xl">
             <Stack align="center" gap="xs">
               <IconArchive size={32} stroke={1.4} />
-              <Text fw={500}>Nothing waiting on you.</Text>
+              <Text fw={500}>{t("inbox.emptyTitle")}</Text>
               <Text c="dimmed" size="sm">
-                When the AI escalates a question, it'll appear here.
+                {t("inbox.emptyDesc")}
               </Text>
             </Stack>
           </Center>
@@ -156,11 +151,11 @@ export function InboxPage() {
                       {q.status}
                     </Badge>
                     <Badge color="gray" variant="default">
-                      {CHANNEL_LABEL[q.channel] ?? q.channel}
+                      {channelLabel(q.channel)}
                     </Badge>
                     {q.contact_id && (
                       <Text size="xs" c="dimmed">
-                        Contact: {q.contact_id.slice(0, 8)}…
+                        {t("inbox.contact")} {q.contact_id.slice(0, 8)}…
                       </Text>
                     )}
                     <Text size="xs" c="dimmed" ml="auto">
@@ -173,7 +168,7 @@ export function InboxPage() {
                       <Group gap="xs" mb={4}>
                         <IconRobot size={14} />
                         <Text size="xs" fw={600} c="dimmed">
-                          AI's attempt
+                          {t("inbox.aiAttempt")}
                         </Text>
                       </Group>
                       <Text size="sm" c="dimmed">
@@ -184,7 +179,7 @@ export function InboxPage() {
                   {q.owner_reply && (
                     <Card withBorder radius="sm" bg="teal.0" p="sm">
                       <Text size="xs" fw={600} c="teal.7" mb={4}>
-                        Your reply
+                        {t("inbox.yourReply")}
                       </Text>
                       <Text size="sm">{q.owner_reply}</Text>
                     </Card>
@@ -192,24 +187,20 @@ export function InboxPage() {
                 </Box>
                 {q.status === "submitted" && (
                   <Stack gap="xs">
-                    <Button
-                      size="xs"
-                      leftSection={<IconSend size={14} />}
-                      onClick={() => openReply(q)}
-                    >
-                      Reply
+                    <Button size="xs" leftSection={<IconSend size={14} />} onClick={() => openReply(q)}>
+                      {t("inbox.reply")}
                     </Button>
                     <Button
                       size="xs"
                       variant="default"
                       onClick={() => {
-                        if (globalThis.confirm("Are you sure you want to close this question?")) {
+                        if (globalThis.confirm(t("inbox.confirmClose"))) {
                           closeMutation.mutate(q.id);
                         }
                       }}
                       loading={closeMutation.isPending && closeMutation.variables === q.id}
                     >
-                      Close
+                      {t("inbox.close")}
                     </Button>
                   </Stack>
                 )}
@@ -219,7 +210,7 @@ export function InboxPage() {
         </Stack>
       )}
 
-      <Modal opened={opened} onClose={close} title={active ? "Reply to question" : ""} size="lg">
+      <Modal opened={opened} onClose={close} title={active ? t("inbox.replyModalTitle") : ""} size="lg">
         {active && (
           <Stack>
             <Card withBorder p="sm" bg="gray.0">
@@ -228,7 +219,7 @@ export function InboxPage() {
               </Text>
               {active.contact_id && (
                 <Text size="xs" c="dimmed" mt={4}>
-                  Contact: {active.contact_id.slice(0, 8)}…
+                  {t("inbox.contact")} {active.contact_id.slice(0, 8)}…
                 </Text>
               )}
             </Card>
@@ -236,23 +227,21 @@ export function InboxPage() {
               <Textarea
                 autosize
                 minRows={6}
-                placeholder="Type the reply you'd like the AI to relay back to the asker…"
+                placeholder={t("inbox.replyPlaceholder")}
                 value={replyText}
                 onChange={(e) => setReplyText(e.currentTarget.value)}
               />
             </ScrollArea.Autosize>
             <Group justify="flex-end">
               <Button variant="default" onClick={close}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
-                onClick={() =>
-                  active && replyMutation.mutate({ id: active.id, reply: replyText.trim() })
-                }
+                onClick={() => active && replyMutation.mutate({ id: active.id, reply: replyText.trim() })}
                 loading={replyMutation.isPending}
                 disabled={replyText.trim().length === 0}
               >
-                Send reply
+                {t("inbox.sendReply")}
               </Button>
             </Group>
           </Stack>

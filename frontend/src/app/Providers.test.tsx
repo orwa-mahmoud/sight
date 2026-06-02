@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-vi.mock("../auth/AuthContext", () => ({
+vi.mock("@auth/AuthContext", () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
@@ -12,7 +12,7 @@ describe("Providers", () => {
     render(
       <Providers>
         <div>App Content</div>
-      </Providers>
+      </Providers>,
     );
     expect(screen.getByText("App Content")).toBeInTheDocument();
   });

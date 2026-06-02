@@ -26,7 +26,7 @@ class AuthenticateUserUseCase:
 
     async def execute(self, cmd: AuthenticateUser) -> AuthResult:
         # Generic message on every failure — never leaks which field was wrong.
-        invalid = AuthenticationError("Invalid email or password")
+        invalid = AuthenticationError("Invalid email or password", code="auth.invalid_credentials")
 
         user = await self._uow.users.get_by_email(cmd.email)
         if user is None or not user.is_active:
@@ -37,7 +37,7 @@ class AuthenticateUserUseCase:
 
         links = await self._uow.user_tenants.list_for_user(user.id)
         if not links:
-            raise AuthenticationError("User is not associated with any tenant")
+            raise AuthenticationError("User is not associated with any tenant", code="auth.no_tenant")
 
         # v1: take the first (and only) tenant; v2 will let the user pick.
         tenant_id = links[0].tenant_id
