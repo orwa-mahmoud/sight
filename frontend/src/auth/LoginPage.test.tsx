@@ -80,6 +80,24 @@ describe("LoginPage", () => {
     });
   });
 
+  it("returns to the originally requested page after login", async () => {
+    mockLogin.mockResolvedValue(undefined);
+    render(
+      <MantineProvider>
+        <Notifications />
+        <MemoryRouter initialEntries={[{ pathname: "/login", state: { from: "/documents" } }]}>
+          <LoginPage />
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("owner@example.com"), { target: { value: "a@b.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "password123" } });
+    fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/documents", { replace: true }));
+  });
+
   it("shows error notification on failed login", async () => {
     mockLogin.mockRejectedValue(new Error("bad creds"));
     render(wrap(<LoginPage />));
