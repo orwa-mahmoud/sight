@@ -118,7 +118,7 @@ export function InvitePage() {
   );
 
   // Logged in as the invited email → accept / reject.
-  if (user && user.email === preview.email) {
+  if (user?.email === preview.email) {
     return shell(
       <>
         {intro}
