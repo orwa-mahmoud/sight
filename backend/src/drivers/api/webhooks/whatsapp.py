@@ -8,6 +8,7 @@ via the WhatsAppAdapter (shared httpx client, retry, media support).
 
 from __future__ import annotations
 
+import hmac
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -49,10 +50,17 @@ async def whatsapp_verify(
     async for session in get_session():
         uow = UnitOfWork(session)
         config = await uow.tenant_configs.get_by_tenant_id(tid)
-        if config and hub_mode == "subscribe" and hub_verify_token == config.whatsapp_verify_token:
+        if config and hub_mode == "subscribe" and _verify_token_matches(hub_verify_token, config.whatsapp_verify_token):
             return Response(content=hub_challenge, media_type="text/plain")
 
     return Response(status_code=403)
+
+
+def _verify_token_matches(provided: str, expected: str | None) -> bool:
+    """Constant-time compare of the Meta verify token (consistent with the POST HMAC check)."""
+    if not expected or not provided:
+        return False
+    return hmac.compare_digest(provided, expected)
 
 
 @router.post("/webhooks/{tenant_id}/whatsapp")

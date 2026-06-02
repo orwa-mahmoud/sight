@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from src.drivers.api.webhooks.whatsapp import _parse_tenant_id
+from src.drivers.api.webhooks.whatsapp import _parse_tenant_id, _verify_token_matches
 from src.infrastructure.channels.whatsapp import WhatsAppAdapter
 from src.main import app
 
@@ -19,6 +19,14 @@ def test_parse_tenant_id_valid() -> None:
 
 def test_parse_tenant_id_invalid() -> None:
     assert _parse_tenant_id("not-a-uuid") is None
+
+
+def test_verify_token_matches() -> None:
+    assert _verify_token_matches("abc", "abc") is True
+    assert _verify_token_matches("abc", "xyz") is False
+    assert _verify_token_matches("abc", None) is False
+    assert _verify_token_matches("", "abc") is False
+    assert _verify_token_matches("abc", "") is False
 
 
 def test_verify_signature_valid() -> None:
