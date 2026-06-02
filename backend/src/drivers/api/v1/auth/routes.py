@@ -71,6 +71,7 @@ async def me(current_user: CurrentUser, uow: UnitOfWorkDep) -> MeResponse:
         email=dto.email,
         full_name=dto.full_name,
         is_active=dto.is_active,
+        is_platform_admin=dto.is_platform_admin,
         tenant=TenantSummary(id=dto.tenant_id, slug=dto.tenant_slug, name=dto.tenant_name, role=dto.role),
     )
 

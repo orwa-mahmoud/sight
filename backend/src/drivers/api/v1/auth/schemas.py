@@ -39,4 +39,5 @@ class MeResponse(BaseModel):
     email: EmailStr
     full_name: str | None
     is_active: bool
+    is_platform_admin: bool
     tenant: TenantSummary

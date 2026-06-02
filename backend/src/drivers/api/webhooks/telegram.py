@@ -19,6 +19,7 @@ from src.ai.types import ChatInput
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationChannel
 from src.domain.tenant_config.entities import TenantConfig
+from src.domain.tenants.value_objects import TenantStatus
 from src.drivers.api.dependencies import get_session
 from src.infrastructure.channels.cache import get_telegram_adapter
 from src.infrastructure.channels.idempotency import is_duplicate_message
@@ -93,6 +94,11 @@ async def _validate_telegram_request(
     if not expected_secret or not secret_header or not hmac.compare_digest(secret_header, expected_secret):
         logger.warning("telegram.webhook.auth_failed", tenant_id=tenant_id_raw)
         return 403
+    tenant = await uow.tenants.get_by_id(tid)
+    if tenant is not None and tenant.status == TenantStatus.SUSPENDED:
+        # Ack without processing so Telegram stops retrying a suspended tenant.
+        logger.info("telegram.webhook.tenant_suspended", tenant_id=tenant_id_raw)
+        return 200
     return config
 
 

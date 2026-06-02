@@ -13,7 +13,12 @@ from uuid import UUID, uuid4
 
 from src.domain.shared.entities import BaseEntity
 from src.domain.shared.exceptions import InvalidOperationError
-from src.domain.users.events import UserAddedToTenant, UserRegistered
+from src.domain.users.events import (
+    PlatformAdminGranted,
+    PlatformAdminRevoked,
+    UserAddedToTenant,
+    UserRegistered,
+)
 from src.domain.users.value_objects import UserTenantRole
 
 
@@ -23,6 +28,7 @@ class User(BaseEntity):
     hashed_password: str
     full_name: str | None
     is_active: bool
+    is_platform_admin: bool
     created_at: datetime
     updated_at: datetime
 
@@ -35,6 +41,7 @@ class User(BaseEntity):
             hashed_password=hashed_password,
             full_name=full_name.strip() if full_name else None,
             is_active=True,
+            is_platform_admin=False,
             created_at=now,
             updated_at=now,
         )
@@ -43,6 +50,8 @@ class User(BaseEntity):
         return user
 
     def deactivate(self) -> None:
+        if self.is_platform_admin:
+            raise InvalidOperationError("Platform admins cannot be deactivated")
         if not self.is_active:
             raise InvalidOperationError("User is already deactivated")
         self.is_active = False
@@ -53,6 +62,22 @@ class User(BaseEntity):
             raise InvalidOperationError("User is already active")
         self.is_active = True
         self.updated_at = datetime.now(UTC)
+
+    def grant_platform_admin(self) -> None:
+        """Promote to platform super-admin. Idempotent: a no-op if already one."""
+        if self.is_platform_admin:
+            return
+        self.is_platform_admin = True
+        self.updated_at = datetime.now(UTC)
+        self._emit(PlatformAdminGranted(user_id=self.id, email=self.email))
+
+    def revoke_platform_admin(self) -> None:
+        """Demote from platform super-admin. Idempotent: a no-op if not one."""
+        if not self.is_platform_admin:
+            return
+        self.is_platform_admin = False
+        self.updated_at = datetime.now(UTC)
+        self._emit(PlatformAdminRevoked(user_id=self.id, email=self.email))
 
     def update_password(self, new_hashed_password: str) -> None:
         self.hashed_password = new_hashed_password

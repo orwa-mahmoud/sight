@@ -8,6 +8,7 @@ from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.auth.ports import PasswordHasher
 from src.domain.auth.ports import TokenServicePort as JwtService
 from src.domain.shared.exceptions import AuthenticationError
+from src.domain.tenants.value_objects import TenantStatus
 
 
 class AuthenticateUserUseCase:
@@ -41,5 +42,13 @@ class AuthenticateUserUseCase:
 
         # v1: take the first (and only) tenant; v2 will let the user pick.
         tenant_id = links[0].tenant_id
+
+        # Suspended tenants block their members from logging in. Platform admins
+        # bypass this so they can always reach the admin console.
+        if not user.is_platform_admin:
+            tenant = await self._uow.tenants.get_by_id(tenant_id)
+            if tenant is not None and tenant.status == TenantStatus.SUSPENDED:
+                raise AuthenticationError("Tenant is suspended", code="auth.tenant_suspended")
+
         token = self._jwt_service.issue_access_token(user_id=user.id, tenant_id=tenant_id)
         return AuthResult(user_id=user.id, tenant_id=tenant_id, access_token=token)

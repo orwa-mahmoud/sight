@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from src.application.admin.use_cases.list_tenants import ListTenantsForAdmin
+from src.application.admin.use_cases.list_users import ListUsersForAdmin
+from src.application.admin.use_cases.set_platform_admin import SetPlatformAdmin
+from src.application.admin.use_cases.set_tenant_active import SetTenantActive
+from src.application.admin.use_cases.set_user_active import SetUserActive
 from src.application.auth.use_cases.authenticate_user import AuthenticateUserUseCase
 from src.application.auth.use_cases.get_user_by_id import GetUserByIdUseCase
 from src.application.auth.use_cases.register_owner import RegisterOwnerUseCase
@@ -51,3 +56,26 @@ def authenticate_user_use_case(uow: UnitOfWork) -> AuthenticateUserUseCase:
 
 def get_user_by_id_use_case(uow: UnitOfWork) -> GetUserByIdUseCase:
     return GetUserByIdUseCase(uow=uow)
+
+
+# ── Admin (platform super-admin) ──────────────────────────────────
+
+
+def list_tenants_for_admin_use_case(uow: UnitOfWork) -> ListTenantsForAdmin:
+    return ListTenantsForAdmin(uow=uow)
+
+
+def list_users_for_admin_use_case(uow: UnitOfWork) -> ListUsersForAdmin:
+    return ListUsersForAdmin(uow=uow)
+
+
+def set_tenant_active_use_case(uow: UnitOfWork) -> SetTenantActive:
+    return SetTenantActive(uow=uow)
+
+
+def set_user_active_use_case(uow: UnitOfWork) -> SetUserActive:
+    return SetUserActive(uow=uow)
+
+
+def set_platform_admin_use_case(uow: UnitOfWork) -> SetPlatformAdmin:
+    return SetPlatformAdmin(uow=uow)
