@@ -10,6 +10,7 @@ const USER_WITH_NAME = {
   email: "owner@acme.com",
   full_name: "Acme Owner",
   is_active: true,
+  is_platform_admin: false,
   tenant: { id: "t1", slug: "acme", name: "Acme Corp", role: "owner" },
 };
 
@@ -18,6 +19,7 @@ const USER_NO_NAME = {
   email: "noname@acme.com",
   full_name: null,
   is_active: true,
+  is_platform_admin: false,
   tenant: { id: "t1", slug: "acme", name: "Acme Corp", role: "owner" },
 };
 
@@ -56,6 +58,19 @@ describe("ProtectedShell", () => {
     expect(screen.getByText("Documents")).toBeInTheDocument();
     expect(screen.getByText("Usage & cost")).toBeInTheDocument();
     expect(screen.getByText("Settings")).toBeInTheDocument();
+  });
+
+  it("hides the admin nav section for non-admins", () => {
+    renderShell(USER_WITH_NAME);
+    expect(screen.queryByText("Platform")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tenants")).not.toBeInTheDocument();
+  });
+
+  it("shows the admin nav section for platform admins", () => {
+    renderShell({ ...USER_WITH_NAME, is_platform_admin: true });
+    expect(screen.getByText("Platform")).toBeInTheDocument();
+    expect(screen.getByText("Tenants")).toBeInTheDocument();
+    expect(screen.getByText("Users")).toBeInTheDocument();
   });
 
   it("renders user display name when present", () => {

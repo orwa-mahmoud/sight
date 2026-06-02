@@ -5,7 +5,10 @@
     "conversations": "المحادثات",
     "documents": "المستندات",
     "usage": "الاستخدام والتكلفة",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "adminSection": "المنصة",
+    "adminTenants": "المستأجرون",
+    "adminUsers": "المستخدمون"
   },
   "common": {
     "signOut": "تسجيل الخروج",
@@ -225,5 +228,36 @@
     "perPageN": "{{n}} / صفحة",
     "loadError": "تعذّر تحميل البيانات",
     "retryAction": "إعادة المحاولة"
+  },
+  "admin": {
+    "tenantsTitle": "المستأجرون",
+    "tenantsSubtitle": "جميع المستأجرين على المنصة. يمكنك تعليق أو إعادة تفعيل أي منهم.",
+    "usersTitle": "المستخدمون",
+    "usersSubtitle": "جميع المستخدمين على المنصة. يمكنك تعطيل أو تفعيل أي حساب.",
+    "colTenant": "المستأجر",
+    "colSlug": "المعرّف",
+    "colStatus": "الحالة",
+    "colOwner": "المالك",
+    "colUsers": "المستخدمون",
+    "colDocs": "المستندات",
+    "colEmail": "البريد الإلكتروني",
+    "colName": "الاسم",
+    "deactivateTenant": "تعليق المستأجر",
+    "activateTenant": "تفعيل المستأجر",
+    "deactivateUser": "تعطيل المستخدم",
+    "activateUser": "تفعيل المستخدم",
+    "confirmDeactivateTenantTitle": "تعليق المستأجر؟",
+    "confirmDeactivateTenant": "تعليق «{{name}}»؟ لن يتمكن أعضاؤه من تسجيل الدخول وستتوقف روبوتاته عن الرد.",
+    "confirmDeactivateUserTitle": "تعطيل المستخدم؟",
+    "confirmDeactivateUser": "تعطيل {{email}}؟ لن يتمكن من تسجيل الدخول.",
+    "tenantUpdated": "تم تحديث المستأجر.",
+    "userUpdated": "تم تحديث المستخدم.",
+    "actionFailed": "فشل الإجراء.",
+    "searchTenants": "بحث في المستأجرين…",
+    "searchUsers": "بحث في المستخدمين…",
+    "noTenantsTitle": "لا يوجد مستأجرون",
+    "noTenantsDesc": "لم يتم إنشاء أي مستأجر بعد.",
+    "noUsersTitle": "لا يوجد مستخدمون",
+    "noUsersDesc": "لم يسجّل أي مستخدم بعد."
   }
 }

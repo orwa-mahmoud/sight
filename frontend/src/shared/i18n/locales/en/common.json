@@ -5,7 +5,10 @@
     "conversations": "Conversations",
     "documents": "Documents",
     "usage": "Usage & cost",
-    "settings": "Settings"
+    "settings": "Settings",
+    "adminSection": "Platform",
+    "adminTenants": "Tenants",
+    "adminUsers": "Users"
   },
   "common": {
     "signOut": "Sign out",
@@ -225,5 +228,36 @@
     "perPageN": "{{n}} / page",
     "loadError": "Could not load data",
     "retryAction": "Retry"
+  },
+  "admin": {
+    "tenantsTitle": "Tenants",
+    "tenantsSubtitle": "Every tenant on the platform. Suspend or reactivate any of them.",
+    "usersTitle": "Users",
+    "usersSubtitle": "Every user on the platform. Disable or enable any account.",
+    "colTenant": "Tenant",
+    "colSlug": "Slug",
+    "colStatus": "Status",
+    "colOwner": "Owner",
+    "colUsers": "Users",
+    "colDocs": "Documents",
+    "colEmail": "Email",
+    "colName": "Name",
+    "deactivateTenant": "Suspend tenant",
+    "activateTenant": "Activate tenant",
+    "deactivateUser": "Disable user",
+    "activateUser": "Enable user",
+    "confirmDeactivateTenantTitle": "Suspend tenant?",
+    "confirmDeactivateTenant": "Suspend “{{name}}”? Its members won’t be able to log in and its bots will stop responding.",
+    "confirmDeactivateUserTitle": "Disable user?",
+    "confirmDeactivateUser": "Disable {{email}}? They won’t be able to log in.",
+    "tenantUpdated": "Tenant updated.",
+    "userUpdated": "User updated.",
+    "actionFailed": "Action failed.",
+    "searchTenants": "Search tenants…",
+    "searchUsers": "Search users…",
+    "noTenantsTitle": "No tenants",
+    "noTenantsDesc": "No tenants have been created yet.",
+    "noUsersTitle": "No users",
+    "noUsersDesc": "No users have registered yet."
   }
 }

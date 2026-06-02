@@ -61,6 +61,7 @@ describe("RequireAuth", () => {
                 email: "a@b.com",
                 full_name: "T",
                 is_active: true,
+                is_platform_admin: false,
                 tenant: { id: "t1", slug: "t", name: "T", role: "owner" },
               },
               loading: false,
