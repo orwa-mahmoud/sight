@@ -21,6 +21,7 @@ def _make_uow() -> MagicMock:
     uow.chunks = MagicMock()
     uow.chunks.save_many = MagicMock()
     uow.flush = AsyncMock()
+    uow.commit = AsyncMock()
     return uow
 
 
@@ -105,10 +106,12 @@ async def test_ingest_empty_after_parsing_marks_failed() -> None:
     with pytest.raises(InvalidOperationError, match="empty after parsing"):
         await uc.execute(cmd)
 
-    # Document should have been saved with FAILED status
+    # Document should have been saved with FAILED status AND committed, so the
+    # request's rollback-on-error doesn't discard the failure record.
     save_calls = uow.documents.save.call_args_list
     last_saved_doc = save_calls[-1][0][0]
     assert last_saved_doc.status == DocumentStatus.FAILED
+    uow.commit.assert_awaited()
 
 
 @pytest.mark.asyncio
@@ -133,6 +136,7 @@ async def test_ingest_embedder_failure_marks_failed() -> None:
     last_saved_doc = save_calls[-1][0][0]
     assert last_saved_doc.status == DocumentStatus.FAILED
     assert "OpenAI down" in (last_saved_doc.error or "")
+    uow.commit.assert_awaited()
 
 
 @pytest.mark.asyncio
