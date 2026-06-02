@@ -141,6 +141,9 @@ export function DocumentsPage() {
     successMessage: t("documents.uploaded"),
     errorMessage: t("documents.uploadFailed"),
     invalidateKeys: [["documents"]],
+    // A failed ingestion is still persisted as a FAILED document — refetch so the
+    // owner sees it (with the error reason) right away, not just the toast.
+    invalidateOnError: true,
   });
 
   const deleteMutation = useMutationWithNotification({

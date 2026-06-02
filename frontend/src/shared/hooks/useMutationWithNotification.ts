@@ -17,6 +17,12 @@ export interface MutationNotificationOptions<TData, TError, TVariables> extends 
   errorMessage?: string;
   /** Query keys to invalidate on success. */
   invalidateKeys?: QueryKey[];
+  /**
+   * Also invalidate `invalidateKeys` on error. Useful when a failed mutation
+   * still changes server state worth re-reading (e.g. an upload that persists a
+   * FAILED document the owner should see).
+   */
+  invalidateOnError?: boolean;
   onSuccess?: (data: TData, variables: TVariables) => void;
   onError?: (error: TError, variables: TVariables) => void;
 }
@@ -29,21 +35,25 @@ export function useMutationWithNotification<TData = unknown, TError = Error, TVa
   options: MutationNotificationOptions<TData, TError, TVariables>,
 ): UseMutationResult<TData, TError, TVariables> {
   const queryClient = useQueryClient();
-  const { successMessage, errorMessage, invalidateKeys, onSuccess, onError, ...rest } = options;
+  const { successMessage, errorMessage, invalidateKeys, invalidateOnError, onSuccess, onError, ...rest } =
+    options;
+
+  const invalidate = () => {
+    for (const queryKey of invalidateKeys ?? []) {
+      queryClient.invalidateQueries({ queryKey }).catch(() => undefined);
+    }
+  };
 
   return useMutation<TData, TError, TVariables>({
     ...rest,
     onSuccess: (data, variables) => {
       if (successMessage) notifications.show({ color: "teal", message: successMessage });
-      if (invalidateKeys) {
-        for (const queryKey of invalidateKeys) {
-          queryClient.invalidateQueries({ queryKey }).catch(() => undefined);
-        }
-      }
+      invalidate();
       onSuccess?.(data, variables);
     },
     onError: (error, variables) => {
       if (errorMessage) notifications.show({ color: "red", message: errorMessage });
+      if (invalidateOnError) invalidate();
       onError?.(error, variables);
     },
   });
