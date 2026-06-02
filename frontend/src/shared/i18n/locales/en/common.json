@@ -8,7 +8,8 @@
     "settings": "Settings",
     "adminSection": "Platform",
     "adminTenants": "Tenants",
-    "adminUsers": "Users"
+    "adminUsers": "Users",
+    "team": "Team"
   },
   "common": {
     "signOut": "Sign out",
@@ -259,5 +260,50 @@
     "noTenantsDesc": "No tenants have been created yet.",
     "noUsersTitle": "No users",
     "noUsersDesc": "No users have registered yet."
+  },
+  "team": {
+    "title": "Team",
+    "subtitle": "Invite collaborators to your tenant. They join with staff access.",
+    "inviteLabel": "Invite by email",
+    "invitePlaceholder": "colleague@example.com",
+    "invite": "Invite",
+    "invited": "Invitation sent.",
+    "inviteDuplicate": "That email already has a pending invite or is already a member.",
+    "inviteFailed": "Could not send the invitation.",
+    "invalidEmail": "Enter a valid email address.",
+    "colEmail": "Email",
+    "colStatus": "Status",
+    "colExpires": "Expires",
+    "copyLink": "Copy invite link",
+    "linkCopied": "Invite link copied to clipboard.",
+    "copyFailed": "Could not copy the link.",
+    "revoke": "Revoke",
+    "revoked": "Invitation revoked.",
+    "actionFailed": "Action failed.",
+    "confirmRevokeTitle": "Revoke invitation?",
+    "confirmRevoke": "Revoke the invite for {{email}}? The link will stop working.",
+    "searchPlaceholder": "Search invitations…",
+    "emptyTitle": "No invitations yet",
+    "emptyDesc": "Invite a colleague by email to collaborate in this tenant."
+  },
+  "invite": {
+    "title": "Team invitation",
+    "invalid": "This invitation is invalid, expired, or has already been used.",
+    "goToLogin": "Go to login",
+    "invitedTo": "You've been invited to join {{tenant}} as {{email}}.",
+    "accepted": "Invitation accepted — welcome aboard!",
+    "rejected": "Invitation declined.",
+    "joined": "Account created — welcome aboard!",
+    "actionFailed": "Something went wrong. Please try again.",
+    "accept": "Accept",
+    "reject": "Decline",
+    "wrongAccount": "You're signed in as {{current}}, but this invite is for {{invited}}.",
+    "switchAccount": "Sign in with the invited account",
+    "createAccount": "Create your account to join.",
+    "fullName": "Full name",
+    "password": "Password",
+    "joinTenant": "Create account & join",
+    "haveAccount": "Already have an account?",
+    "passwordTooShort": "Password must be at least 8 characters."
   }
 }

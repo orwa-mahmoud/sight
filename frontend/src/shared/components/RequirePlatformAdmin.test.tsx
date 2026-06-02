@@ -12,6 +12,7 @@ function renderGuard(user: AuthContextValue["user"], loading = false) {
     loading,
     login: vi.fn(),
     register: vi.fn(),
+    refresh: vi.fn(),
     logout: vi.fn(),
   };
   return render(

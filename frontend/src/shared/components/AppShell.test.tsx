@@ -27,6 +27,7 @@ const base: Omit<AuthContextValue, "user"> = {
   loading: false,
   login: vi.fn(),
   register: vi.fn(),
+  refresh: vi.fn(),
   logout: vi.fn(),
 };
 
@@ -58,6 +59,18 @@ describe("ProtectedShell", () => {
     expect(screen.getByText("Documents")).toBeInTheDocument();
     expect(screen.getByText("Usage & cost")).toBeInTheDocument();
     expect(screen.getByText("Settings")).toBeInTheDocument();
+  });
+
+  it("shows owner-only nav (Team, Settings) for owners", () => {
+    renderShell(USER_WITH_NAME);
+    expect(screen.getByText("Team")).toBeInTheDocument();
+    expect(screen.getByText("Settings")).toBeInTheDocument();
+  });
+
+  it("hides owner-only nav (Team, Settings) for staff members", () => {
+    renderShell({ ...USER_WITH_NAME, tenant: { ...USER_WITH_NAME.tenant, role: "staff" } });
+    expect(screen.queryByText("Team")).not.toBeInTheDocument();
+    expect(screen.queryByText("Settings")).not.toBeInTheDocument();
   });
 
   it("hides the admin nav section for non-admins", () => {

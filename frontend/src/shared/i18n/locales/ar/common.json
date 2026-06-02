@@ -8,7 +8,8 @@
     "settings": "الإعدادات",
     "adminSection": "المنصة",
     "adminTenants": "المستأجرون",
-    "adminUsers": "المستخدمون"
+    "adminUsers": "المستخدمون",
+    "team": "الفريق"
   },
   "common": {
     "signOut": "تسجيل الخروج",
@@ -259,5 +260,50 @@
     "noTenantsDesc": "لم يتم إنشاء أي مستأجر بعد.",
     "noUsersTitle": "لا يوجد مستخدمون",
     "noUsersDesc": "لم يسجّل أي مستخدم بعد."
+  },
+  "team": {
+    "title": "الفريق",
+    "subtitle": "ادعُ المتعاونين إلى مستأجرك. ينضمون بصلاحية موظف.",
+    "inviteLabel": "الدعوة عبر البريد الإلكتروني",
+    "invitePlaceholder": "colleague@example.com",
+    "invite": "دعوة",
+    "invited": "تم إرسال الدعوة.",
+    "inviteDuplicate": "هذا البريد لديه دعوة معلّقة بالفعل أو أنه عضو بالفعل.",
+    "inviteFailed": "تعذّر إرسال الدعوة.",
+    "invalidEmail": "أدخل بريدًا إلكترونيًا صالحًا.",
+    "colEmail": "البريد الإلكتروني",
+    "colStatus": "الحالة",
+    "colExpires": "تنتهي في",
+    "copyLink": "نسخ رابط الدعوة",
+    "linkCopied": "تم نسخ رابط الدعوة.",
+    "copyFailed": "تعذّر نسخ الرابط.",
+    "revoke": "إلغاء",
+    "revoked": "تم إلغاء الدعوة.",
+    "actionFailed": "فشل الإجراء.",
+    "confirmRevokeTitle": "إلغاء الدعوة؟",
+    "confirmRevoke": "إلغاء دعوة {{email}}؟ سيتوقف الرابط عن العمل.",
+    "searchPlaceholder": "بحث في الدعوات…",
+    "emptyTitle": "لا توجد دعوات بعد",
+    "emptyDesc": "ادعُ زميلًا عبر البريد الإلكتروني للتعاون في هذا المستأجر."
+  },
+  "invite": {
+    "title": "دعوة فريق",
+    "invalid": "هذه الدعوة غير صالحة أو منتهية أو تم استخدامها بالفعل.",
+    "goToLogin": "الذهاب لتسجيل الدخول",
+    "invitedTo": "تمت دعوتك للانضمام إلى {{tenant}} باسم {{email}}.",
+    "accepted": "تم قبول الدعوة — أهلًا بك!",
+    "rejected": "تم رفض الدعوة.",
+    "joined": "تم إنشاء الحساب — أهلًا بك!",
+    "actionFailed": "حدث خطأ ما. حاول مرة أخرى.",
+    "accept": "قبول",
+    "reject": "رفض",
+    "wrongAccount": "أنت مسجّل الدخول باسم {{current}}، لكن هذه الدعوة لـ {{invited}}.",
+    "switchAccount": "سجّل الدخول بالحساب المدعو",
+    "createAccount": "أنشئ حسابك للانضمام.",
+    "fullName": "الاسم الكامل",
+    "password": "كلمة المرور",
+    "joinTenant": "إنشاء حساب والانضمام",
+    "haveAccount": "لديك حساب بالفعل؟",
+    "passwordTooShort": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل."
   }
 }

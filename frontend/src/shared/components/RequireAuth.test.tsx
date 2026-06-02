@@ -11,7 +11,7 @@ describe("RequireAuth", () => {
       <MantineProvider>
         <MemoryRouter>
           <AuthContext.Provider
-            value={{ user: null, loading: true, login: vi.fn(), register: vi.fn(), logout: vi.fn() }}
+            value={{ user: null, loading: true, login: vi.fn(), register: vi.fn(), refresh: vi.fn(), logout: vi.fn() }}
           >
             <RequireAuth>
               <div>Protected</div>
@@ -29,7 +29,7 @@ describe("RequireAuth", () => {
       <MantineProvider>
         <MemoryRouter initialEntries={["/dashboard"]}>
           <AuthContext.Provider
-            value={{ user: null, loading: false, login: vi.fn(), register: vi.fn(), logout: vi.fn() }}
+            value={{ user: null, loading: false, login: vi.fn(), register: vi.fn(), refresh: vi.fn(), logout: vi.fn() }}
           >
             <Routes>
               <Route
@@ -67,6 +67,7 @@ describe("RequireAuth", () => {
               loading: false,
               login: vi.fn(),
               register: vi.fn(),
+              refresh: vi.fn(),
               logout: vi.fn(),
             }}
           >
