@@ -67,6 +67,9 @@ def create_app() -> FastAPI:
     )
 
     app.state.limiter = limiter
+    # Disable rate limiting under the test env so the suite's many login/register
+    # calls from one client aren't throttled; enforced in dev and production.
+    limiter.enabled = get_settings().app_env != "test"
 
     def _handle_rate_limit(request: Request, exc: Exception) -> Response:
         assert isinstance(exc, RateLimitExceeded)
