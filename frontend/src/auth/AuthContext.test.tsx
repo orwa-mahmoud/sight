@@ -24,6 +24,7 @@ const ME_RESPONSE = {
   email: "test@example.com",
   full_name: "Test User",
   is_active: true,
+  is_platform_admin: false,
   tenant: { id: "t1", slug: "acme", name: "Acme", role: "owner" },
 };
 

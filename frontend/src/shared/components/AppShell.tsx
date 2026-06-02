@@ -18,6 +18,9 @@ import {
   IconMessageCircle,
   IconQuestionMark,
   IconSettings,
+  IconShieldLock,
+  IconUserPlus,
+  IconUsers,
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,13 +30,22 @@ import { useAuth } from "@auth/useAuth";
 import { ColorSchemeToggle } from "@shared/components/ColorSchemeToggle";
 import { LanguageSwitcher } from "@shared/components/LanguageSwitcher";
 
-const NAV_ITEMS: Array<{ labelKey: string; to: string; icon: ReactNode }> = [
+type NavItem = { labelKey: string; to: string; icon: ReactNode; ownerOnly?: boolean };
+
+const NAV_ITEMS: NavItem[] = [
   { labelKey: "nav.inbox", to: "/", icon: <IconQuestionMark size={18} stroke={1.6} /> },
   { labelKey: "nav.chatTest", to: "/chat", icon: <IconMessageCircle size={18} stroke={1.6} /> },
   { labelKey: "nav.conversations", to: "/conversations", icon: <IconMessageCircle size={18} stroke={1.6} /> },
   { labelKey: "nav.documents", to: "/documents", icon: <IconFileText size={18} stroke={1.6} /> },
   { labelKey: "nav.usage", to: "/usage", icon: <IconChartBar size={18} stroke={1.6} /> },
-  { labelKey: "nav.settings", to: "/settings", icon: <IconSettings size={18} stroke={1.6} /> },
+  { labelKey: "nav.team", to: "/team", icon: <IconUserPlus size={18} stroke={1.6} />, ownerOnly: true },
+  { labelKey: "nav.settings", to: "/settings", icon: <IconSettings size={18} stroke={1.6} />, ownerOnly: true },
+];
+
+// Platform-admin-only nav items, appended below a divider for admins.
+const ADMIN_NAV_ITEMS: Array<{ labelKey: string; to: string; icon: ReactNode }> = [
+  { labelKey: "nav.adminTenants", to: "/admin/tenants", icon: <IconBuildingStore size={18} stroke={1.6} /> },
+  { labelKey: "nav.adminUsers", to: "/admin/users", icon: <IconUsers size={18} stroke={1.6} /> },
 ];
 
 export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) {
@@ -114,7 +126,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
       <MantineAppShell.Navbar p="sm">
         <ScrollArea h="100%">
           <Stack gap={2}>
-            {NAV_ITEMS.map((item) => (
+            {NAV_ITEMS.filter((item) => !item.ownerOnly || user?.tenant.role === "owner").map((item) => (
               <NavLink
                 key={item.to}
                 component={Link}
@@ -125,6 +137,27 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
               />
             ))}
           </Stack>
+
+          {user?.is_platform_admin && (
+            <Stack gap={2} mt="md">
+              <Group gap={6} px="sm" mb={4} c="dimmed">
+                <IconShieldLock size={14} stroke={1.6} />
+                <Text size="xs" fw={600} tt="uppercase">
+                  {t("nav.adminSection")}
+                </Text>
+              </Group>
+              {ADMIN_NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  component={Link}
+                  to={item.to}
+                  label={t(item.labelKey)}
+                  leftSection={item.icon}
+                  active={location.pathname.startsWith(item.to)}
+                />
+              ))}
+            </Stack>
+          )}
           <Box mt="lg">
             <NavLink
               component="div"

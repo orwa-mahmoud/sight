@@ -56,6 +56,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         await authApi.register(req);
         await loadCurrentUser();
       },
+      refresh: loadCurrentUser,
       logout: () => {
         setUser(null);
         authApi.logout().catch(() => undefined);

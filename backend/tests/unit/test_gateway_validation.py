@@ -16,6 +16,7 @@ from src.domain.shared.exceptions import InvalidOperationError
 @pytest.mark.asyncio
 async def test_gateway_rejects_missing_config() -> None:
     uow = MagicMock()
+    uow.set_tenant_scope = AsyncMock()
     uow.tenant_configs = MagicMock()
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=None)
 
@@ -37,6 +38,7 @@ async def test_gateway_rejects_empty_api_key() -> None:
     mock_config.llm_api_key = ""
 
     uow = MagicMock()
+    uow.set_tenant_scope = AsyncMock()
     uow.tenant_configs = MagicMock()
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=mock_config)
 

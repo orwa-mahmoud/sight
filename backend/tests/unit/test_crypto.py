@@ -10,7 +10,7 @@ from src.infrastructure.auth.crypto import _ENC_PREFIX, decrypt_value, encrypt_v
 def _reset_fernet() -> None:
     import src.infrastructure.auth.crypto as mod
 
-    mod._fernet = None
+    mod._CryptoState.fernet = None
 
 
 def test_encrypt_empty_string() -> None:

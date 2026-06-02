@@ -15,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette.responses import Response as StarletteResponse
 
 from src.bootstrap.event_handlers import register_event_handlers
+from src.bootstrap.startup import bootstrap_platform_admin, validate_production_settings
 from src.config.settings import get_settings
 from src.domain.shared.exceptions import DomainError
 from src.drivers.api.middleware.rate_limit import limiter
@@ -40,7 +41,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """
     register_event_handlers()
     settings = get_settings()
+    validate_production_settings(settings)
     logger.info("app.startup", env=settings.app_env, name=settings.app_name)
+    await bootstrap_platform_admin(settings)
     yield
     logger.info("app.shutdown")
 

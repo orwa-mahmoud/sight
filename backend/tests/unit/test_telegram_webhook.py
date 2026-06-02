@@ -85,6 +85,8 @@ async def test_telegram_webhook_no_config_returns_404() -> None:
     mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=None)
     mock_uow.commit = AsyncMock()
     mock_uow.rollback = AsyncMock()
+    mock_uow.tenants = MagicMock()
+    mock_uow.tenants.get_by_id = AsyncMock(return_value=None)
 
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body())
@@ -114,6 +116,8 @@ async def test_telegram_webhook_invalid_secret_returns_403() -> None:
     mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
     mock_uow.commit = AsyncMock()
     mock_uow.rollback = AsyncMock()
+    mock_uow.tenants = MagicMock()
+    mock_uow.tenants.get_by_id = AsyncMock(return_value=None)
 
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body())
@@ -143,6 +147,8 @@ async def test_telegram_webhook_happy_path_with_reply() -> None:
     mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
     mock_uow.commit = AsyncMock()
     mock_uow.rollback = AsyncMock()
+    mock_uow.tenants = MagicMock()
+    mock_uow.tenants.get_by_id = AsyncMock(return_value=None)
 
     chat_result = ChatResult(response="Hi there!", thread_id="t1", escalated=False, request_id="r1")
 
@@ -184,6 +190,8 @@ async def test_telegram_webhook_skips_duplicate_delivery() -> None:
     mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
     mock_uow.commit = AsyncMock()
     mock_uow.rollback = AsyncMock()
+    mock_uow.tenants = MagicMock()
+    mock_uow.tenants.get_by_id = AsyncMock(return_value=None)
 
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body(chat_id=99))
@@ -222,6 +230,8 @@ async def test_telegram_webhook_acknowledges_non_text_message() -> None:
     mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
     mock_uow.commit = AsyncMock()
     mock_uow.rollback = AsyncMock()
+    mock_uow.tenants = MagicMock()
+    mock_uow.tenants.get_by_id = AsyncMock(return_value=None)
 
     request = MagicMock()
     # A voice message — no text.
@@ -266,6 +276,8 @@ async def test_telegram_webhook_exception_rolls_back() -> None:
     mock_uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=config)
     mock_uow.commit = AsyncMock()
     mock_uow.rollback = AsyncMock()
+    mock_uow.tenants = MagicMock()
+    mock_uow.tenants.get_by_id = AsyncMock(return_value=None)
 
     request = MagicMock()
     request.json = AsyncMock(return_value=_telegram_body())

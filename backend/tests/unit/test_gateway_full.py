@@ -165,6 +165,7 @@ async def test_gateway_no_token_usage_when_zero_tokens() -> None:
     mock_result = AgentLoopResult(text="cached", input_tokens=0, output_tokens=0)
 
     uow = MagicMock()
+    uow.set_tenant_scope = AsyncMock()
     uow.tenant_configs = MagicMock()
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=mock_config)
     uow.flush = AsyncMock()
@@ -215,6 +216,7 @@ async def test_gateway_applies_temperature_and_bot_personality() -> None:
     mock_result = AgentLoopResult(text="hi", input_tokens=1, output_tokens=1)
 
     uow = MagicMock()
+    uow.set_tenant_scope = AsyncMock()
     uow.tenant_configs = MagicMock()
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=mock_config)
     uow.flush = AsyncMock()

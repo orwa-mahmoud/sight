@@ -34,6 +34,11 @@ class PostgresUserTenantRepository:
         result = await self._session.execute(stmt)
         return [self._to_entity(m) for m in result.scalars().all()]
 
+    async def list_for_tenant(self, tenant_id: UUID) -> list[UserTenant]:
+        stmt = select(UserTenantModel).where(UserTenantModel.tenant_id == tenant_id).order_by(UserTenantModel.joined_at)
+        result = await self._session.execute(stmt)
+        return [self._to_entity(m) for m in result.scalars().all()]
+
     async def get(self, user_id: UUID, tenant_id: UUID) -> UserTenant | None:
         stmt = select(UserTenantModel).where(
             UserTenantModel.user_id == user_id,

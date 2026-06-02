@@ -20,3 +20,15 @@ class UserAddedToTenant(DomainEvent):
     user_id: UUID
     tenant_id: UUID
     role: UserTenantRole
+
+
+@dataclass(frozen=True, kw_only=True)
+class PlatformAdminGranted(DomainEvent):
+    user_id: UUID
+    email: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class PlatformAdminRevoked(DomainEvent):
+    user_id: UUID
+    email: str

@@ -30,6 +30,7 @@ class PostgresUserRepository:
         model.hashed_password = user.hashed_password
         model.full_name = user.full_name
         model.is_active = user.is_active
+        model.is_platform_admin = user.is_platform_admin
         model.updated_at = user.updated_at
 
     async def get_by_id(self, user_id: UUID) -> User | None:
@@ -42,6 +43,11 @@ class PostgresUserRepository:
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
+    async def list_all(self) -> list[User]:
+        stmt = select(UserModel).order_by(UserModel.created_at.desc())
+        result = await self._session.execute(stmt)
+        return [self._to_entity(m) for m in result.scalars().all()]
+
     # ── Mapping helpers ────────────────────────────────────────────
     @staticmethod
     def _to_model(user: User) -> UserModel:
@@ -51,6 +57,7 @@ class PostgresUserRepository:
             hashed_password=user.hashed_password,
             full_name=user.full_name,
             is_active=user.is_active,
+            is_platform_admin=user.is_platform_admin,
             created_at=user.created_at,
             updated_at=user.updated_at,
         )
@@ -63,6 +70,7 @@ class PostgresUserRepository:
             hashed_password=model.hashed_password,
             full_name=model.full_name,
             is_active=model.is_active,
+            is_platform_admin=model.is_platform_admin,
             created_at=model.created_at,
             updated_at=model.updated_at,
         )

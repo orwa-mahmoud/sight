@@ -24,6 +24,7 @@ class UserDTO:
     email: str
     full_name: str | None
     is_active: bool
+    is_platform_admin: bool
     tenant_id: UUID
     tenant_slug: str
     tenant_name: str

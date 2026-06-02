@@ -34,6 +34,7 @@ class GetUserByIdUseCase:
             email=user.email,
             full_name=user.full_name,
             is_active=user.is_active,
+            is_platform_admin=user.is_platform_admin,
             tenant_id=tenant.id,
             tenant_slug=tenant.slug,
             tenant_name=tenant.name,

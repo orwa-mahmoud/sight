@@ -58,6 +58,10 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     """Process one inbound message end-to-end. Returns the AI's reply."""
     request_id = uuid.uuid4().hex
 
+    # Scope this transaction to the tenant for Row-Level Security (webhooks and
+    # the chat API both enter here). Harmless under a superuser DB role.
+    await uow.set_tenant_scope(inp.tenant_id)
+
     # ── 0. Load tenant config (per-tenant LLM + embedding creds) ──
     tenant_config = await uow.tenant_configs.get_by_tenant_id(inp.tenant_id)
     if tenant_config is None:

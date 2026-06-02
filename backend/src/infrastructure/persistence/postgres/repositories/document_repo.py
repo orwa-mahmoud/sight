@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.documents.entities import Document
@@ -45,6 +45,11 @@ class PostgresDocumentRepository:
         )
         result = await self._session.execute(stmt)
         return [self._to_entity(m) for m in result.scalars().all()]
+
+    async def count_for_tenant(self, tenant_id: UUID) -> int:
+        stmt = select(func.count(DocumentModel.id)).where(DocumentModel.tenant_id == tenant_id)
+        result = await self._session.execute(stmt)
+        return int(result.scalar_one())
 
     async def delete(self, document_id: UUID) -> None:
         await self._session.execute(delete(DocumentModel).where(DocumentModel.id == document_id))

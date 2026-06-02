@@ -17,6 +17,7 @@ export interface MeResponse {
   email: string;
   full_name: string | null;
   is_active: boolean;
+  is_platform_admin: boolean;
   tenant: TenantSummary;
 }
 

@@ -18,6 +18,7 @@ describe("Auth types", () => {
       email: "test@test.com",
       full_name: "Test User",
       is_active: true,
+      is_platform_admin: false,
       tenant: { id: "uuid", slug: "test", name: "Test", role: "owner" },
     };
     expect(me.tenant.role).toBe("owner");
