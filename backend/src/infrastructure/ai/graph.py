@@ -97,16 +97,22 @@ async def _execute_tools_node(
         args = tc.get("args") or {}
         logger.info("graph.tool_call", tool=tool_name, iteration=state["iteration"])
 
-        result = await _dispatch_tool(
-            tool_name=tool_name,
-            arguments=args,
-            tenant_id=tenant_id,
-            channel=channel,
-            conversation_id=conversation_id,
-            contact_id=contact_id,
-            retriever=retriever,
-            uow=uow,
-        )
+        try:
+            result = await _dispatch_tool(
+                tool_name=tool_name,
+                arguments=args,
+                tenant_id=tenant_id,
+                channel=channel,
+                conversation_id=conversation_id,
+                contact_id=contact_id,
+                retriever=retriever,
+                uow=uow,
+            )
+        except Exception:
+            # A single tool failure must not crash the whole turn — surface it as a
+            # result so the model can recover (apologize, escalate, or answer anyway).
+            logger.warning("graph.tool_error", tool=tool_name, iteration=state["iteration"], exc_info=True)
+            result = {"error": f"The {tool_name} tool failed and returned no result."}
         result_str = json.dumps(result, default=str)
         new_messages.append(ToolMessage(content=result_str, tool_call_id=tc.get("id", "")))
         new_tool_calls.append(

@@ -61,6 +61,41 @@ async def test_dispatch_key_fact_requires_resolved_contact() -> None:
 
 
 @pytest.mark.asyncio
+async def test_graph_survives_a_tool_that_raises() -> None:
+    """A tool raising must not crash the turn — it becomes an error result and the
+    model still produces a reply."""
+    mock_llm = AsyncMock()
+    mock_llm.chat_with_tools = AsyncMock(
+        side_effect=[
+            LLMCallResult(
+                text="",
+                tool_calls=(LLMToolCall(id="c1", name="search_documents", arguments={"query": "hours"}),),
+                usage=TokenUsage(input_tokens=20, output_tokens=10),
+            ),
+            LLMCallResult(
+                text="Sorry, I had trouble looking that up.",
+                usage=TokenUsage(input_tokens=5, output_tokens=4),
+            ),
+        ]
+    )
+    mock_retriever = AsyncMock()
+    mock_retriever.hybrid_retrieve = AsyncMock(side_effect=RuntimeError("db down"))
+
+    graph = build_agent_graph(llm=mock_llm, tools=[SEARCH_DOCUMENTS_DEF], retriever=mock_retriever, uow=AsyncMock())
+    result = await run_graph(
+        graph,
+        messages=[LLMMessage(role=LLMMessageRole.USER, content="When open?")],
+        tenant_id=uuid4(),
+        channel=ConversationChannel.WEB,
+        conversation_id=None,
+        contact_id=None,
+    )
+    assert result.text == "Sorry, I had trouble looking that up."
+    assert len(result.tool_calls) == 1
+    assert "error" in str(result.tool_calls[0].result)
+
+
+@pytest.mark.asyncio
 async def test_graph_forwards_temperature_and_max_tokens() -> None:
     """The tenant's configured temperature + max_tokens must reach the LLM call."""
     mock_llm = AsyncMock()
