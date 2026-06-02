@@ -3,7 +3,7 @@ import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "./useAuth";
 
@@ -11,7 +11,13 @@ export function LoginPage() {
   const { t } = useTranslation();
   const { user, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [submitting, setSubmitting] = useState(false);
+
+  // Return to the page the user originally tried to reach (set by RequireAuth),
+  // falling back to home. Guard against pointing back at /login.
+  const fromState = (location.state as { from?: string } | null)?.from;
+  const redirectTo = fromState && fromState !== "/login" ? fromState : "/";
 
   const form = useForm({
     initialValues: { email: "", password: "" },
@@ -25,7 +31,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await login(values.email, values.password);
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch {
       notifications.show({ color: "red", message: t("auth.errInvalidCredentials") });
     } finally {
@@ -33,7 +39,7 @@ export function LoginPage() {
     }
   });
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to={redirectTo} replace />;
 
   return (
     <Stack align="center" justify="center" mih="100vh" px="md">
