@@ -65,7 +65,7 @@ interface BotConfigLite {
 }
 
 async function listDocuments(): Promise<DocumentLite[]> {
-  const { data } = await api.get<DocumentLite[]>("/api/v1/documents");
+  const { data } = await api.get<DocumentLite[]>("/api/v1/documents", { params: { limit: 500 } });
   return data;
 }
 

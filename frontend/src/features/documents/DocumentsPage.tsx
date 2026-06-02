@@ -47,7 +47,7 @@ const STATUS_COLOR: Record<string, string> = {
 const STATUSES = ["uploaded", "ingesting", "ready", "failed"] as const;
 
 async function listDocuments(): Promise<DocumentSummary[]> {
-  const { data } = await api.get<DocumentSummary[]>("/api/v1/documents");
+  const { data } = await api.get<DocumentSummary[]>("/api/v1/documents", { params: { limit: 500 } });
   return data;
 }
 

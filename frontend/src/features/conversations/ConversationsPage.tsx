@@ -59,7 +59,7 @@ function channelLabel(t: TFunction, channel: string): string {
 }
 
 async function listConversations(): Promise<ConversationSummary[]> {
-  const { data } = await api.get<ConversationSummary[]>("/api/v1/conversations");
+  const { data } = await api.get<ConversationSummary[]>("/api/v1/conversations", { params: { limit: 500 } });
   return data;
 }
 
