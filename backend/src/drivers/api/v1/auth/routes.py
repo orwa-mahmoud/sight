@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Request, Response, status
 from pydantic import BaseModel, Field
 
 from src.application.auth.commands import AuthenticateUser, RegisterOwner
@@ -17,6 +17,7 @@ from src.bootstrap.container import (
 )
 from src.config.settings import get_settings
 from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
+from src.drivers.api.middleware.rate_limit import limiter
 from src.drivers.api.v1.auth.schemas import LoginRequest, MeResponse, RegisterRequest, TenantSummary, TokenResponse
 
 _COOKIE_NAME = "frontdesk_token"
@@ -39,7 +40,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(req: RegisterRequest, uow: UnitOfWorkDep, response: Response) -> TokenResponse:
+@limiter.limit("5/minute")
+async def register(request: Request, req: RegisterRequest, uow: UnitOfWorkDep, response: Response) -> TokenResponse:
     cmd = RegisterOwner(
         email=req.email,
         password=req.password,
@@ -53,7 +55,8 @@ async def register(req: RegisterRequest, uow: UnitOfWorkDep, response: Response)
 
 
 @router.post("/login")
-async def login(req: LoginRequest, uow: UnitOfWorkDep, response: Response) -> TokenResponse:
+@limiter.limit("10/minute")
+async def login(request: Request, req: LoginRequest, uow: UnitOfWorkDep, response: Response) -> TokenResponse:
     cmd = AuthenticateUser(email=req.email, password=req.password)
     result = await authenticate_user_use_case(uow).execute(cmd)
     _set_auth_cookie(response, result.access_token)
