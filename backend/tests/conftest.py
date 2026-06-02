@@ -46,7 +46,7 @@ async def _clean_db() -> AsyncIterator[None]:
         await session.execute(
             text(
                 "TRUNCATE TABLE questions, token_usages, messages, conversations, "
-                "chunks, documents, user_tenants, tenant_configs, users, tenants "
+                "chunks, documents, invitations, user_tenants, tenant_configs, users, tenants "
                 "RESTART IDENTITY CASCADE"
             )
         )

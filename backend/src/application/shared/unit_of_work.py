@@ -23,6 +23,9 @@ from src.infrastructure.persistence.postgres.repositories.conversation_repo impo
     PostgresConversationRepository,
 )
 from src.infrastructure.persistence.postgres.repositories.document_repo import PostgresDocumentRepository
+from src.infrastructure.persistence.postgres.repositories.invitation_repo import (
+    PostgresInvitationRepository,
+)
 from src.infrastructure.persistence.postgres.repositories.key_fact_repo import PostgresKeyFactRepository
 from src.infrastructure.persistence.postgres.repositories.message_repo import PostgresMessageRepository
 from src.infrastructure.persistence.postgres.repositories.question_repo import PostgresQuestionRepository
@@ -45,6 +48,7 @@ if TYPE_CHECKING:
     from src.domain.contacts.repositories import ContactRepository
     from src.domain.conversations.repositories import ConversationRepository, MessageRepository
     from src.domain.documents.repositories import ChunkRepository, DocumentRepository
+    from src.domain.invitations.repositories import InvitationRepository
     from src.domain.key_facts.repositories import KeyFactRepository
     from src.domain.llm_usage.repositories import TokenUsageRepository
     from src.domain.questions.repositories import QuestionRepository
@@ -68,6 +72,7 @@ class UnitOfWork:
     key_facts: KeyFactRepository
     contacts: ContactRepository
     telegram_phones: TelegramPhoneRepository
+    invitations: InvitationRepository
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -85,6 +90,7 @@ class UnitOfWork:
         self.key_facts = PostgresKeyFactRepository(session)
         self.contacts = PostgresContactRepository(session)
         self.telegram_phones = PostgresTelegramPhoneRepository(session)
+        self.invitations = PostgresInvitationRepository(session)
 
     def track(self, entity: BaseEntity) -> None:
         """Register an entity for post-commit event collection."""

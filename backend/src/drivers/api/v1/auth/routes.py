@@ -15,26 +15,11 @@ from src.bootstrap.container import (
     get_user_by_id_use_case,
     register_owner_use_case,
 )
-from src.config.settings import get_settings
+from src.drivers.api.auth_cookie import COOKIE_NAME as _COOKIE_NAME
+from src.drivers.api.auth_cookie import set_auth_cookie as _set_auth_cookie
 from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
 from src.drivers.api.middleware.rate_limit import limiter
 from src.drivers.api.v1.auth.schemas import LoginRequest, MeResponse, RegisterRequest, TenantSummary, TokenResponse
-
-_COOKIE_NAME = "frontdesk_token"
-
-
-def _set_auth_cookie(response: Response, token: str) -> None:
-    is_prod = get_settings().app_env == "production"
-    response.set_cookie(
-        key=_COOKIE_NAME,
-        value=token,
-        httponly=True,
-        secure=is_prod,
-        samesite="lax",
-        max_age=get_settings().jwt_access_token_expire_minutes * 60,
-        path="/",
-    )
-
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

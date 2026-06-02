@@ -11,6 +11,7 @@ from src.infrastructure.persistence.postgres.models.chunk import ChunkModel
 from src.infrastructure.persistence.postgres.models.contact import ContactModel
 from src.infrastructure.persistence.postgres.models.conversation import ConversationModel
 from src.infrastructure.persistence.postgres.models.document import DocumentModel
+from src.infrastructure.persistence.postgres.models.invitation import InvitationModel
 from src.infrastructure.persistence.postgres.models.key_fact import KeyFactModel
 from src.infrastructure.persistence.postgres.models.message import MessageModel
 from src.infrastructure.persistence.postgres.models.outbox import OutboxEventModel
@@ -28,6 +29,7 @@ __all__ = [
     "ContactModel",
     "ConversationModel",
     "DocumentModel",
+    "InvitationModel",
     "KeyFactModel",
     "MessageModel",
     "OutboxEventModel",

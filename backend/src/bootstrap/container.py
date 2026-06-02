@@ -17,6 +17,13 @@ from src.application.admin.use_cases.set_user_active import SetUserActive
 from src.application.auth.use_cases.authenticate_user import AuthenticateUserUseCase
 from src.application.auth.use_cases.get_user_by_id import GetUserByIdUseCase
 from src.application.auth.use_cases.register_owner import RegisterOwnerUseCase
+from src.application.invitations.use_cases.accept_invitation import AcceptInvitation
+from src.application.invitations.use_cases.create_invitation import CreateInvitation
+from src.application.invitations.use_cases.list_invitations import ListInvitations
+from src.application.invitations.use_cases.preview_invitation import PreviewInvitation
+from src.application.invitations.use_cases.register_via_invitation import RegisterViaInvitation
+from src.application.invitations.use_cases.reject_invitation import RejectInvitation
+from src.application.invitations.use_cases.revoke_invitation import RevokeInvitation
 from src.application.shared.unit_of_work import UnitOfWork
 from src.config.settings import get_settings
 from src.infrastructure.auth.bcrypt_hasher import BcryptPasswordHasher
@@ -79,3 +86,38 @@ def set_user_active_use_case(uow: UnitOfWork) -> SetUserActive:
 
 def set_platform_admin_use_case(uow: UnitOfWork) -> SetPlatformAdmin:
     return SetPlatformAdmin(uow=uow)
+
+
+# ── Invitations ───────────────────────────────────────────────────
+
+
+def create_invitation_use_case(uow: UnitOfWork) -> CreateInvitation:
+    return CreateInvitation(uow=uow)
+
+
+def list_invitations_use_case(uow: UnitOfWork) -> ListInvitations:
+    return ListInvitations(uow=uow)
+
+
+def revoke_invitation_use_case(uow: UnitOfWork) -> RevokeInvitation:
+    return RevokeInvitation(uow=uow)
+
+
+def preview_invitation_use_case(uow: UnitOfWork) -> PreviewInvitation:
+    return PreviewInvitation(uow=uow)
+
+
+def accept_invitation_use_case(uow: UnitOfWork) -> AcceptInvitation:
+    return AcceptInvitation(uow=uow)
+
+
+def reject_invitation_use_case(uow: UnitOfWork) -> RejectInvitation:
+    return RejectInvitation(uow=uow)
+
+
+def register_via_invitation_use_case(uow: UnitOfWork) -> RegisterViaInvitation:
+    return RegisterViaInvitation(
+        uow=uow,
+        password_hasher=get_password_hasher(),
+        jwt_service=get_jwt_service(),
+    )
