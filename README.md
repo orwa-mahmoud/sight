@@ -5,6 +5,84 @@ their knowledge base, connect WhatsApp and Telegram, and the AI handles
 incoming questions — grounded in the tenant's own documents. Anything the
 AI can't answer gets routed to the owner's inbox for a human reply.
 
+## Start here
+
+| | |
+|---|---|
+| **Run it** | [Quick start](#quick-start) — Docker one-liner below |
+| **Contribute** | [CONTRIBUTING.md](CONTRIBUTING.md) — setup, checks, PR guide, good first issues |
+| **Backend design** | [backend/docs/ARCHITECTURE.md](backend/docs/ARCHITECTURE.md) — DDD layers, bounded contexts, adding a feature |
+| **Frontend design** | [frontend/docs/ARCHITECTURE.md](frontend/docs/ARCHITECTURE.md) — features, auth, DataTable, i18n |
+| **Data model** | [backend/docs/ERD.md](backend/docs/ERD.md) |
+| **Report a bug / request a feature** | [Open an issue](https://github.com/orwa-mahmoud/frontdesk/issues/new/choose) |
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph channels [Channels]
+        WA[WhatsApp]
+        TG[Telegram]
+        API[Chat API / Dashboard]
+    end
+
+    subgraph drivers [Drivers — entry points]
+        WH[Webhooks]
+        REST[FastAPI /api/v1]
+    end
+
+    subgraph ai [AI orchestration]
+        GW[gateway.chat_with_agent]
+        AG[Agent loop — LangGraph]
+        TOOLS[Tools: search · escalate · key facts]
+    end
+
+    subgraph core [Application + Domain]
+        UC[Use cases — CQRS]
+        DOM[Rich entities + events]
+    end
+
+    subgraph infra [Infrastructure]
+        PG[(PostgreSQL + pgvector + RLS)]
+        RAG[Hybrid RAG — vector + BM25]
+        LLM[Per-tenant LLM client]
+        CH[Channel adapters]
+    end
+
+    subgraph ui [Frontend]
+        SPA[React SPA — Mantine + TanStack Query]
+    end
+
+    WA --> WH
+    TG --> WH
+    API --> WH
+    API --> REST
+    WH --> GW
+    REST --> UC
+    REST --> SPA
+    SPA --> REST
+    GW --> AG
+    AG --> TOOLS
+    TOOLS --> UC
+    GW --> UC
+    UC --> DOM
+    UC --> PG
+    TOOLS --> RAG
+    AG --> LLM
+    GW --> CH
+```
+
+**Dependency direction (backend):** drivers → application → domain ←
+infrastructure. The `ai/` layer orchestrates by calling use cases — never
+repositories or ORM directly. LangGraph is isolated to a single file:
+`backend/src/infrastructure/ai/graph.py`.
+
+Deeper dives: [backend architecture](backend/docs/ARCHITECTURE.md) ·
+[RAG pipeline](backend/docs/RAG_PIPELINE.md) ·
+[AI orchestration](backend/docs/AI_ORCHESTRATION.md) ·
+[channel integration](backend/docs/CHANNEL_INTEGRATION.md) ·
+[frontend architecture](frontend/docs/ARCHITECTURE.md).
+
 ## How it works
 
 1. **Owner registers** and creates a tenant.
@@ -100,6 +178,7 @@ npm run dev    # http://localhost:5173 (Vite proxies /api + /webhooks to :8000)
 
 | Doc | What it covers |
 |-----|---------------|
+| [Contributing](CONTRIBUTING.md) | Dev setup, checks, where to change code, PR expectations, good first issues |
 | [Backend architecture](backend/docs/ARCHITECTURE.md) | DDD layers, bounded contexts, entity patterns, CQRS |
 | [RAG pipeline](backend/docs/RAG_PIPELINE.md) | Chunking, embedding, hybrid retrieval |
 | [AI orchestration](backend/docs/AI_ORCHESTRATION.md) | Agent loop, tools, LangGraph, prompt design |
@@ -109,6 +188,13 @@ npm run dev    # http://localhost:5173 (Vite proxies /api + /webhooks to :8000)
 | [Frontend architecture](frontend/docs/ARCHITECTURE.md) | Components, state management, routing |
 | [Design system](frontend/docs/DESIGN_SYSTEM.md) | Theme, colors, component patterns |
 
+## Contributing
+
+Contributions are welcome — bugs, features, docs, and tests. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for local setup, which checks to run, and
+[good first issues](CONTRIBUTING.md#good-first-issues) if you're looking for a
+place to start.
+
 ## License
 
-MIT
+This project is licensed under the [MIT License](LICENSE).
