@@ -9,7 +9,7 @@ import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist", "coverage", "e2e", "playwright.config.ts"]),
+  globalIgnores(["dist", "coverage"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [
@@ -28,6 +28,17 @@ export default defineConfig([
     },
     rules: {
       "unused-imports/no-unused-imports": "error",
+    },
+  },
+  {
+    // Playwright e2e tests + config run in Node, not the browser, and aren't
+    // React — lint them with Node globals and without the Fast-Refresh rule.
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
 ]);
