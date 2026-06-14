@@ -9,7 +9,7 @@ import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist", "coverage"]),
+  globalIgnores(["dist", "coverage", "e2e", "playwright.config.ts"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [

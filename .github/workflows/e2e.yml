@@ -1,0 +1,49 @@
+name: e2e
+
+# Manual only — brings up the full docker-compose stack and runs Playwright
+# against it. Kept off the per-PR path so the fast lint/type/test/build gate in
+# ci.yml stays the required check.
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate runtime secrets
+        run: |
+          cp .env.docker.example .env.docker
+          JWT=$(python3 -c "import secrets;print(secrets.token_urlsafe(48))")
+          ENC=$(python3 -c "from cryptography.fernet import Fernet;print(Fernet.generate_key().decode())")
+          sed -i "s|^JWT_SECRET_KEY=.*|JWT_SECRET_KEY=$JWT|" .env.docker
+          sed -i "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$ENC|" .env.docker
+
+      - name: Start the stack
+        run: docker compose up --build -d
+
+      - name: Wait for the frontend
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000 >/dev/null; then echo "up"; exit 0; fi
+            sleep 2
+          done
+          echo "frontend did not come up"; docker compose logs --tail=100; exit 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install + run Playwright
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run e2e
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
