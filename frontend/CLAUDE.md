@@ -67,14 +67,15 @@ Two categories only. No Redux, no Zustand.
 
 ## DataTable (`src/shared/components/datatable`)
 
-Unified, mode-agnostic table. A page builds a **`TableSource`** with
-`useFrontendData` (in-memory) or `useBackendData` (server-paginated infinite
-query), then renders `<DataTable source columns rowKey ... />`. Features: sort,
-debounced search, filter drawer + chips (generic `SelectFilter`/`TextFilter`
-bound to `source.extra`), paged + infinite modes, responsive desktop/mobile,
-URL-synced state, `RowAction`s (optional confirm modal), loading skeleton +
-empty/error states, i18n, GSAP entrance stagger. Columns are `ColumnDef<TRow>`
-(use `Cell`/`accessor`, `sortValue`, `mobileLabel`). See `DataTable.test.tsx`.
+Thin facade over [`@adapttable/mantine`](https://www.npmjs.com/package/@adapttable/mantine)
+(`0.2.0+`). Pages import only from `@shared/components/datatable` — never from
+`@adapttable/*` directly. The wrapper wires Mantine confirm modals, i18next /
+`@adapttable/i18n` labels, RTL direction, react-router URL sync, and drawer-style
+filters.
+
+A page builds a **`TableSource`** with `useFrontendData` (in-memory) or
+`useBackendData` (server-paginated), then renders
+`<DataTable source columns rowKey ... />`.
 
 ## Shared hooks / utils
 

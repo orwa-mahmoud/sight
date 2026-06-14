@@ -1,20 +1,24 @@
 export { DataTable } from "./DataTable";
 export type { DataTableProps } from "./DataTable";
-export { useFrontendData } from "./hooks/useFrontendData";
-export type { UseFrontendDataOptions } from "./hooks/useFrontendData";
-export { useBackendData } from "./hooks/useBackendData";
-export type { UseBackendDataOptions, PageSelector } from "./hooks/useBackendData";
-export { useTableUrlState } from "./hooks/useTableUrlState";
-export type { TableSource } from "./hooks/TableSource";
-export { SelectFilter } from "./filters/SelectFilter";
-export { TextFilter } from "./filters/TextFilter";
-export type {
-  ColumnDef,
-  CellProps,
-  RowAction,
-  PaginatedResponse,
-  TableQueryParams,
-  SortDirection,
-  ExtraFilters,
-  PaginationMode,
-} from "./types";
+export { useFrontendData } from "./useFrontendData";
+export type { UseFrontendDataOptions } from "./useFrontendData";
+export { SelectFilter } from "./SelectFilter";
+export { TextFilter } from "./TextFilter";
+
+export {
+  useBackendData,
+  useTableUrlState,
+  type BulkAction,
+  type CellProps,
+  type ColumnDef,
+  type ExtraFilters,
+  type PageSelector,
+  type PaginatedResponse,
+  type PaginationMode,
+  type RowAction,
+  type SortDirection,
+  type TableQueryParams,
+  type TableSource,
+  type UseBackendDataOptions,
+  type UseTableUrlStateOptions,
+} from "@adapttable/mantine";

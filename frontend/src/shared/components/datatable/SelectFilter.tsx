@@ -1,7 +1,5 @@
+import type { ExtraFilters, TableSource } from "@adapttable/mantine";
 import { Select } from "@mantine/core";
-
-import type { TableSource } from "../hooks/TableSource";
-import type { ExtraFilters } from "../types";
 
 export interface SelectFilterProps<TRow> {
   readonly source: TableSource<TRow>;

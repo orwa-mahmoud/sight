@@ -1,6 +1,5 @@
+import type { TableSource } from "@adapttable/mantine";
 import { TextInput } from "@mantine/core";
-
-import type { TableSource } from "../hooks/TableSource";
 
 export interface TextFilterProps<TRow> {
   readonly source: TableSource<TRow>;
@@ -9,10 +8,17 @@ export interface TextFilterProps<TRow> {
   readonly placeholder?: string;
 }
 
-/** Free-text filter bound to `source.extra[filterKey]`. */
-export function TextFilter<TRow>({ source, filterKey, label, placeholder }: Readonly<TextFilterProps<TRow>>) {
-  const current = source.extra[filterKey];
-  const value = typeof current === "string" ? current : "";
+/** Text filter bound to `source.extra[filterKey]`. */
+export function TextFilter<TRow>({
+  source,
+  filterKey,
+  label,
+  placeholder,
+}: Readonly<TextFilterProps<TRow>>) {
+  const raw = source.extra[filterKey];
+  let value = "";
+  if (typeof raw === "string") value = raw;
+  else if (raw != null) value = String(raw);
 
   return (
     <TextInput

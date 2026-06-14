@@ -153,10 +153,7 @@ npm run dev    # http://localhost:5173 (Vite proxies /api + /webhooks to :8000)
   app shell, self-hosted Arabic font, layout mirrors via Mantine's
   `DirectionProvider`. Backend API error messages localize via `Accept-Language`.
 - **Light / dark mode** toggle.
-- **Unified DataTable** — one mode-agnostic table over a `TableSource` contract
-  (client-side *or* server-paginated), with sort, search, a filter drawer +
-  removable chips, responsive desktop/mobile, URL-synced state, row actions with
-  confirm modals, and reduced-motion-aware entrance animations.
+- **Unified DataTable** — `@adapttable/mantine` via a thin app facade (`@shared/components/datatable`): sort, search, filter drawer + chips, paged & infinite modes, responsive desktop/mobile, URL-synced state, row actions with confirm modals, EN/AR labels, and mount animations.
 - **Route-level code splitting**, path aliases, typed config, Prettier + strict
   TypeScript/ESLint.
 

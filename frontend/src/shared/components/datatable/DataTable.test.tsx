@@ -10,7 +10,7 @@ interface Row {
   status: string;
 }
 
-const DATA: Row[] = Array.from({ length: 25 }, (_, i) => ({
+const DATA: Row[] = Array.from({ length: 30 }, (_, i) => ({
   id: String(i + 1),
   name: `Item ${i + 1}`,
   status: i % 2 === 0 ? "active" : "inactive",
@@ -54,26 +54,26 @@ function renderTable(props: Readonly<{ onAction?: (row: Row) => void }> = {}) {
   );
 }
 
-describe("DataTable (frontend source)", () => {
+describe("DataTable facade", () => {
   it("renders the first page (default page size)", () => {
     renderTable();
     expect(screen.getByText("Item 1")).toBeInTheDocument();
-    expect(screen.getByText("Item 20")).toBeInTheDocument();
-    expect(screen.queryByText("Item 21")).not.toBeInTheDocument();
+    expect(screen.getByText("Item 25")).toBeInTheDocument();
+    expect(screen.queryByText("Item 26")).not.toBeInTheDocument();
   });
 
   it("shows the range and paginates to page 2", async () => {
     renderTable();
-    expect(screen.getByText("1–20 of 25")).toBeInTheDocument();
+    expect(screen.getByText("1–25 of 30")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "2" }));
-    await waitFor(() => expect(screen.getByText("Item 21")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Item 26")).toBeInTheDocument());
     expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
   });
 
   it("filters rows via search (debounced)", async () => {
     renderTable();
-    fireEvent.change(screen.getByLabelText("Search"), { target: { value: "Item 25" } });
-    await waitFor(() => expect(screen.getByText("Item 25")).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("Search"), { target: { value: "Item 30" } });
+    await waitFor(() => expect(screen.getByText("Item 30")).toBeInTheDocument());
     expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe("DataTable (frontend source)", () => {
     fireEvent.click(button());
     expect(header()).toHaveAttribute("aria-sort", "descending");
     fireEvent.click(button());
-    expect(header()).not.toHaveAttribute("aria-sort");
+    expect(header()).toHaveAttribute("aria-sort", "none");
   });
 
   it("runs a row action", () => {
