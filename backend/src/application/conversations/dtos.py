@@ -29,3 +29,6 @@ class ThreadMessageDTO:
 class SaveMessageResult:
     message_id: UUID
     conversation_id: UUID
+    # True when an inbound message was skipped because its provider_message_id
+    # was already saved for this conversation (durable de-duplication).
+    is_duplicate: bool = False

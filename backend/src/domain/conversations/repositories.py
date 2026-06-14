@@ -24,6 +24,10 @@ class ConversationRepository(Protocol):
 class MessageRepository(Protocol):
     async def save(self, message: Message) -> None: ...
 
+    async def insert_if_new(self, message: Message) -> bool:
+        """Insert, returning False if (conversation, provider_message_id) already exists."""
+        ...
+
     async def list_for_conversation(
         self,
         conversation_id: UUID,

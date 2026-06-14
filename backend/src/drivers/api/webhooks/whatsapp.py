@@ -145,11 +145,13 @@ async def _handle_whatsapp_post(
                     channel=ConversationChannel.WHATSAPP,
                     sender_identifier=incoming.sender_phone,
                     sender_name=None,
+                    provider_message_id=incoming.message_id,
                 ),
                 uow=uow,
             )
             await uow.commit()
-            await adapter.send_text(incoming.sender_phone, result.response)
+            if not result.duplicate:
+                await adapter.send_text(incoming.sender_phone, result.response)
         except Exception:
             await uow.rollback()
             logger.error("whatsapp.webhook.failed", tenant_id=tenant_id_raw, exc_info=True)

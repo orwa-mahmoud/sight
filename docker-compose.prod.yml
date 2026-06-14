@@ -1,0 +1,86 @@
+# Production-leaning compose: standalone (not an override of docker-compose.yml).
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Differences from the dev compose:
+#   - Postgres and Redis are NOT published to the host (internal network only).
+#   - Only the frontend exposes a port; it reverse-proxies /api + /webhooks to the
+#     backend, so that's the single public surface. Put TLS in front of it.
+#   - restart: unless-stopped, healthchecks on every service, and memory limits.
+#   - For tenant-isolation defense-in-depth, point DATABASE_URL at the
+#     NOBYPASSRLS `frontdesk_app` role (see DEPLOYMENT.md → "Activate RLS").
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    env_file: .env.docker
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: .env.docker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      # Terminate TLS here or (recommended) behind an external reverse proxy /
+      # load balancer. See DEPLOYMENT.md.
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+volumes:
+  pgdata:

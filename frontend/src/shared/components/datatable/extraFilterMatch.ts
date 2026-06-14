@@ -1,10 +1,10 @@
 import type { ExtraFilters } from "@adapttable/mantine";
 
+import { fieldText } from "./cellText";
+
 function fieldString(row: unknown, key: string): string {
   if (typeof row !== "object" || row === null) return "";
-  const value = (row as Record<string, unknown>)[key];
-  if (value == null) return "";
-  return String(value).toLowerCase();
+  return fieldText((row as Record<string, unknown>)[key]).toLowerCase();
 }
 
 /** Match `source.extra` filter keys against row object fields (client-side tables). */

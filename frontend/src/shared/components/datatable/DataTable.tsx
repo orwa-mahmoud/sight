@@ -49,8 +49,8 @@ export function DataTable<TRow>({
 
   const resolvedLabels = {
     ...getLabels(locale ?? language),
-    ...(labels ?? {}),
-    ...(emptyText ? { noData: emptyText } : {}),
+    ...labels,
+    ...(emptyText ? { noData: emptyText } : undefined),
     cancel: t("common.cancel"),
     filters: t("common.filters"),
     clearAll: t("common.clearAll"),

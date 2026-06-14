@@ -27,10 +27,30 @@ async def test_update_password(client: AsyncClient) -> None:
     token, _, _ = await register_and_token(client)
     resp = await client.put(
         "/api/v1/users/me",
-        json={"password": "newlongpassword123"},
+        json={"password": "newlongpassword123", "current_password": "supersecure123"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_update_password_requires_current_password(client: AsyncClient) -> None:
+    token, _, _ = await register_and_token(client)
+    # Missing current_password is rejected.
+    missing = await client.put(
+        "/api/v1/users/me",
+        json={"password": "newlongpassword123"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert missing.status_code == 401
+    # Wrong current_password is rejected.
+    wrong = await client.put(
+        "/api/v1/users/me",
+        json={"password": "newlongpassword123", "current_password": "not-the-password"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert wrong.status_code == 401
 
 
 @pytest.mark.integration

@@ -1,0 +1,68 @@
+{
+  "description": "Golden Q&A set for the Nest Coworking fixture knowledge base. relevant_doc_ids empty + should_escalate true => the answer is NOT in the KB and the agent should escalate.",
+  "items": [
+    {
+      "id": "weekend-hours",
+      "question": "What are your opening hours on the weekend?",
+      "relevant_doc_ids": ["hours.md"],
+      "answer_must_include": ["9:00 am", "6:00 pm"],
+      "should_escalate": false
+    },
+    {
+      "id": "hot-desk-price",
+      "question": "How much does a hot desk cost per month?",
+      "relevant_doc_ids": ["membership.md"],
+      "answer_must_include": ["99"],
+      "should_escalate": false
+    },
+    {
+      "id": "private-office-price",
+      "question": "What is the price of a private office?",
+      "relevant_doc_ids": ["membership.md"],
+      "answer_must_include": ["499"],
+      "should_escalate": false
+    },
+    {
+      "id": "pets-policy",
+      "question": "Can I bring my pet into the building?",
+      "relevant_doc_ids": ["amenities.md"],
+      "answer_must_include": ["not allowed", "service"],
+      "should_escalate": false
+    },
+    {
+      "id": "parking",
+      "question": "Is there parking available and how much is it?",
+      "relevant_doc_ids": ["amenities.md"],
+      "answer_must_include": ["basement", "50"],
+      "should_escalate": false
+    },
+    {
+      "id": "meeting-rooms",
+      "question": "How do I book a meeting room?",
+      "relevant_doc_ids": ["amenities.md"],
+      "answer_must_include": ["member app"],
+      "should_escalate": false
+    },
+    {
+      "id": "24-7-access",
+      "question": "Do dedicated desk members get 24/7 access?",
+      "relevant_doc_ids": ["membership.md", "hours.md"],
+      "answer_must_include": ["24/7"],
+      "should_escalate": false
+    },
+    {
+      "id": "offtopic-party",
+      "question": "Can you organise a rooftop birthday party for me next Friday?",
+      "relevant_doc_ids": [],
+      "answer_must_include": [],
+      "should_escalate": true
+    },
+    {
+      "id": "offtopic-refund",
+      "question": "What is your refund policy if I cancel an annual contract early?",
+      "relevant_doc_ids": [],
+      "answer_must_include": [],
+      "should_escalate": true
+    }
+  ]
+}

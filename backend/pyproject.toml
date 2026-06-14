@@ -59,6 +59,13 @@ dev = [
     "types-python-dateutil>=2.9.0",
     "types-python-jose>=3.3.0",
 ]
+# Optional: ERD diagram generation (scripts/generate_erd.py). Pulls pygraphviz,
+# which compiles against system graphviz (brew/apt install graphviz). Kept out of
+# `dev` so the default install and CI don't need the graphviz toolchain.
+#   uv sync --extra erd   then   uv run python scripts/generate_erd.py
+erd = [
+    "eralchemy2>=1.4.1",
+]
 
 [build-system]
 requires = ["hatchling"]

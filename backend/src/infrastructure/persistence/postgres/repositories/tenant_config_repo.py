@@ -18,6 +18,7 @@ _SECRET_FIELDS = (
     "whatsapp_access_token",
     "whatsapp_app_secret",
     "telegram_bot_token",
+    "telegram_webhook_secret",
 )
 
 
@@ -47,7 +48,7 @@ class PostgresTenantConfigRepository:
         model.whatsapp_verify_token = config.whatsapp_verify_token
         model.whatsapp_app_secret = encrypt_value(config.whatsapp_app_secret or "")
         model.telegram_bot_token = encrypt_value(config.telegram_bot_token or "")
-        model.telegram_webhook_secret = config.telegram_webhook_secret
+        model.telegram_webhook_secret = encrypt_value(config.telegram_webhook_secret or "")
         model.bot_name = config.bot_name
         model.bot_welcome_message = config.bot_welcome_message
         model.bot_language = config.bot_language
@@ -77,7 +78,7 @@ class PostgresTenantConfigRepository:
             whatsapp_verify_token=c.whatsapp_verify_token,
             whatsapp_app_secret=encrypt_value(c.whatsapp_app_secret or ""),
             telegram_bot_token=encrypt_value(c.telegram_bot_token or ""),
-            telegram_webhook_secret=c.telegram_webhook_secret,
+            telegram_webhook_secret=encrypt_value(c.telegram_webhook_secret or ""),
             bot_name=c.bot_name,
             bot_welcome_message=c.bot_welcome_message,
             bot_language=c.bot_language,
@@ -103,7 +104,7 @@ class PostgresTenantConfigRepository:
             whatsapp_verify_token=m.whatsapp_verify_token,
             whatsapp_app_secret=decrypt_value(m.whatsapp_app_secret or "") or None,
             telegram_bot_token=decrypt_value(m.telegram_bot_token or "") or None,
-            telegram_webhook_secret=m.telegram_webhook_secret,
+            telegram_webhook_secret=decrypt_value(m.telegram_webhook_secret or "") or None,
             bot_name=m.bot_name,
             bot_welcome_message=m.bot_welcome_message,
             bot_language=m.bot_language,

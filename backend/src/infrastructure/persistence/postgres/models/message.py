@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,6 +18,19 @@ from src.infrastructure.persistence.postgres.models import Base
 
 class MessageModel(Base):
     __tablename__ = "messages"
+
+    # Durable webhook de-duplication: at-least-once channels can redeliver the
+    # same message. A partial unique index makes a second insert of the same
+    # provider id within a conversation fail at the DB — independent of Redis.
+    __table_args__ = (
+        Index(
+            "uq_messages_conversation_provider_msg",
+            "conversation_id",
+            "provider_message_id",
+            unique=True,
+            postgresql_where=text("provider_message_id IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True)
     conversation_id: Mapped[UUID] = mapped_column(
@@ -46,6 +59,7 @@ class MessageModel(Base):
     is_checkpoint: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     request_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    provider_message_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True),
         nullable=False,

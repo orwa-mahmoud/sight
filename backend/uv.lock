@@ -536,6 +536,19 @@ wheels = [
 ]
 
 [[package]]
+name = "eralchemy2"
+version = "1.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pygraphviz" },
+    { name = "sqlalchemy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6d/84/d43709501e867d00448ce98db3ea2e02d67b71813e1587f9aa94d338fc24/eralchemy2-1.4.1.tar.gz", hash = "sha256:1c1ee49b26287a459c5c89aa3eba3d6a9d1b8e6bd245d9fbacc6b15560fc66a5", size = 24101, upload-time = "2024-05-20T09:27:37.414Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/29/b2/192f1f9b0eebd0169549e291bb9ca1b522636c48b530af655524e2a20896/eralchemy2-1.4.1-py3-none-any.whl", hash = "sha256:be3ecd4e696172fe4b439a3010b08564c6f7c7323b9e9b4369e47da7a7b48428", size = 18565, upload-time = "2024-05-20T09:27:35.844Z" },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.136.3"
 source = { registry = "https://pypi.org/simple" }
@@ -597,6 +610,9 @@ dev = [
     { name = "types-python-dateutil" },
     { name = "types-python-jose" },
 ]
+erd = [
+    { name = "eralchemy2" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -604,6 +620,7 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.31.0" },
     { name = "bcrypt", specifier = ">=4.0.0" },
     { name = "blinker", specifier = ">=1.9.0" },
+    { name = "eralchemy2", marker = "extra == 'erd'", specifier = ">=1.4.1" },
     { name = "fastapi", specifier = ">=0.128.0" },
     { name = "httpx", specifier = ">=0.28.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.0" },
@@ -637,7 +654,7 @@ requires-dist = [
     { name = "types-python-jose", marker = "extra == 'dev'", specifier = ">=3.3.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.40.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["dev", "erd"]
 
 [[package]]
 name = "greenlet"
@@ -1646,6 +1663,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
 ]
+
+[[package]]
+name = "pygraphviz"
+version = "1.14"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/ca/823d5c74a73d6b8b08e1f5aea12468ef334f0732c65cbb18df2a7f285c87/pygraphviz-1.14.tar.gz", hash = "sha256:c10df02377f4e39b00ae17c862f4ee7e5767317f1c6b2dfd04cea6acc7fc2bea", size = 106003, upload-time = "2024-09-29T18:31:12.471Z" }
 
 [[package]]
 name = "pypdf"

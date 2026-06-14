@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -16,8 +16,8 @@ from src.domain.tenant_config.value_objects import LLMProvider
 from src.infrastructure.persistence.postgres.database import async_session_factory
 
 
-def _make_config(tenant_id: object) -> TenantConfig:
-    c = TenantConfig.create_default(tenant_id=tenant_id)  # type: ignore[arg-type]
+def _make_config(tenant_id: UUID) -> TenantConfig:
+    c = TenantConfig.create_default(tenant_id=tenant_id)
     c.llm_api_key = "sk-test-key-1234567890"
     return c
 
@@ -169,9 +169,10 @@ async def test_gateway_no_token_usage_when_zero_tokens() -> None:
     uow.tenant_configs = MagicMock()
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=mock_config)
     uow.flush = AsyncMock()
+    uow.commit = AsyncMock()
 
     mock_save_uc = MagicMock()
-    mock_save_uc.execute = AsyncMock(return_value=MagicMock(conversation_id=uuid4()))
+    mock_save_uc.execute = AsyncMock(return_value=MagicMock(conversation_id=uuid4(), is_duplicate=False))
 
     with (
         patch("src.ai.gateway.SaveThreadMessageUseCase", return_value=mock_save_uc),
@@ -220,9 +221,10 @@ async def test_gateway_applies_temperature_and_bot_personality() -> None:
     uow.tenant_configs = MagicMock()
     uow.tenant_configs.get_by_tenant_id = AsyncMock(return_value=mock_config)
     uow.flush = AsyncMock()
+    uow.commit = AsyncMock()
 
     mock_save_uc = MagicMock()
-    mock_save_uc.execute = AsyncMock(return_value=MagicMock(conversation_id=uuid4()))
+    mock_save_uc.execute = AsyncMock(return_value=MagicMock(conversation_id=uuid4(), is_duplicate=False))
 
     mock_record_uc = MagicMock()
     mock_record_uc.execute = AsyncMock()

@@ -96,6 +96,10 @@ class Message(BaseEntity):
     token_count: int = 0
     # ── End-to-end tracing ───────────────────────────────────────────
     request_id: str | None = None
+    # ── Provider message id (WhatsApp wamid / Telegram message_id) ───
+    # Set for inbound channel messages; drives durable de-duplication
+    # (unique per conversation). None for API/dashboard messages and replies.
+    provider_message_id: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @classmethod
@@ -113,6 +117,7 @@ class Message(BaseEntity):
         is_checkpoint: bool = False,
         token_count: int = 0,
         request_id: str | None = None,
+        provider_message_id: str | None = None,
     ) -> Message:
         msg = cls(
             id=uuid4(),
@@ -127,6 +132,7 @@ class Message(BaseEntity):
             is_checkpoint=is_checkpoint,
             token_count=token_count,
             request_id=request_id,
+            provider_message_id=provider_message_id,
             created_at=datetime.now(UTC),
         )
         msg._is_new = True

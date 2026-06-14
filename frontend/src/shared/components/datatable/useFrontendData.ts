@@ -7,6 +7,7 @@ import {
 } from "@adapttable/mantine";
 import { useMemo } from "react";
 
+import { fieldText } from "./cellText";
 import { matchesExtraFilters } from "./extraFilterMatch";
 import { useReactRouterUrlAdapter } from "./useReactRouterUrlAdapter";
 
@@ -22,9 +23,7 @@ function searchTextFromKeys<TRow>(row: TRow, keys: readonly string[]): string {
   return keys
     .map((key) => {
       if (typeof row !== "object" || row === null) return "";
-      const value = (row as Record<string, unknown>)[key];
-      if (value == null) return "";
-      return String(value);
+      return fieldText((row as Record<string, unknown>)[key]);
     })
     .join(" ")
     .toLowerCase();

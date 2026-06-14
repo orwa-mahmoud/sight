@@ -1,8 +1,12 @@
 """Fernet encryption for tenant secrets stored at rest.
 
-When ENCRYPTION_KEY is set, API keys and tokens are encrypted before
-persisting and decrypted on read. When not set, values pass through
-as plaintext (development mode).
+When ENCRYPTION_KEY is set, API keys and tokens are encrypted before persisting
+and decrypted on read. When unset, values pass through as plaintext (dev mode).
+
+Key rotation: set ENCRYPTION_KEY to the new key and list the previous key(s) in
+ENCRYPTION_KEY_FALLBACKS (comma-separated). New writes use the new key; existing
+ciphertext still decrypts via a fallback (MultiFernet). Re-encrypt at leisure by
+re-saving the affected records, then drop the fallback once nothing depends on it.
 
 Generate a key: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 """
@@ -10,7 +14,7 @@ Generate a key: python -c "from cryptography.fernet import Fernet; print(Fernet.
 from __future__ import annotations
 
 import structlog
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 
 from src.config.settings import get_settings
 
@@ -20,36 +24,42 @@ _ENC_PREFIX = "enc:"
 
 
 class _CryptoState:
-    fernet: Fernet | None = None
+    cipher: MultiFernet | None = None
 
 
-def _get_fernet() -> Fernet | None:
-    if _CryptoState.fernet is not None:
-        return _CryptoState.fernet
-    key = get_settings().encryption_key
+def _get_cipher() -> MultiFernet | None:
+    if _CryptoState.cipher is not None:
+        return _CryptoState.cipher
+    settings = get_settings()
+    key = settings.encryption_key
     if not key:
         return None
-    _CryptoState.fernet = Fernet(key.encode())
-    return _CryptoState.fernet
+    keys = [Fernet(key.encode())]
+    # Previous keys (comma-separated) still decrypt old ciphertext during a rotation.
+    fallbacks = getattr(settings, "encryption_key_fallbacks", None)
+    if isinstance(fallbacks, str):
+        keys.extend(Fernet(part.strip().encode()) for part in fallbacks.split(",") if part.strip())
+    _CryptoState.cipher = MultiFernet(keys)
+    return _CryptoState.cipher
 
 
 def encrypt_value(plaintext: str) -> str:
     if not plaintext:
         return plaintext
-    f = _get_fernet()
-    if f is None:
+    cipher = _get_cipher()
+    if cipher is None:
         return plaintext
-    return _ENC_PREFIX + f.encrypt(plaintext.encode()).decode()
+    return _ENC_PREFIX + cipher.encrypt(plaintext.encode()).decode()
 
 
 def decrypt_value(ciphertext: str) -> str:
     if not ciphertext or not ciphertext.startswith(_ENC_PREFIX):
         return ciphertext
-    f = _get_fernet()
-    if f is None:
+    cipher = _get_cipher()
+    if cipher is None:
         return ciphertext
     try:
-        return f.decrypt(ciphertext[len(_ENC_PREFIX) :].encode()).decode()
+        return cipher.decrypt(ciphertext[len(_ENC_PREFIX) :].encode()).decode()
     except InvalidToken:
-        logger.error("crypto.decrypt_failed", hint="ENCRYPTION_KEY may have changed")
+        logger.error("crypto.decrypt_failed", hint="ENCRYPTION_KEY rotated without a matching fallback?")
         return ""

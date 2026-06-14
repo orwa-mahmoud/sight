@@ -53,7 +53,7 @@ async def test_update_password_then_login(client: AsyncClient) -> None:
     # Change password
     resp = await client.put(
         "/api/v1/users/me",
-        json={"password": new_password},
+        json={"password": new_password, "current_password": old_password},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
@@ -79,7 +79,7 @@ async def test_update_both_name_and_password(client: AsyncClient) -> None:
     token, _, _ = await register_and_token(client)
     resp = await client.put(
         "/api/v1/users/me",
-        json={"full_name": "Both Updated", "password": "anothersecure99"},
+        json={"full_name": "Both Updated", "password": "anothersecure99", "current_password": "supersecure123"},
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200

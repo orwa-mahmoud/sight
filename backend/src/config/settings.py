@@ -40,6 +40,8 @@ class Settings(BaseSettings):
 
     # ── Encryption (Fernet key for tenant secrets at rest) ─────────
     encryption_key: str | None = None
+    # Previous Fernet keys (comma-separated) kept readable during a key rotation.
+    encryption_key_fallbacks: str | None = None
 
     # ── Observability ──────────────────────────────────────────────
     otel_exporter_otlp_endpoint: str | None = None

@@ -1,9 +1,42 @@
 # frontdesk
 
+[![CI](https://github.com/orwa-mahmoud/frontdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/orwa-mahmoud/frontdesk/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)
+![React 19](https://img.shields.io/badge/React-19-61dafb.svg)
+![PostgreSQL 17 + pgvector](https://img.shields.io/badge/PostgreSQL-17%20%2B%20pgvector-336791.svg)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
 Multi-tenant AI front desk that answers on your behalf. Tenants upload
 their knowledge base, connect WhatsApp and Telegram, and the AI handles
 incoming questions — grounded in the tenant's own documents. Anything the
 AI can't answer gets routed to the owner's inbox for a human reply.
+
+_Live demo: coming soon_ &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [Architecture](backend/docs/ARCHITECTURE.md) &nbsp;·&nbsp; [Contributing](CONTRIBUTING.md)
+
+## Screenshots
+
+_Screenshots coming soon._
+<!-- TODO(orwa): add dashboard.png / documents.png / chat.png to docs/screenshots/,
+     delete the line above, and uncomment the table below. See ai_docs/orwa-tasks.md.
+| Dashboard | Knowledge base | AI answering |
+|---|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Documents](docs/screenshots/documents.png) | ![Chat answering from a document](docs/screenshots/chat.png) |
+-->
+
+## Features
+
+- **RAG-grounded answers** — hybrid retrieval (vector + BM25 + RRF) over each
+  tenant's own documents; the AI cites their knowledge base, not the open web.
+- **Human-in-the-loop escalation** — anything the AI can't answer lands in the
+  owner's inbox with the AI's attempt for context; the reply relays back.
+- **Omnichannel** — WhatsApp Cloud API, Telegram, and a built-in chat/dashboard,
+  all behind one agent gateway.
+- **Multi-tenant by design** — strict per-tenant isolation at the app layer plus
+  Postgres Row-Level Security; per-tenant LLM provider/model/keys.
+- **Per-contact memory + cost accounting** — the agent remembers key facts across
+  conversations and tracks token spend per tenant.
+- **Bilingual UI** — English + Arabic with full RTL, light/dark mode.
 
 ## Start here
 
