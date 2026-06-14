@@ -20,6 +20,7 @@ class ChatInput:
     sender_name: str | None = None
     thread_id: str | None = None  # if known; gateway resolves if None
     contact_id: UUID | None = None  # resolved by sender resolution; None for anonymous
+    provider_message_id: str | None = None  # WA wamid / TG message_id — for de-dup
 
 
 @dataclass(kw_only=True)
@@ -42,6 +43,7 @@ class ChatResult:
     response: str
     thread_id: str
     escalated: bool = False  # true if a Question was submitted
+    duplicate: bool = False  # true if a redelivered message was skipped (no reply to send)
     request_id: str = ""
     sources: list[ChatSource] = field(default_factory=list)
     input_tokens: int = 0

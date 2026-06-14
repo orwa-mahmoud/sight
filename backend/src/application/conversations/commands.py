@@ -24,3 +24,6 @@ class SaveThreadMessage:
     is_checkpoint: bool = False
     token_count: int = 0
     request_id: str | None = None
+    # Provider message id (WhatsApp wamid / Telegram message_id). When set, the
+    # save is de-duplicated against (conversation, provider_message_id).
+    provider_message_id: str | None = None

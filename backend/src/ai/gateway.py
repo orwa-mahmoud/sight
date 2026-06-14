@@ -43,6 +43,7 @@ from src.config.settings import get_settings
 from src.domain.conversations.value_objects import ConversationRole
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole
 from src.domain.shared.exceptions import InvalidOperationError
+from src.domain.tenant_config.entities import TenantConfig
 from src.infrastructure.ai.graph import build_agent_graph, run_graph
 from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory
 from src.infrastructure.metrics import AGENT_INVOCATIONS_TOTAL, AGENT_TOOL_CALLS_TOTAL
@@ -96,10 +97,23 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
             content=inp.message,
             participant_id=contact_id,
             request_id=request_id,
+            provider_message_id=inp.provider_message_id,
         )
     )
+    # Redelivered webhook (or a race) → the message id was already saved; skip
+    # the whole turn so the asker isn't answered (and billed) twice.
+    if save_result.is_duplicate:
+        logger.info("gateway.duplicate_inbound", thread_id=thread_id, request_id=request_id)
+        return ChatResult(response="", thread_id=thread_id, duplicate=True, request_id=request_id)
     conversation_id = save_result.conversation_id
-    await uow.flush()
+
+    # Persist the inbound message NOW, before the agent runs. If the agent later
+    # fails (LLM timeout, etc.) the asker's message stays in the thread — visible,
+    # not silently dropped — and their next message carries it forward. Commit ends
+    # the transaction, which clears the transaction-local RLS scope, so re-apply it
+    # for the agent's queries that follow.
+    await uow.commit()
+    await uow.set_tenant_scope(inp.tenant_id)
 
     # ── 2. Load history ───────────────────────────────────────────
     history = await load_history(thread_id=thread_id, uow=uow)
@@ -179,21 +193,7 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     await _save_agent_messages(save_uc, inp, thread_id, result, request_id)
 
     # ── 7. Record token usage ─────────────────────────────────────
-    if result.input_tokens > 0 or result.output_tokens > 0:
-        await RecordTokenUsageUseCase(uow=uow).execute(
-            RecordTokenUsage(
-                tenant_id=inp.tenant_id,
-                provider=tenant_config.llm_provider.value,
-                model=tenant_config.llm_model,
-                input_tokens=result.input_tokens,
-                output_tokens=result.output_tokens,
-                cache_read_tokens=result.cache_read_tokens,
-                thread_id=thread_id,
-                request_id=request_id,
-                source="asker",
-                channel=inp.channel.value,
-            )
-        )
+    await _record_usage(inp, tenant_config, result, thread_id=thread_id, request_id=request_id, uow=uow)
 
     # ── 8. Maybe create checkpoint (structured summary) ─────────
     await maybe_create_checkpoint(
@@ -297,6 +297,34 @@ def _record_agent_metrics(channel: str, result: AgentLoopResult) -> None:
     AGENT_INVOCATIONS_TOTAL.labels(channel=channel).inc()
     for tc in result.tool_calls:
         AGENT_TOOL_CALLS_TOTAL.labels(tool_name=tc.tool_name).inc()
+
+
+async def _record_usage(
+    inp: ChatInput,
+    tenant_config: TenantConfig,
+    result: AgentLoopResult,
+    *,
+    thread_id: str,
+    request_id: str,
+    uow: UnitOfWork,
+) -> None:
+    """Persist token usage for the turn (skipped when nothing was consumed)."""
+    if result.input_tokens <= 0 and result.output_tokens <= 0:
+        return
+    await RecordTokenUsageUseCase(uow=uow).execute(
+        RecordTokenUsage(
+            tenant_id=inp.tenant_id,
+            provider=tenant_config.llm_provider.value,
+            model=tenant_config.llm_model,
+            input_tokens=result.input_tokens,
+            output_tokens=result.output_tokens,
+            cache_read_tokens=result.cache_read_tokens,
+            thread_id=thread_id,
+            request_id=request_id,
+            source="asker",
+            channel=inp.channel.value,
+        )
+    )
 
 
 class _Singletons:

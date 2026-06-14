@@ -122,11 +122,12 @@ async def _process_telegram_text(
             channel=ConversationChannel.TELEGRAM,
             sender_identifier=telegram_user_id,
             sender_name=sender_name,
+            provider_message_id=message_id,
         ),
         uow=uow,
     )
     await uow.commit()
-    if config.telegram_bot_token and chat_id:
+    if not result.duplicate and config.telegram_bot_token and chat_id:
         adapter = await get_telegram_adapter(str(tid), tenant_config=config)
         await adapter.send_text(chat_id, result.response)
 

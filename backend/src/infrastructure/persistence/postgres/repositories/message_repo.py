@@ -6,6 +6,7 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import desc, func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.conversations.entities import Message
@@ -26,6 +27,30 @@ class PostgresMessageRepository:
         existing = await self._session.get(MessageModel, message.id)
         if existing is None:
             self._session.add(self._to_model(message))
+
+    async def insert_if_new(self, message: Message) -> bool:
+        """Insert an inbound message, skipping if (conversation_id, provider_message_id)
+        already exists. Returns True if inserted, False if it was a duplicate.
+
+        Concurrency-safe: the partial unique index serializes concurrent inserts of
+        the same provider id (the second blocks, then conflicts), so two duplicate
+        webhooks racing can't both win — no SELECT-then-insert window to lose.
+        """
+        model = self._to_model(message)
+        values = {col.name: getattr(model, col.name) for col in MessageModel.__table__.columns}
+        stmt = (
+            pg_insert(MessageModel)
+            .values(**values)
+            .on_conflict_do_nothing(
+                index_elements=["conversation_id", "provider_message_id"],
+                index_where=MessageModel.provider_message_id.isnot(None),
+            )
+            .returning(MessageModel.id)
+        )
+        inserted = (await self._session.execute(stmt)).scalar_one_or_none() is not None
+        if inserted:
+            message.mark_persisted()
+        return inserted
 
     async def list_for_conversation(
         self,
@@ -116,6 +141,7 @@ class PostgresMessageRepository:
             is_checkpoint=m.is_checkpoint,
             token_count=m.token_count,
             request_id=m.request_id,
+            provider_message_id=m.provider_message_id,
             created_at=m.created_at,
         )
 
@@ -136,5 +162,6 @@ class PostgresMessageRepository:
             is_checkpoint=m.is_checkpoint,
             token_count=m.token_count,
             request_id=m.request_id,
+            provider_message_id=m.provider_message_id,
             created_at=m.created_at,
         )

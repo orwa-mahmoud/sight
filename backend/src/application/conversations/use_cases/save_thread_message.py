@@ -38,8 +38,18 @@ class SaveThreadMessageUseCase:
             is_checkpoint=cmd.is_checkpoint,
             token_count=cmd.token_count,
             request_id=cmd.request_id,
+            provider_message_id=cmd.provider_message_id,
         )
-        await self._uow.messages.save(message)
+
+        if cmd.provider_message_id is not None:
+            # Durable, concurrency-safe de-dup at the DB. A redelivered webhook
+            # (or a race) hits the unique index and is skipped — not reprocessed.
+            inserted = await self._uow.messages.insert_if_new(message)
+            if not inserted:
+                return SaveMessageResult(message_id=message.id, conversation_id=conversation.id, is_duplicate=True)
+        else:
+            await self._uow.messages.save(message)
+
         conversation.touch()
         await self._uow.conversations.save(conversation)
         self._uow.track(conversation)
