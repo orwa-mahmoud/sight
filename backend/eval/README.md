@@ -35,9 +35,21 @@ keywords that must be present in retrieved context, and `should_escalate`
 (true ⇒ the answer is deliberately *not* in the KB). Add your own items to grow
 coverage; keep them small and specific.
 
-## Roadmap
+## DB mode — grade the real retriever
 
-The metrics module is backend-agnostic. The next step is a **DB-mode backend**
-that drives the real `HybridRetriever` (vector + BM25 + RRF) over an ingested
-tenant — gated on `EVAL_LLM_API_KEY` + `EVAL_EMBEDDING_API_KEY` — plus
-answer-level grading by running the full agent. See [ROADMAP.md](../../ROADMAP.md).
+`eval.run` scores an offline lexical retriever so it runs anywhere. To measure
+the **production** pipeline — pgvector HNSW + Postgres BM25 + RRF + the LLM
+reranker — run `eval.db_eval` against a tenant whose documents are already
+ingested:
+
+```bash
+DATABASE_URL=postgresql+asyncpg://... \
+EVAL_EMBEDDING_API_KEY=sk-... EVAL_LLM_API_KEY=sk-... \
+EVAL_TENANT_ID=<uuid> \
+uv run python -m eval.db_eval        # or: make eval-db (from the repo root)
+```
+
+Edit `golden_set.json` so `relevant_doc_ids` are that tenant's document
+filenames. Without the keys/tenant it prints how to enable it and exits 0, so it
+never breaks a default `make`. This is how you quantify what the reranker and
+Contextual Retrieval actually buy you; the same metrics module grades both modes.

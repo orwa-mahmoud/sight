@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help check check-backend check-frontend setup up down eval erd
+.PHONY: help check check-backend check-frontend setup up down eval eval-db erd
 
 help:  ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -30,8 +30,11 @@ up:  ## docker compose up --build
 down:  ## docker compose down
 	docker compose down
 
-eval:  ## Run the RAG/agent eval harness (needs EVAL_LLM_API_KEY + EVAL_EMBEDDING_API_KEY)
+eval:  ## Run the offline RAG retrieval eval (no keys needed)
 	cd backend && uv run python -m eval.run
+
+eval-db:  ## Run the DB-mode eval over the real retriever (needs EVAL_* keys + EVAL_TENANT_ID)
+	cd backend && uv run python -m eval.db_eval
 
 erd:  ## Regenerate backend/docs/erd.png from the live schema (needs system graphviz)
 	cd backend && uv run --extra erd python scripts/generate_erd.py
