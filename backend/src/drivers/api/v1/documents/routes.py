@@ -5,13 +5,15 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+import structlog
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Query, UploadFile, status
 
-from src.application.documents.commands import IngestDocument
+from src.application.documents.commands import ProcessDocument, RegisterDocument
 from src.application.documents.queries import ListDocuments, RetrieveForQuery
 from src.application.documents.use_cases.delete_document import DeleteDocumentUseCase
-from src.application.documents.use_cases.ingest_document import IngestDocumentUseCase
 from src.application.documents.use_cases.list_documents import ListDocumentsUseCase
+from src.application.documents.use_cases.process_document import ProcessDocumentUseCase
+from src.application.documents.use_cases.register_document import RegisterDocumentUseCase
 from src.application.documents.use_cases.retrieve_for_query import RetrieveForQueryUseCase
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.shared.exceptions import EntityNotFoundError
@@ -24,6 +26,7 @@ from src.drivers.api.v1.documents.schemas import (
     RetrieveResponse,
 )
 from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory
+from src.infrastructure.persistence.postgres.database import async_session_factory
 from src.infrastructure.rag.chunker import RecursiveTokenChunker
 from src.infrastructure.rag.contextualizer import LLMContextualizer
 from src.infrastructure.rag.embedder import OpenAIEmbedder
@@ -31,6 +34,8 @@ from src.infrastructure.rag.parser import DocumentParser
 from src.infrastructure.rag.retriever import HybridRetriever
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+logger = structlog.get_logger()
 
 _MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25 MB hard cap for v1
 
@@ -63,6 +68,29 @@ def _build_contextualizer(tenant_id: UUID, config: TenantConfig) -> LLMContextua
     return LLMContextualizer(_llm_factory.get_or_build(tenant_id, config))
 
 
+async def _process_document_in_background(
+    *, tenant_id: UUID, document_id: UUID, filename: str, content: bytes, config: TenantConfig
+) -> None:
+    """Parse + chunk + embed a registered document off the request, in its own
+    session. Failures are recorded on the document; this never raises."""
+    try:
+        async with async_session_factory() as session:
+            uow = UnitOfWork(session)
+            await uow.set_tenant_scope(tenant_id)
+            use_case = ProcessDocumentUseCase(
+                uow=uow,
+                parser=DocumentParser(),
+                chunker=RecursiveTokenChunker(),
+                embedder=_build_embedder(config),
+                contextualizer=_build_contextualizer(tenant_id, config),
+            )
+            await use_case.execute(
+                ProcessDocument(tenant_id=tenant_id, document_id=document_id, filename=filename, content=content)
+            )
+    except Exception:
+        logger.error("documents.background_ingest_failed", document_id=str(document_id), exc_info=True)
+
+
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
@@ -71,6 +99,7 @@ def _build_contextualizer(tenant_id: UUID, config: TenantConfig) -> LLMContextua
 async def upload_document(
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
+    background_tasks: BackgroundTasks,
     file: Annotated[UploadFile, File()],
 ) -> DocumentSummary:
     if not file.filename:
@@ -87,20 +116,24 @@ async def upload_document(
     tenant_id = await resolve_tenant_id(current_user, uow)
     config = await _load_tenant_config(tenant_id, uow)
 
-    use_case = IngestDocumentUseCase(
-        uow=uow,
-        parser=DocumentParser(),
-        chunker=RecursiveTokenChunker(),
-        embedder=_build_embedder(config),
-        contextualizer=_build_contextualizer(tenant_id, config),
-    )
-    dto = await use_case.execute(
-        IngestDocument(
+    # Record the document synchronously (so it appears immediately and bad file
+    # types are rejected now), then parse + chunk + embed it in the background so
+    # a large upload never blocks the request. The frontend polls for the status.
+    dto = await RegisterDocumentUseCase(uow=uow).execute(
+        RegisterDocument(
             tenant_id=tenant_id,
             uploaded_by_user_id=current_user.id,
             filename=file.filename,
-            content=content,
+            size_bytes=len(content),
         )
+    )
+    background_tasks.add_task(
+        _process_document_in_background,
+        tenant_id=tenant_id,
+        document_id=dto.id,
+        filename=file.filename,
+        content=content,
+        config=config,
     )
     return DocumentSummary(
         id=dto.id,

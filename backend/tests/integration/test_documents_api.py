@@ -33,12 +33,10 @@ async def test_upload_unsupported_file_type(client: AsyncClient) -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_failed_ingestion_persists_as_failed_document(client: AsyncClient) -> None:
-    """A document that fails ingestion is recorded as FAILED (not rolled back).
+    """A document that fails ingestion is recorded as FAILED, not lost.
 
-    Regression: the request session rolls back on the re-raised error, which used
-    to discard the failure row — leaving the owner with no record of what broke.
-    An empty file parses to zero chunks, so it fails before embedding (no API key
-    needed) and exercises the persist-the-failure path.
+    An empty file parses to zero chunks, so background ingestion fails before
+    embedding (no API key needed) and records the failure on the document.
     """
     token, _, _ = await register_and_token(client)
     headers = {"Authorization": f"Bearer {token}"}
@@ -48,7 +46,7 @@ async def test_failed_ingestion_persists_as_failed_document(client: AsyncClient)
         headers=headers,
         files={"file": ("empty.md", b"", "text/markdown")},
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 201  # registered immediately; ingestion runs in the background
 
     resp = await client.get("/api/v1/documents", headers=headers)
     assert resp.status_code == 200
@@ -70,18 +68,19 @@ async def test_upload_markdown_then_list_then_delete(client: AsyncClient) -> Non
         headers=headers,
         files={"file": ("faq.md", md_content, "text/markdown")},
     )
-    if resp.status_code in {400, 500}:
-        pytest.skip("Embedding API key not configured in tenant settings — cannot test upload")
-    assert resp.status_code == 201
-    doc = resp.json()
-    assert doc["status"] == "ready"
-    assert doc["chunk_count"] >= 1
-    doc_id = doc["id"]
+    assert resp.status_code == 201  # registered; ingestion runs in the background
+    doc_id = resp.json()["id"]
 
-    # List
+    # Background ingestion has run (ASGITransport awaits it). Without an embedding
+    # key it fails; with one the document is ready with chunks.
     resp = await client.get("/api/v1/documents", headers=headers)
     assert resp.status_code == 200
-    assert len(resp.json()) == 1
+    docs = resp.json()
+    assert len(docs) == 1
+    if docs[0]["status"] == "failed":
+        pytest.skip("Embedding API key not configured in tenant settings — ingestion failed")
+    assert docs[0]["status"] == "ready"
+    assert docs[0]["chunk_count"] >= 1
 
     # Delete
     resp = await client.delete(f"/api/v1/documents/{doc_id}", headers=headers)

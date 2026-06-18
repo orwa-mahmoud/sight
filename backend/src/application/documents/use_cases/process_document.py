@@ -1,34 +1,33 @@
-"""IngestDocument — parse + chunk + embed + persist in one transaction.
+"""ProcessDocument — parse, chunk, embed and persist a registered document.
 
-The use case orchestrates ports (chunker, embedder) without knowing their
-implementations. Errors during parsing or embedding mark the document FAILED
-without losing the upload metadata, so the owner can see what happened.
+Runs in the background after the upload request returns. Moves the document
+INGESTING -> READY, or records FAILED with the reason. Failures are captured in
+the document's status rather than raised, since there is no request to surface
+them to — the owner sees the failure (and reason) in the documents list.
 """
 
 from __future__ import annotations
 
 import structlog
 
-from src.application.documents.commands import IngestDocument
-from src.application.documents.dtos import DocumentDTO
+from src.application.documents.commands import ProcessDocument
 from src.application.shared.unit_of_work import UnitOfWork
-from src.domain.documents.entities import Chunk, Document
-from src.domain.documents.value_objects import DocumentMimeType
+from src.domain.documents.entities import Chunk
 from src.domain.rag.ports import ChunkerPort, ContextualizerPort, EmbeddingPort, ParserPort
 from src.domain.rag.value_objects import TextChunk
 from src.domain.shared.exceptions import InvalidOperationError
 
 logger = structlog.get_logger()
 
-# Cap how many chunks get an LLM-generated context per upload, so a very large
-# document can't fan out into unbounded LLM calls during a synchronous ingest.
+# Cap how many chunks get an LLM-generated context, so a very large document
+# can't fan out into unbounded LLM calls.
 _MAX_CONTEXTUALIZED_CHUNKS = 100
 # Below this chunk count the document is small enough that each chunk already
 # carries its context — contextualizing would add LLM cost for no retrieval gain.
 _MIN_CHUNKS_FOR_CONTEXT = 3
 
 
-class IngestDocumentUseCase:
+class ProcessDocumentUseCase:
     def __init__(
         self,
         *,
@@ -44,36 +43,28 @@ class IngestDocumentUseCase:
         self._embedder = embedder
         self._contextualizer = contextualizer
 
-    async def execute(self, cmd: IngestDocument) -> DocumentDTO:
-        mime = DocumentMimeType.from_filename(cmd.filename)
-        if mime is None:
-            raise InvalidOperationError(
-                "Unsupported file type. Allowed: PDF, DOCX, Markdown, plain text.",
-                code="document.unsupported_type",
-            )
+    async def execute(self, cmd: ProcessDocument) -> None:
+        doc = await self._uow.documents.get_by_id(cmd.document_id)
+        if doc is None:
+            logger.warning("process.document_missing", document_id=str(cmd.document_id))
+            return
 
-        doc = Document.upload(
-            tenant_id=cmd.tenant_id,
-            uploaded_by_user_id=cmd.uploaded_by_user_id,
-            filename=cmd.filename,
-            mime_type=mime,
-            size_bytes=len(cmd.content),
-        )
-        await self._uow.documents.save(doc)
-        await self._uow.flush()  # flush INSERT so the row exists for the UPDATE
         doc.mark_ingesting()
         await self._uow.documents.save(doc)
-        await self._uow.flush()
+        await self._uow.commit()
+        # commit ends the transaction, clearing the transaction-local RLS scope —
+        # re-apply it for the chunk writes that follow.
+        await self._uow.set_tenant_scope(cmd.tenant_id)
 
         try:
-            text = self._parser.parse(cmd.content, mime)
+            text = self._parser.parse(cmd.content, doc.mime_type)
             text_chunks = self._chunker.chunk(text)
             if not text_chunks:
                 raise InvalidOperationError("Document is empty after parsing")
 
             # Embed each chunk with an LLM-generated context prepended (Contextual
-            # Retrieval); the stored chunk content stays the original, only the
-            # embedding sees the context. Falls back to the raw chunk if disabled.
+            # Retrieval); the stored chunk content stays original, only the embedding
+            # sees the context. Falls back to the raw chunk if disabled.
             embed_inputs = await self._contextualized_inputs(text, text_chunks)
             embeddings = await self._embedder.embed_documents(embed_inputs)
 
@@ -81,29 +72,22 @@ class IngestDocumentUseCase:
                 Chunk.create(
                     document_id=doc.id,
                     tenant_id=cmd.tenant_id,
-                    chunk_index=text_chunks[i].index,
-                    content=text_chunks[i].content,
+                    chunk_index=chunk.index,
+                    content=chunk.content,
                     embedding=embeddings[i],
-                    extra_metadata={"source_filename": cmd.filename, **text_chunks[i].extra_metadata},
+                    extra_metadata={"source_filename": cmd.filename, **chunk.extra_metadata},
                 )
-                for i in range(len(text_chunks))
+                for i, chunk in enumerate(text_chunks)
             ]
             self._uow.chunks.save_many(chunks)
             doc.mark_ready(chunk_count=len(chunks))
             await self._uow.documents.save(doc)
+            await self._uow.commit()
         except Exception as exc:
-            logger.warning("ingest.failed", document_id=str(doc.id), exc_info=True)
+            logger.warning("process.failed", document_id=str(doc.id), exc_info=True)
             doc.mark_failed(reason=str(exc))
             await self._uow.documents.save(doc)
-            # Commit the terminal FAILED state before propagating. The request's
-            # session rolls back on the re-raised exception, which would otherwise
-            # discard the failed row — leaving the owner with no record of what
-            # went wrong. Committing here keeps the failure visible in the list.
             await self._uow.commit()
-            raise
-
-        self._uow.track(doc)
-        return _to_dto(doc)
 
     async def _contextualized_inputs(self, document: str, text_chunks: list[TextChunk]) -> list[str]:
         """Build the per-chunk strings to embed.
@@ -122,17 +106,3 @@ class IngestDocumentUseCase:
                 context = await self._contextualizer.contextualize(document=document, chunk=chunk.content)
             inputs.append(f"{context}\n\n{chunk.content}" if context else chunk.content)
         return inputs
-
-
-def _to_dto(doc: Document) -> DocumentDTO:
-    return DocumentDTO(
-        id=doc.id,
-        filename=doc.filename,
-        mime_type=doc.mime_type.value,
-        size_bytes=doc.size_bytes,
-        status=doc.status.value,
-        chunk_count=doc.chunk_count,
-        error=doc.error,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-    )

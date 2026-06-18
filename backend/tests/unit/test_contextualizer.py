@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.application.documents.use_cases.ingest_document import IngestDocumentUseCase
+from src.application.documents.use_cases.process_document import ProcessDocumentUseCase
 from src.domain.rag.ports import ContextualizerPort
 from src.domain.rag.value_objects import TextChunk
 from src.infrastructure.rag.contextualizer import LLMContextualizer
@@ -18,8 +18,8 @@ def _llm(text: str) -> MagicMock:
     return llm
 
 
-def _use_case(contextualizer: ContextualizerPort | None = None) -> IngestDocumentUseCase:
-    return IngestDocumentUseCase(
+def _use_case(contextualizer: ContextualizerPort | None = None) -> ProcessDocumentUseCase:
+    return ProcessDocumentUseCase(
         uow=MagicMock(),
         parser=MagicMock(),
         chunker=MagicMock(),
