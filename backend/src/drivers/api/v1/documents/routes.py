@@ -23,7 +23,9 @@ from src.drivers.api.v1.documents.schemas import (
     RetrieveRequest,
     RetrieveResponse,
 )
+from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory
 from src.infrastructure.rag.chunker import RecursiveTokenChunker
+from src.infrastructure.rag.contextualizer import LLMContextualizer
 from src.infrastructure.rag.embedder import OpenAIEmbedder
 from src.infrastructure.rag.parser import DocumentParser
 from src.infrastructure.rag.retriever import HybridRetriever
@@ -49,6 +51,16 @@ def _build_embedder(config: TenantConfig) -> OpenAIEmbedder:
         model=config.embedding_model,
         dimensions=_EMBEDDING_DIMENSIONS,
     )
+
+
+_llm_factory = TenantLLMClientFactory()
+
+
+def _build_contextualizer(tenant_id: UUID, config: TenantConfig) -> LLMContextualizer | None:
+    """Contextual Retrieval needs the tenant's LLM — skip when none is configured."""
+    if not config.llm_api_key:
+        return None
+    return LLMContextualizer(_llm_factory.get_or_build(tenant_id, config))
 
 
 @router.post(
@@ -80,6 +92,7 @@ async def upload_document(
         parser=DocumentParser(),
         chunker=RecursiveTokenChunker(),
         embedder=_build_embedder(config),
+        contextualizer=_build_contextualizer(tenant_id, config),
     )
     dto = await use_case.execute(
         IngestDocument(

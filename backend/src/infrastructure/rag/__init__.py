@@ -3,7 +3,7 @@
 from src.infrastructure.rag.chunker import RecursiveTokenChunker
 from src.infrastructure.rag.embedder import OpenAIEmbedder
 from src.infrastructure.rag.parser import parse
-from src.infrastructure.rag.reranker import PassThroughReranker
+from src.infrastructure.rag.reranker import LLMReranker
 from src.infrastructure.rag.retriever import HybridRetriever
 
-__all__ = ["HybridRetriever", "OpenAIEmbedder", "PassThroughReranker", "RecursiveTokenChunker", "parse"]
+__all__ = ["HybridRetriever", "LLMReranker", "OpenAIEmbedder", "RecursiveTokenChunker", "parse"]

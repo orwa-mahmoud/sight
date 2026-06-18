@@ -3,8 +3,9 @@
 Step 1: pull top-N candidates from the HNSW index (cosine distance).
 Step 2: pull top-N from BM25 over the tsvector column.
 Step 3: combine ranks with RRF (k=60) — robust to scale differences.
-Step 4: optional cross-encoder reranking via RerankerPort.
-Step 5: take top-k.
+Step 4: optional reranking via RerankerPort (kept hybrid order when absent).
+Step 5: take top-k, then re-order so the strongest chunks sit at the edges of
+        the context the LLM sees ("lost in the middle").
 """
 
 from __future__ import annotations
@@ -18,10 +19,22 @@ from src.domain.rag.ports import EmbeddingPort, RerankerPort
 from src.domain.rag.value_objects import RetrievedChunk
 from src.infrastructure.metrics import RAG_RETRIEVALS_TOTAL
 from src.infrastructure.persistence.postgres.models.chunk import ChunkModel
-from src.infrastructure.rag.reranker import PassThroughReranker
 
 _DEFAULT_CANDIDATE_POOL = 50
 _RRF_K = 60
+
+
+def reorder_lost_in_the_middle(chunks: list[RetrievedChunk]) -> list[RetrievedChunk]:
+    """Place the strongest chunks at the start and end of the list.
+
+    LLMs attend best to the beginning and end of their context and worst to the
+    middle. Given chunks in best-first order, interleave them so the top result
+    stays first, the second-best lands last, and the weakest sit in the middle.
+    Order-only — same chunks, same set — so it never changes recall, only layout.
+    """
+    if len(chunks) <= 2:
+        return chunks
+    return chunks[0::2] + chunks[1::2][::-1]
 
 
 class HybridRetriever:
@@ -30,7 +43,7 @@ class HybridRetriever:
     def __init__(self, *, session: AsyncSession, embedder: EmbeddingPort, reranker: RerankerPort | None = None) -> None:
         self._session = session
         self._embedder = embedder
-        self._reranker: RerankerPort = reranker or PassThroughReranker()
+        self._reranker = reranker
 
     async def hybrid_retrieve(
         self,
@@ -65,7 +78,12 @@ class HybridRetriever:
             if cid in by_id
         ]
 
-        return self._reranker.rerank(query, candidates, top_k=top_k)
+        if self._reranker is not None:
+            candidates = await self._reranker.rerank(query, candidates, top_k=top_k)
+        else:
+            candidates = candidates[:top_k]
+
+        return reorder_lost_in_the_middle(candidates)
 
     # ── Stage 1: vector (HNSW cosine) ─────────────────────────────
     async def _vector_search(

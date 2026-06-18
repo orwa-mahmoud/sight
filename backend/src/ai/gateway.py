@@ -48,6 +48,7 @@ from src.infrastructure.ai.graph import build_agent_graph, run_graph
 from src.infrastructure.llm.tenant_factory import TenantLLMClientFactory
 from src.infrastructure.metrics import AGENT_INVOCATIONS_TOTAL, AGENT_TOOL_CALLS_TOTAL
 from src.infrastructure.rag.embedder import OpenAIEmbedder
+from src.infrastructure.rag.reranker import LLMReranker
 from src.infrastructure.rag.retriever import HybridRetriever
 
 logger = structlog.get_logger()
@@ -147,7 +148,7 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
         model=tenant_config.embedding_model,
         dimensions=1536,
     )
-    retriever = HybridRetriever(session=uow._session, embedder=embedder)
+    retriever = HybridRetriever(session=uow._session, embedder=embedder, reranker=LLMReranker(llm))
 
     # ── 5. Acquire thread lock + run LangGraph agent ───────────────
     lock = await _acquire_thread_lock(thread_id)

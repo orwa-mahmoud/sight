@@ -32,8 +32,19 @@ class EmbeddingPort(Protocol):
 
 
 class RerankerPort(Protocol):
-    # Sync for now; upgrade to async when a real reranker (Cohere, cross-encoder) is added.
-    def rerank(self, query: str, chunks: list[RetrievedChunk], *, top_k: int = 8) -> list[RetrievedChunk]: ...
+    async def rerank(self, query: str, chunks: list[RetrievedChunk], *, top_k: int = 8) -> list[RetrievedChunk]: ...
+
+
+class ContextualizerPort(Protocol):
+    """Generates a short context that situates a chunk within its document.
+
+    Prepended to the chunk *before embedding* (Anthropic's Contextual Retrieval)
+    so the chunk's vector reflects its place in the document, not just its words.
+    Returns "" when no useful context can be produced (caller falls back to the
+    raw chunk).
+    """
+
+    async def contextualize(self, *, document: str, chunk: str) -> str: ...
 
 
 class RetrieverPort(Protocol):

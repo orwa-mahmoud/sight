@@ -14,10 +14,15 @@ from src.application.documents.dtos import DocumentDTO
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.documents.entities import Chunk, Document
 from src.domain.documents.value_objects import DocumentMimeType
-from src.domain.rag.ports import ChunkerPort, EmbeddingPort, ParserPort
+from src.domain.rag.ports import ChunkerPort, ContextualizerPort, EmbeddingPort, ParserPort
+from src.domain.rag.value_objects import TextChunk
 from src.domain.shared.exceptions import InvalidOperationError
 
 logger = structlog.get_logger()
+
+# Cap how many chunks get an LLM-generated context per upload, so a very large
+# document can't fan out into unbounded LLM calls during a synchronous ingest.
+_MAX_CONTEXTUALIZED_CHUNKS = 100
 
 
 class IngestDocumentUseCase:
@@ -28,11 +33,13 @@ class IngestDocumentUseCase:
         parser: ParserPort,
         chunker: ChunkerPort,
         embedder: EmbeddingPort,
+        contextualizer: ContextualizerPort | None = None,
     ) -> None:
         self._uow = uow
         self._parser = parser
         self._chunker = chunker
         self._embedder = embedder
+        self._contextualizer = contextualizer
 
     async def execute(self, cmd: IngestDocument) -> DocumentDTO:
         mime = DocumentMimeType.from_filename(cmd.filename)
@@ -61,7 +68,11 @@ class IngestDocumentUseCase:
             if not text_chunks:
                 raise InvalidOperationError("Document is empty after parsing")
 
-            embeddings = await self._embedder.embed_documents([c.content for c in text_chunks])
+            # Embed each chunk with an LLM-generated context prepended (Contextual
+            # Retrieval); the stored chunk content stays the original, only the
+            # embedding sees the context. Falls back to the raw chunk if disabled.
+            embed_inputs = await self._contextualized_inputs(text, text_chunks)
+            embeddings = await self._embedder.embed_documents(embed_inputs)
 
             chunks = [
                 Chunk.create(
@@ -90,6 +101,23 @@ class IngestDocumentUseCase:
 
         self._uow.track(doc)
         return _to_dto(doc)
+
+    async def _contextualized_inputs(self, document: str, text_chunks: list[TextChunk]) -> list[str]:
+        """Build the per-chunk strings to embed.
+
+        With a contextualizer, each chunk gets a short LLM-generated context line
+        prepended (Contextual Retrieval). Without one — or beyond the per-upload
+        cap — the raw chunk is embedded, so this is never worse than plain embedding.
+        """
+        if self._contextualizer is None:
+            return [c.content for c in text_chunks]
+        inputs: list[str] = []
+        for i, chunk in enumerate(text_chunks):
+            context = ""
+            if i < _MAX_CONTEXTUALIZED_CHUNKS:
+                context = await self._contextualizer.contextualize(document=document, chunk=chunk.content)
+            inputs.append(f"{context}\n\n{chunk.content}" if context else chunk.content)
+        return inputs
 
 
 def _to_dto(doc: Document) -> DocumentDTO:
