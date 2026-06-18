@@ -23,6 +23,9 @@ logger = structlog.get_logger()
 # Cap how many chunks get an LLM-generated context per upload, so a very large
 # document can't fan out into unbounded LLM calls during a synchronous ingest.
 _MAX_CONTEXTUALIZED_CHUNKS = 100
+# Below this chunk count the document is small enough that each chunk already
+# carries its context — contextualizing would add LLM cost for no retrieval gain.
+_MIN_CHUNKS_FOR_CONTEXT = 3
 
 
 class IngestDocumentUseCase:
@@ -106,10 +109,11 @@ class IngestDocumentUseCase:
         """Build the per-chunk strings to embed.
 
         With a contextualizer, each chunk gets a short LLM-generated context line
-        prepended (Contextual Retrieval). Without one — or beyond the per-upload
-        cap — the raw chunk is embedded, so this is never worse than plain embedding.
+        prepended (Contextual Retrieval). Without one, for a tiny document, or
+        beyond the per-upload cap, the raw chunk is embedded — so this is never
+        worse than plain embedding, and small uploads pay no extra LLM cost.
         """
-        if self._contextualizer is None:
+        if self._contextualizer is None or len(text_chunks) < _MIN_CHUNKS_FOR_CONTEXT:
             return [c.content for c in text_chunks]
         inputs: list[str] = []
         for i, chunk in enumerate(text_chunks):

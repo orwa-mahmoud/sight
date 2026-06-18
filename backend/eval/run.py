@@ -23,7 +23,7 @@ from eval.types import GoldenItem
 _HERE = Path(__file__).parent
 
 
-def _load_golden(path: Path) -> list[GoldenItem]:
+def load_golden(path: Path) -> list[GoldenItem]:
     data = json.loads(path.read_text(encoding="utf-8"))
     return [
         GoldenItem(
@@ -54,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
 
     corpus = load_corpus(_HERE / "fixtures")
     retriever = LexicalRetriever(corpus)
-    golden = _load_golden(_HERE / "golden_set.json")
+    golden = load_golden(_HERE / "golden_set.json")
 
     outcomes = []
     for item in golden:

@@ -48,26 +48,37 @@ async def test_contextualizer_returns_empty_on_error() -> None:
 # ── ingest: contextualized embed inputs ───────────────────────────
 
 
+def _chunks(*contents: str) -> list[TextChunk]:
+    return [TextChunk(index=i, content=c) for i, c in enumerate(contents)]
+
+
 @pytest.mark.asyncio
 async def test_ingest_prepends_context_before_embedding() -> None:
     ctx = MagicMock()
     ctx.contextualize = AsyncMock(return_value="CTX")
-    chunks = [TextChunk(index=0, content="alpha"), TextChunk(index=1, content="beta")]
-    out = await _use_case(ctx)._contextualized_inputs("document", chunks)
-    assert out == ["CTX\n\nalpha", "CTX\n\nbeta"]
+    out = await _use_case(ctx)._contextualized_inputs("document", _chunks("a", "b", "c"))
+    assert out == ["CTX\n\na", "CTX\n\nb", "CTX\n\nc"]
+
+
+@pytest.mark.asyncio
+async def test_ingest_skips_context_for_tiny_documents() -> None:
+    ctx = MagicMock()
+    ctx.contextualize = AsyncMock(return_value="CTX")
+    # Below the chunk threshold the contextualizer is never called — no LLM cost.
+    out = await _use_case(ctx)._contextualized_inputs("document", _chunks("alpha", "beta"))
+    assert out == ["alpha", "beta"]
+    ctx.contextualize.assert_not_called()
 
 
 @pytest.mark.asyncio
 async def test_ingest_without_contextualizer_embeds_raw() -> None:
-    chunks = [TextChunk(index=0, content="alpha")]
-    out = await _use_case()._contextualized_inputs("document", chunks)
-    assert out == ["alpha"]
+    out = await _use_case()._contextualized_inputs("document", _chunks("a", "b", "c"))
+    assert out == ["a", "b", "c"]
 
 
 @pytest.mark.asyncio
 async def test_ingest_falls_back_to_raw_when_context_empty() -> None:
     ctx = MagicMock()
     ctx.contextualize = AsyncMock(return_value="")  # contextualizer produced nothing
-    chunks = [TextChunk(index=0, content="alpha")]
-    out = await _use_case(ctx)._contextualized_inputs("document", chunks)
-    assert out == ["alpha"]
+    out = await _use_case(ctx)._contextualized_inputs("document", _chunks("a", "b", "c"))
+    assert out == ["a", "b", "c"]
