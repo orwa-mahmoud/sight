@@ -6,9 +6,10 @@ from uuid import uuid4
 
 import pytest
 
-from src.application.documents.queries import ListDocuments
+from src.application.documents.queries import ListDocuments, ListProcessingDocuments
 from src.application.documents.use_cases.delete_document import DeleteDocumentUseCase
 from src.application.documents.use_cases.list_documents import ListDocumentsUseCase
+from src.application.documents.use_cases.list_processing_documents import ListProcessingDocumentsUseCase
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.documents.entities import Document
 from src.domain.documents.value_objects import DocumentMimeType
@@ -56,6 +57,70 @@ async def test_list_documents_with_entries(client: None) -> None:
         result = await ListDocumentsUseCase(uow=uow).execute(ListDocuments(tenant_id=tenant.id))
         assert len(result) == 1
         assert result[0].filename == "a.md"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_list_processing_returns_only_in_flight_documents(client: None) -> None:
+    """The progress endpoint surfaces uploaded/ingesting docs and hides ready ones,
+    so the indicator (which polls it) re-derives in-flight work after a refresh."""
+    tenant = await _make_tenant()
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        uploaded = Document.upload(
+            tenant_id=tenant.id,
+            uploaded_by_user_id=None,
+            filename="pending.md",
+            mime_type=DocumentMimeType.MARKDOWN,
+            size_bytes=10,
+        )
+        ingesting = Document.upload(
+            tenant_id=tenant.id,
+            uploaded_by_user_id=None,
+            filename="working.md",
+            mime_type=DocumentMimeType.MARKDOWN,
+            size_bytes=10,
+        )
+        ingesting.mark_ingesting()
+        ready = Document.upload(
+            tenant_id=tenant.id,
+            uploaded_by_user_id=None,
+            filename="done.md",
+            mime_type=DocumentMimeType.MARKDOWN,
+            size_bytes=10,
+        )
+        ready.mark_ingesting()
+        ready.mark_ready(chunk_count=3)
+        for d in (uploaded, ingesting, ready):
+            await uow.documents.save(d)
+        await uow.commit()
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        result = await ListProcessingDocumentsUseCase(uow=uow).execute(ListProcessingDocuments(tenant_id=tenant.id))
+        names = {d.filename for d in result}
+        assert names == {"pending.md", "working.md"}
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_list_processing_isolated_by_tenant(client: None) -> None:
+    tenant_a = await _make_tenant()
+    tenant_b = await _make_tenant()
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        d = Document.upload(
+            tenant_id=tenant_a.id,
+            uploaded_by_user_id=None,
+            filename="a-pending.md",
+            mime_type=DocumentMimeType.MARKDOWN,
+            size_bytes=10,
+        )
+        await uow.documents.save(d)
+        await uow.commit()
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        result = await ListProcessingDocumentsUseCase(uow=uow).execute(ListProcessingDocuments(tenant_id=tenant_b.id))
+        assert result == []
 
 
 @pytest.mark.integration

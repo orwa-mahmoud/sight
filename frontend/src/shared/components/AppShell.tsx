@@ -28,6 +28,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import { useAuth } from "@auth/useAuth";
 import { ColorSchemeToggle } from "@shared/components/ColorSchemeToggle";
+import { IngestionProgress } from "@shared/components/IngestionProgress";
 import { LanguageSwitcher } from "@shared/components/LanguageSwitcher";
 
 type NavItem = { labelKey: string; to: string; icon: ReactNode; ownerOnly?: boolean };
@@ -175,6 +176,10 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
       <MantineAppShell.Main id="main-content" tabIndex={-1}>
         {children}
       </MantineAppShell.Main>
+
+      {/* Global, non-blocking ingestion progress — visible from any page, backed
+          by the server so it survives a refresh. */}
+      <IngestionProgress />
     </MantineAppShell>
   );
 }

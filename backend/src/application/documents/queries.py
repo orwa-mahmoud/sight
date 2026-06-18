@@ -14,6 +14,11 @@ class ListDocuments:
 
 
 @dataclass(frozen=True, kw_only=True)
+class ListProcessingDocuments:
+    tenant_id: UUID
+
+
+@dataclass(frozen=True, kw_only=True)
 class RetrieveForQuery:
     tenant_id: UUID
     query: str

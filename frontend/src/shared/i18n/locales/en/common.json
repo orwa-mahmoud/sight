@@ -134,6 +134,12 @@
     "filterStatus": "Status",
     "uploadTooLarge": "File is too large. The maximum upload size is 25 MB."
   },
+  "ingestion": {
+    "processing": "Processing {{n}} document(s)…",
+    "andMore": "+{{n}} more",
+    "ariaLabel": "Document ingestion progress",
+    "viewAll": "View knowledge base"
+  },
   "inbox": {
     "title": "Inbox",
     "subtitle": "Questions the AI escalated to you.",

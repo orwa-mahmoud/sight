@@ -9,9 +9,11 @@ import structlog
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Query, UploadFile, status
 
 from src.application.documents.commands import ProcessDocument, RegisterDocument
-from src.application.documents.queries import ListDocuments, RetrieveForQuery
+from src.application.documents.dtos import DocumentDTO
+from src.application.documents.queries import ListDocuments, ListProcessingDocuments, RetrieveForQuery
 from src.application.documents.use_cases.delete_document import DeleteDocumentUseCase
 from src.application.documents.use_cases.list_documents import ListDocumentsUseCase
+from src.application.documents.use_cases.list_processing_documents import ListProcessingDocumentsUseCase
 from src.application.documents.use_cases.process_document import ProcessDocumentUseCase
 from src.application.documents.use_cases.register_document import RegisterDocumentUseCase
 from src.application.documents.use_cases.retrieve_for_query import RetrieveForQueryUseCase
@@ -38,6 +40,20 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 logger = structlog.get_logger()
 
 _MAX_UPLOAD_BYTES = 25 * 1024 * 1024  # 25 MB hard cap for v1
+
+
+def _to_summary(dto: DocumentDTO) -> DocumentSummary:
+    return DocumentSummary(
+        id=dto.id,
+        filename=dto.filename,
+        mime_type=dto.mime_type,
+        size_bytes=dto.size_bytes,
+        status=dto.status,
+        chunk_count=dto.chunk_count,
+        error=dto.error,
+        created_at=dto.created_at,
+        updated_at=dto.updated_at,
+    )
 
 
 async def _load_tenant_config(tenant_id: UUID, uow: UnitOfWork) -> TenantConfig:
@@ -135,17 +151,7 @@ async def upload_document(
         content=content,
         config=config,
     )
-    return DocumentSummary(
-        id=dto.id,
-        filename=dto.filename,
-        mime_type=dto.mime_type,
-        size_bytes=dto.size_bytes,
-        status=dto.status,
-        chunk_count=dto.chunk_count,
-        error=dto.error,
-        created_at=dto.created_at,
-        updated_at=dto.updated_at,
-    )
+    return _to_summary(dto)
 
 
 @router.get("")
@@ -157,20 +163,22 @@ async def list_documents(
 ) -> list[DocumentSummary]:
     tenant_id = await resolve_tenant_id(current_user, uow)
     dtos = await ListDocumentsUseCase(uow=uow).execute(ListDocuments(tenant_id=tenant_id, limit=limit, offset=offset))
-    return [
-        DocumentSummary(
-            id=d.id,
-            filename=d.filename,
-            mime_type=d.mime_type,
-            size_bytes=d.size_bytes,
-            status=d.status,
-            chunk_count=d.chunk_count,
-            error=d.error,
-            created_at=d.created_at,
-            updated_at=d.updated_at,
-        )
-        for d in dtos
-    ]
+    return [_to_summary(d) for d in dtos]
+
+
+@router.get("/processing")
+async def list_processing_documents(
+    current_user: CurrentUser,
+    uow: UnitOfWorkDep,
+) -> list[DocumentSummary]:
+    """In-flight uploads (uploaded or ingesting) for the global progress indicator.
+
+    Lightweight by design: returns only the few documents still being ingested,
+    so any page can poll it cheaply and a refresh re-derives progress from the DB.
+    """
+    tenant_id = await resolve_tenant_id(current_user, uow)
+    dtos = await ListProcessingDocumentsUseCase(uow=uow).execute(ListProcessingDocuments(tenant_id=tenant_id))
+    return [_to_summary(d) for d in dtos]
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

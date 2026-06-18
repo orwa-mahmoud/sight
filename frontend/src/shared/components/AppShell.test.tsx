@@ -5,6 +5,11 @@ import { MantineProvider } from "@mantine/core";
 import { AuthContext, type AuthContextValue } from "@auth/context";
 import { ProtectedShell } from "./AppShell";
 
+// The shell mounts the global IngestionProgress (which polls via useQuery). These
+// tests cover shell structure, not ingestion, so stub it to keep them isolated
+// from the query client — IngestionProgress has its own dedicated test.
+vi.mock("./IngestionProgress", () => ({ IngestionProgress: () => null }));
+
 const USER_WITH_NAME = {
   id: "u1",
   email: "owner@acme.com",

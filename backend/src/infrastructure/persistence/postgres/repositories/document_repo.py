@@ -46,6 +46,18 @@ class PostgresDocumentRepository:
         result = await self._session.execute(stmt)
         return [self._to_entity(m) for m in result.scalars().all()]
 
+    async def list_processing(self, tenant_id: UUID) -> list[Document]:
+        stmt = (
+            select(DocumentModel)
+            .where(
+                DocumentModel.tenant_id == tenant_id,
+                DocumentModel.status.in_((DocumentStatus.UPLOADED.value, DocumentStatus.INGESTING.value)),
+            )
+            .order_by(DocumentModel.created_at.desc())
+        )
+        result = await self._session.execute(stmt)
+        return [self._to_entity(m) for m in result.scalars().all()]
+
     async def count_for_tenant(self, tenant_id: UUID) -> int:
         stmt = select(func.count(DocumentModel.id)).where(DocumentModel.tenant_id == tenant_id)
         result = await self._session.execute(stmt)
