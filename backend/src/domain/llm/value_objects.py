@@ -34,6 +34,11 @@ class LLMMessage:
     content: str
     tool_calls: tuple[LLMToolCall, ...] = field(default_factory=tuple)
     tool_call_id: str | None = None  # set on role=TOOL responses
+    # Hint that this message's content is a large, reusable prefix worth caching
+    # (provider prompt caching). The infra adapter maps it to provider specifics
+    # (e.g. Anthropic cache_control); ignored where the provider caches prefixes
+    # automatically or doesn't support it.
+    cache: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)

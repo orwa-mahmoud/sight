@@ -8,6 +8,8 @@ them to — the owner sees the failure (and reason) in the documents list.
 
 from __future__ import annotations
 
+import asyncio
+
 import structlog
 
 from src.application.documents.commands import ProcessDocument
@@ -25,6 +27,9 @@ _MAX_CONTEXTUALIZED_CHUNKS = 100
 # Below this chunk count the document is small enough that each chunk already
 # carries its context — contextualizing would add LLM cost for no retrieval gain.
 _MIN_CHUNKS_FOR_CONTEXT = 3
+# Run per-chunk contextualization concurrently, but bounded so a large document
+# doesn't open dozens of simultaneous LLM calls (provider rate limits / fairness).
+_CONTEXTUALIZE_CONCURRENCY = 8
 
 
 class ProcessDocumentUseCase:
@@ -117,10 +122,21 @@ class ProcessDocumentUseCase:
         """
         if self._contextualizer is None or len(text_chunks) < _MIN_CHUNKS_FOR_CONTEXT:
             return [c.content for c in text_chunks]
-        inputs: list[str] = []
-        for i, chunk in enumerate(text_chunks):
-            context = ""
-            if i < _MAX_CONTEXTUALIZED_CHUNKS:
-                context = await self._contextualizer.contextualize(document=document, chunk=chunk.content)
-            inputs.append(f"{context}\n\n{chunk.content}" if context else chunk.content)
-        return inputs
+
+        # Contextualize chunks concurrently (bounded). Each call is independent and the
+        # shared document prefix is cached provider-side, so this cuts wall-clock to
+        # `ready` without re-paying for the prefix per chunk. Order is preserved.
+        contextualizer = self._contextualizer
+        semaphore = asyncio.Semaphore(_CONTEXTUALIZE_CONCURRENCY)
+
+        async def _context_for(index: int, content: str) -> str:
+            if index >= _MAX_CONTEXTUALIZED_CHUNKS:  # past the cap: embed the raw chunk
+                return ""
+            async with semaphore:
+                return await contextualizer.contextualize(document=document, chunk=content)
+
+        contexts = await asyncio.gather(*(_context_for(i, c.content) for i, c in enumerate(text_chunks)))
+        return [
+            f"{context}\n\n{chunk.content}" if context else chunk.content
+            for context, chunk in zip(contexts, text_chunks, strict=True)
+        ]
