@@ -28,7 +28,6 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
-    jwt_refresh_token_expire_days: int = 30
 
     # ── Platform admin bootstrap ───────────────────────────────────
     # If set, the user with this email is granted platform-admin on startup.
@@ -42,11 +41,6 @@ class Settings(BaseSettings):
     encryption_key: str | None = None
     # Previous Fernet keys (comma-separated) kept readable during a key rotation.
     encryption_key_fallbacks: str | None = None
-
-    # ── Observability ──────────────────────────────────────────────
-    otel_exporter_otlp_endpoint: str | None = None
-    otel_service_name: str = "frontdesk-backend"
-    sentry_dsn: str | None = None
 
     # ── CORS ───────────────────────────────────────────────────────
     cors_origins: str = Field(default="http://localhost:5173,http://localhost:3000")

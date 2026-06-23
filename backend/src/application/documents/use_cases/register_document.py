@@ -37,14 +37,4 @@ class RegisterDocumentUseCase:
         await self._uow.documents.save(doc)
         self._uow.track(doc)
         await self._uow.commit()
-        return DocumentDTO(
-            id=doc.id,
-            filename=doc.filename,
-            mime_type=doc.mime_type.value,
-            size_bytes=doc.size_bytes,
-            status=doc.status.value,
-            chunk_count=doc.chunk_count,
-            error=doc.error,
-            created_at=doc.created_at,
-            updated_at=doc.updated_at,
-        )
+        return DocumentDTO.from_entity(doc)
