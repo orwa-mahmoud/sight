@@ -26,6 +26,14 @@ export default defineConfig({
       reportsDirectory: "coverage",
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/**/*.test.{ts,tsx}", "src/test/**"],
+      // Floor so coverage can't silently erode as UI is added (see issue #32).
+      // Run via `npm run test:coverage`; CI fails the build if any metric drops below.
+      thresholds: {
+        lines: 92,
+        statements: 90,
+        branches: 85,
+        functions: 85,
+      },
     },
   },
 });
