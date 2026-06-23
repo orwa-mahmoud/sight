@@ -26,6 +26,7 @@ from src.domain.llm.value_objects import (
 from src.infrastructure.llm.error_classifier import classify_llm_error
 
 _LLM_RETRY_ATTEMPTS = 3
+_ANTHROPIC = "anthropic"
 
 
 def _is_transient_llm_error(exc: BaseException) -> bool:
@@ -69,7 +70,7 @@ class LangChainLLMClient(LLMClientPort):
         if tools:
             chat = chat.bind_tools(list(tools))
 
-        lc_messages = [_to_lc_message(m) for m in messages]
+        lc_messages = [_to_lc_message(m, self._provider) for m in messages]
         response = await chat.ainvoke(lc_messages)
         return _to_call_result(response, provider=self._provider, model=self._model)
 
@@ -77,16 +78,28 @@ class LangChainLLMClient(LLMClientPort):
 # ── Translation between domain VOs and langchain_core messages ────
 
 
-def _to_lc_message(msg: LLMMessage) -> Any:
+def _message_content(msg: LLMMessage, provider: str) -> str | list[str | dict[Any, Any]]:
+    """Plain text, unless the caller asked to cache this prefix on Anthropic — then a
+    single text block with `cache_control: ephemeral`, so a large repeated prefix
+    (e.g. the document in Contextual Retrieval) is billed once and read cheaply on
+    later calls within the cache TTL. Other providers cache stable prefixes on their
+    own, so the hint is a no-op there."""
+    if msg.cache and provider == _ANTHROPIC:
+        return [{"type": "text", "text": msg.content, "cache_control": {"type": "ephemeral"}}]
+    return msg.content
+
+
+def _to_lc_message(msg: LLMMessage, provider: str = "") -> Any:
+    content = _message_content(msg, provider)
     match msg.role:
         case LLMMessageRole.SYSTEM:
-            return SystemMessage(content=msg.content)
+            return SystemMessage(content=content)
         case LLMMessageRole.USER:
-            return HumanMessage(content=msg.content)
+            return HumanMessage(content=content)
         case LLMMessageRole.ASSISTANT:
-            return AIMessage(content=msg.content)
+            return AIMessage(content=content)
         case LLMMessageRole.TOOL:
-            return ToolMessage(content=msg.content, tool_call_id=msg.tool_call_id or "")
+            return ToolMessage(content=content, tool_call_id=msg.tool_call_id or "")
 
 
 def _to_call_result(response: AIMessage, *, provider: str, model: str) -> LLMCallResult:

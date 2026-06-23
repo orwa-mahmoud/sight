@@ -47,6 +47,23 @@ def test_to_lc_message_tool_missing_call_id() -> None:
     assert result.tool_call_id == ""
 
 
+def test_to_lc_message_caches_prefix_for_anthropic() -> None:
+    msg = LLMMessage(role=LLMMessageRole.SYSTEM, content="big prefix", cache=True)
+    result = _to_lc_message(msg, "anthropic")
+    assert result.content == [{"type": "text", "text": "big prefix", "cache_control": {"type": "ephemeral"}}]
+
+
+def test_to_lc_message_cache_is_noop_for_non_anthropic() -> None:
+    # OpenAI caches stable prefixes automatically — no cache_control block needed.
+    msg = LLMMessage(role=LLMMessageRole.SYSTEM, content="big prefix", cache=True)
+    assert _to_lc_message(msg, "openai").content == "big prefix"
+
+
+def test_to_lc_message_plain_string_without_cache() -> None:
+    msg = LLMMessage(role=LLMMessageRole.USER, content="hi")
+    assert _to_lc_message(msg, "anthropic").content == "hi"
+
+
 # ── _to_call_result tests ───────────────────────────────────────
 
 

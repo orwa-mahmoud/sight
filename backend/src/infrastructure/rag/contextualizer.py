@@ -27,20 +27,22 @@ class LLMContextualizer:
         self._llm = llm
 
     async def contextualize(self, *, document: str, chunk: str) -> str:
+        # The instruction + document is identical for every chunk of this document, so
+        # it goes in one cacheable prefix (system message); only the chunk varies. With
+        # provider prompt caching that prefix is billed once instead of once per chunk.
         messages = [
             LLMMessage(
                 role=LLMMessageRole.SYSTEM,
                 content=(
                     "You write a single short sentence that situates a chunk within its document "
-                    "to improve search retrieval. Reply with ONLY that sentence — no preamble."
+                    "to improve search retrieval. Reply with ONLY that sentence — no preamble.\n\n"
+                    f"<document>\n{document[:_DOC_EXCERPT_CHARS]}\n</document>"
                 ),
+                cache=True,
             ),
             LLMMessage(
                 role=LLMMessageRole.USER,
-                content=(
-                    f"<document>\n{document[:_DOC_EXCERPT_CHARS]}\n</document>\n\n"
-                    f"<chunk>\n{chunk}\n</chunk>\n\nShort context:"
-                ),
+                content=f"<chunk>\n{chunk}\n</chunk>\n\nShort context:",
             ),
         ]
         try:
