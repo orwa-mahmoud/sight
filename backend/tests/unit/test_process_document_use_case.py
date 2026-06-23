@@ -30,6 +30,7 @@ def _uow(doc: Document | None) -> MagicMock:
     uow.chunks = MagicMock()
     uow.chunks.save_many = MagicMock()
     uow.commit = AsyncMock()
+    uow.rollback = AsyncMock()
     uow.set_tenant_scope = AsyncMock()
     return uow
 
@@ -117,3 +118,26 @@ async def test_process_missing_document_is_noop() -> None:
     await uc.execute(ProcessDocument(tenant_id=uuid4(), document_id=uuid4(), filename="x.txt", content=b"x"))
 
     uow.documents.save.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_failure_during_final_commit_still_records_failed() -> None:
+    """If the work commit fails *after* mark_ready advanced the status, the recovery
+    handler rolls back, re-fetches, and forces FAILED — the row is never left ingesting."""
+    doc = _doc()
+    uow = _uow(doc)
+    # Commits in order: mark_ingesting (ok), mark_ready (raises), recovery (ok).
+    uow.commit = AsyncMock(side_effect=[None, RuntimeError("DB connection lost"), None])
+    uc = ProcessDocumentUseCase(
+        uow=uow,
+        parser=_parser(),
+        chunker=_chunker([TextChunk(index=0, content="chunk one"), TextChunk(index=1, content="chunk two")]),
+        embedder=_embedder([[0.1, 0.2], [0.3, 0.4]]),
+    )
+
+    await uc.execute(_cmd(doc))  # background work never raises
+
+    assert doc.status == DocumentStatus.FAILED  # not left INGESTING or READY
+    assert "DB connection lost" in (doc.error or "")
+    uow.rollback.assert_awaited()  # the dead work transaction was rolled back
+    uow.track.assert_called_with(doc)  # DocumentIngestionFailed still dispatched

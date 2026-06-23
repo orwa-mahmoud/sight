@@ -53,6 +53,27 @@ def test_mark_failed_truncates_long_reason() -> None:
     assert len(d.error or "") <= 1024
 
 
+def test_force_failed_from_ready_and_idempotent() -> None:
+    d = Document.upload(
+        tenant_id=uuid4(),
+        uploaded_by_user_id=None,
+        filename="d.pdf",
+        mime_type=DocumentMimeType.PDF,
+        size_bytes=100,
+    )
+    d.mark_ingesting()
+    d.mark_ready(chunk_count=5)
+    # mark_failed rejects a READY doc; force_failed is the recovery escape hatch.
+    with pytest.raises(InvalidOperationError):
+        d.mark_failed(reason="late error")
+    d.force_failed(reason="late error")
+    assert d.status == DocumentStatus.FAILED
+    assert d.error == "late error"
+    # Idempotent: forcing failure on an already-failed doc keeps the first reason.
+    d.force_failed(reason="second error")
+    assert d.error == "late error"
+
+
 def test_upload_events() -> None:
     d = Document.upload(
         tenant_id=uuid4(),

@@ -86,6 +86,20 @@ class Document(BaseEntity):
     def mark_failed(self, *, reason: str) -> None:
         if self.status != DocumentStatus.INGESTING:
             raise InvalidOperationError(f"Cannot mark failed from status {self.status}")
+        self._set_failed(reason)
+
+    def force_failed(self, *, reason: str) -> None:
+        """Record a failure from any non-terminal state (idempotent on FAILED).
+
+        The ingestion recovery path uses this: if the work transaction failed
+        *after* ``mark_ready()`` advanced the in-memory status, the row is
+        re-fetched and forced to FAILED so a document is never left stuck.
+        """
+        if self.status == DocumentStatus.FAILED:
+            return
+        self._set_failed(reason)
+
+    def _set_failed(self, reason: str) -> None:
         self.status = DocumentStatus.FAILED
         self.error = reason[:1024]
         self.updated_at = datetime.now(UTC)

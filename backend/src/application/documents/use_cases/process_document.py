@@ -86,10 +86,26 @@ class ProcessDocumentUseCase:
             await self._uow.commit()
         except Exception as exc:
             logger.warning("process.failed", document_id=str(doc.id), exc_info=True)
-            doc.mark_failed(reason=str(exc))
+            await self._record_failure(cmd, reason=str(exc))
+
+    async def _record_failure(self, cmd: ProcessDocument, *, reason: str) -> None:
+        """Persist FAILED in a fresh transaction, robust to a failure during the
+        work commit. That commit may have left the transaction dead and the
+        in-memory status already advanced past INGESTING, so roll back, re-apply
+        the tenant scope, re-fetch the row, force it to FAILED, and commit on its
+        own — a document is never left stuck mid-ingest."""
+        try:
+            await self._uow.rollback()
+            await self._uow.set_tenant_scope(cmd.tenant_id)
+            doc = await self._uow.documents.get_by_id(cmd.document_id)
+            if doc is None:
+                return
+            doc.force_failed(reason=reason)
             await self._uow.documents.save(doc)
             self._uow.track(doc)  # dispatch DocumentIngestionFailed after commit
             await self._uow.commit()
+        except Exception:
+            logger.error("process.failure_record_failed", document_id=str(cmd.document_id), exc_info=True)
 
     async def _contextualized_inputs(self, document: str, text_chunks: list[TextChunk]) -> list[str]:
         """Build the per-chunk strings to embed.
