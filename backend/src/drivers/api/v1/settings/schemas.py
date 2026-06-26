@@ -50,6 +50,7 @@ class ModelCatalogResponse(BaseModel):
     """Provider/model options offered to the owner in the settings dropdowns."""
 
     providers: list[ProviderModels]
+    embedding_models: list[ModelOption] = []
 
 
 class UpdateLLMConfig(BaseModel):

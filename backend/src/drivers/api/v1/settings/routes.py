@@ -9,7 +9,7 @@ from fastapi import APIRouter
 from src.ai.gateway import invalidate_tenant_llm_client
 from src.domain.shared.exceptions import AuthenticationError, AuthorizationError, EntityNotFoundError
 from src.domain.tenant_config.entities import TenantConfig
-from src.domain.tenant_config.model_catalog import MODEL_CATALOG, PROVIDER_LABELS
+from src.domain.tenant_config.model_catalog import EMBEDDING_MODELS, MODEL_CATALOG, PROVIDER_LABELS
 from src.domain.users.value_objects import UserTenantRole
 from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
 from src.drivers.api.v1.settings.schemas import (
@@ -85,7 +85,8 @@ async def list_models(current_user: CurrentUser) -> ModelCatalogResponse:
         for provider, label in PROVIDER_LABELS.items()
         if any(s.provider == provider for s in MODEL_CATALOG)
     ]
-    return ModelCatalogResponse(providers=providers)
+    embedding_models = [ModelOption(model=model, label=label) for model, label in EMBEDDING_MODELS]
+    return ModelCatalogResponse(providers=providers, embedding_models=embedding_models)
 
 
 @router.put("/llm")

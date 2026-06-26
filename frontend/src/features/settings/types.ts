@@ -11,6 +11,7 @@ export interface ProviderModels {
 
 export interface ModelCatalogResponse {
   providers: ProviderModels[];
+  embedding_models: ModelOption[];
 }
 
 export interface TenantConfigResponse {

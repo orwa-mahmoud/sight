@@ -92,3 +92,14 @@ def get_model_spec(model: str) -> ModelSpec | None:
     """The spec for a model id, or None if it is not in the catalog (caller falls
     back to legacy defaults — ``max_tokens`` + temperature)."""
     return _BY_MODEL.get(model)
+
+
+# Embedding models offered in Settings, as (model, label). Limited to models that
+# work at the chunk column's fixed 1536 dimensions: the text-embedding-3-* models
+# accept the ``dimensions`` request parameter the embedder always sends (large is
+# reduced from 3072 to 1536), whereas text-embedding-ada-002 ignores that
+# parameter, so it is intentionally excluded to avoid a dimension mismatch.
+EMBEDDING_MODELS: tuple[tuple[str, str], ...] = (
+    ("text-embedding-3-small", "text-embedding-3-small"),
+    ("text-embedding-3-large", "text-embedding-3-large"),
+)

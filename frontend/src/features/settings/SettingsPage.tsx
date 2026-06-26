@@ -183,6 +183,10 @@ export function SettingsPage() {
     catalogProviders
       .find((p) => p.provider === selectedProvider)
       ?.models.map((m) => ({ value: m.model, label: m.label })) ?? [];
+  const embeddingModelOptions = (catalogQuery.data?.embedding_models ?? []).map((m) => ({
+    value: m.model,
+    label: m.label,
+  }));
 
   return (
     <Stack>
@@ -287,9 +291,11 @@ export function SettingsPage() {
               })}
             >
               <Stack>
-                <TextInput
+                <Select
                   label={t("settings.model")}
+                  data={embeddingModelOptions}
                   placeholder={config.embedding_model}
+                  searchable
                   {...embForm.getInputProps("model")}
                 />
                 <PasswordInput

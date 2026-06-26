@@ -118,6 +118,10 @@ const CATALOG: ModelCatalogResponse = {
       models: [{ model: "glm-4.5-flash", label: "GLM-4.5 Flash (free)" }],
     },
   ],
+  embedding_models: [
+    { model: "text-embedding-3-small", label: "text-embedding-3-small" },
+    { model: "text-embedding-3-large", label: "text-embedding-3-large" },
+  ],
 };
 
 describe("SettingsPage", () => {
@@ -541,19 +545,20 @@ describe("SettingsPage", () => {
     });
   });
 
-  it("submits Embedding form with model filled", async () => {
+  it("submits Embedding form with a model picked from the catalog", async () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateEmbedding).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });
     await openSection("Embedding Configuration", "Save embedding config");
 
-    const modelInputs = screen.getAllByLabelText("Model");
-    fireEvent.change(modelInputs.at(-1)!, { target: { value: "ada-002" } });
+    fireEvent.click(screen.getAllByLabelText("Model").at(-1)!);
+    await waitFor(() => expect(screen.getByText("text-embedding-3-small")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("text-embedding-3-small"));
     fireEvent.click(screen.getByText("Save embedding config"));
 
     await waitFor(() => {
       expect(updateEmbedding).toHaveBeenCalledWith(
-        expect.objectContaining({ model: "ada-002" }),
+        expect.objectContaining({ model: "text-embedding-3-small" }),
         expect.anything(),
       );
     });
