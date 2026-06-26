@@ -12,17 +12,26 @@ their knowledge base, connect WhatsApp and Telegram, and the AI handles
 incoming questions — grounded in the tenant's own documents. Anything the
 AI can't answer gets routed to the owner's inbox for a human reply.
 
-_Live demo: coming soon_ &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [Architecture](backend/docs/ARCHITECTURE.md) &nbsp;·&nbsp; [Contributing](CONTRIBUTING.md)
+_Live demo: coming soon_ &nbsp;·&nbsp; [Demo](#demo) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [Architecture](backend/docs/ARCHITECTURE.md) &nbsp;·&nbsp; [Contributing](CONTRIBUTING.md)
 
-## Screenshots
+## Demo
 
-_Screenshots coming soon._
-<!-- TODO(orwa): add dashboard.png / documents.png / chat.png to docs/screenshots/,
-     delete the line above, and uncomment the table below.
-| Dashboard | Knowledge base | AI answering |
+[![Watch the demo — ask anything about Westeros, get a grounded, cited answer](docs/screenshots/library-poster.png)](docs/demo/rag-library-demo.mp4)
+
+Point frontdesk at a library and ask anything — it answers grounded in the source
+material and **cites the exact book** every time. Here it's reading the full
+_A Song of Ice and Fire_ saga (~5,000 pages). _Click to play (0:44)._
+
+### Built for real front desks
+
+The same engine pointed at a business's own knowledge base — a bank's support desk
+answering from its policy documents, and escalating to a human when it can't:
+
+| Owner inbox (escalation) | Knowledge base | AI answering, with sources |
 |---|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Documents](docs/screenshots/documents.png) | ![Chat answering from a document](docs/screenshots/chat.png) |
--->
+| ![Owner inbox with an escalated question](docs/screenshots/dashboard.png) | ![Knowledge base of uploaded documents](docs/screenshots/documents.png) | ![AI answering a question and citing the source document](docs/screenshots/chat.png) |
+
+▶ **[Watch the front-desk walkthrough](docs/demo/frontdesk-demo.mp4)** — a support desk answering from its own documents, with a live human escalation.
 
 ## Features
 

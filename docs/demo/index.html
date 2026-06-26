@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>frontdesk — demos</title>
+  <meta name="description" content="Video walkthroughs of frontdesk: a self-hosted, multi-tenant AI front desk with RAG-grounded answers and human-in-the-loop escalation." />
+  <style>
+    :root { --coral:#f76b22; --ink:#1f2937; --muted:#6b7280; --bg:#f8fafc; --card:#ffffff; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+           color:var(--ink); background:var(--bg); line-height:1.55; }
+    header { padding:56px 24px 8px; text-align:center; }
+    .logo { display:inline-flex; align-items:center; gap:10px; font-weight:800; font-size:24px; }
+    .logo .dot { width:24px; height:24px; border-radius:7px; background:var(--coral); }
+    header p { color:var(--muted); max-width:660px; margin:14px auto 0; }
+    main { max-width:960px; margin:0 auto; padding:24px; }
+    .demo { background:var(--card); border:1px solid #eef2f7; border-radius:16px;
+            padding:22px; margin:28px 0; box-shadow:0 8px 24px rgba(2,6,23,.05); }
+    .demo h2 { font-size:20px; margin:0 0 4px; }
+    .demo p { color:var(--muted); margin:0 0 14px; }
+    video { width:100%; border-radius:12px; background:#000; display:block; }
+    footer { text-align:center; color:var(--muted); padding:32px; }
+    a { color:var(--coral); text-decoration:none; font-weight:600; }
+    a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><span class="dot"></span> frontdesk</div>
+    <p>A self-hosted, multi-tenant AI front desk — RAG-grounded answers over your own
+       documents, with human-in-the-loop escalation. Two short walkthroughs:</p>
+  </header>
+  <main>
+    <section class="demo">
+      <h2>Ask anything about a library</h2>
+      <p>Grounded, source-cited answers across the full <em>A Song of Ice and Fire</em> saga (~5,000 pages) — it cites the exact book.</p>
+      <video controls preload="metadata" playsinline>
+        <source src="rag-library-demo.mp4" type="video/mp4" />
+        <track kind="descriptions" src="library-demo.vtt" srclang="en" label="English description" default />
+      </video>
+    </section>
+    <section class="demo">
+      <h2>Built for real front desks</h2>
+      <p>The same engine on a business's own knowledge base — a bank's support desk answering from its policy docs, with a live human escalation.</p>
+      <video controls preload="metadata" playsinline>
+        <source src="frontdesk-demo.mp4" type="video/mp4" />
+        <track kind="descriptions" src="frontdesk-demo.vtt" srclang="en" label="English description" default />
+      </video>
+    </section>
+  </main>
+  <footer>&larr; <a href="https://github.com/orwa-mahmoud/frontdesk">Back to the repository</a></footer>
+</body>
+</html>
