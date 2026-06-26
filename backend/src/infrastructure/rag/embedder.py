@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from openai import AsyncOpenAI
+from openai import APIConnectionError, APITimeoutError, AsyncOpenAI, RateLimitError
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from src.domain.shared.exceptions import InvalidOperationError
 
@@ -46,25 +47,37 @@ class OpenAIEmbedder:
     async def embed_documents(self, texts: Sequence[str]) -> list[list[float]]:
         if not texts:
             return []
-        client = self._get_client()
         cleaned = [t if t.strip() else " " for t in texts]
         all_embeddings: list[list[float]] = []
         for i in range(0, len(cleaned), self._BATCH_SIZE):
-            batch = cleaned[i : i + self._BATCH_SIZE]
-            response = await client.embeddings.create(
-                model=self._model,
-                input=list(batch),
-                dimensions=self._dimensions,
-            )
-            # The API may not return items in request order — sort by index so
-            # each embedding lines up with its source chunk.
-            ordered = sorted(response.data, key=lambda d: d.index)
-            all_embeddings.extend(d.embedding for d in ordered)
+            all_embeddings.extend(await self._embed_batch(list(cleaned[i : i + self._BATCH_SIZE])))
         if len(all_embeddings) != len(cleaned):
             raise InvalidOperationError(
                 f"Embedding provider returned {len(all_embeddings)} vectors for {len(cleaned)} chunks."
             )
         return all_embeddings
+
+    @retry(
+        retry=retry_if_exception_type((RateLimitError, APITimeoutError, APIConnectionError)),
+        stop=stop_after_attempt(6),
+        wait=wait_exponential(multiplier=1, max=20),
+        reraise=True,
+    )
+    async def _embed_batch(self, batch: list[str]) -> list[list[float]]:
+        """Embed one batch, retrying transient provider errors — especially 429 rate
+        limits — so a momentary TPM spike during bulk ingestion (many/large documents
+        at once) doesn't fail the whole document. Up to 6 attempts with exponential
+        backoff rides out a per-minute token window."""
+        client = self._get_client()
+        response = await client.embeddings.create(
+            model=self._model,
+            input=batch,
+            dimensions=self._dimensions,
+        )
+        # The API may not return items in request order — sort by index so each
+        # embedding lines up with its source chunk.
+        ordered = sorted(response.data, key=lambda d: d.index)
+        return [d.embedding for d in ordered]
 
     async def embed_query(self, text: str) -> list[float]:
         result = await self.embed_documents([text])
