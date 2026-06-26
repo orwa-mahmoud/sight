@@ -16,137 +16,148 @@
     />
     <style>
       :root {
-        --coral: #f76b22;
-        --gold: #e9c46a;
-        --ink: #e9ecf1;
-        --muted: #9aa3b2;
-        --bg: #0b0e13;
-        --line: rgba(233, 196, 106, 0.18);
+        --paper: #f1e5c8;
+        --paper-card: #f7eed7;
+        --ink: #3a2a1b;
+        --muted: #6f5a40;
+        --oxblood: #7a1f2b;
+        --oxblood-deep: #5a1320;
+        --gold: #a87f23;
+        --gold-bright: #caa53a;
+        --line: rgba(122, 31, 43, 0.22);
       }
       * { box-sizing: border-box; }
       html { scroll-behavior: smooth; }
       body {
         margin: 0;
         color: var(--ink);
-        background-color: var(--bg);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         font-size: 16px;
         line-height: 1.65;
-        /* torchlight over the wall */
+        background-color: var(--paper);
+        /* aged parchment: warm vignette + a faint old-map wash + subtle paper grain */
         background-image:
-          radial-gradient(1100px 520px at 50% -180px, rgba(247, 107, 34, 0.20), transparent 62%),
-          radial-gradient(820px 480px at 82% -60px, rgba(233, 196, 106, 0.12), transparent 60%),
-          linear-gradient(180deg, #0d1118, #0b0e13 40%);
-        background-attachment: fixed;
-        background-repeat: no-repeat;
+          radial-gradient(1200px 700px at 50% -160px, rgba(202, 165, 58, 0.22), transparent 60%),
+          radial-gradient(900px 900px at 100% 0, rgba(122, 31, 43, 0.08), transparent 55%),
+          radial-gradient(1100px 1100px at 0 100%, rgba(90, 60, 20, 0.10), transparent 55%),
+          radial-gradient(140% 120% at 50% 40%, transparent 55%, rgba(90, 62, 24, 0.22)),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+        background-attachment: fixed, fixed, fixed, fixed, fixed;
+        background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat;
       }
       .wrap { max-width: 1000px; margin: 0 auto; padding: 24px; }
 
-      header { text-align: center; padding: 70px 16px 6px; }
-      .brand { display: inline-flex; align-items: center; gap: 14px; }
-      .brand .sigil { color: var(--gold); filter: drop-shadow(0 0 10px rgba(233, 196, 106, 0.45)); }
-      .brand h1 {
+      header { text-align: center; padding: 56px 16px 6px; }
+      .seal { margin: 0 auto 18px; display: block; filter: drop-shadow(0 6px 10px rgba(60, 20, 24, 0.35)); }
+      h1.title {
         font-family: "Cinzel", serif;
         font-weight: 900;
-        letter-spacing: 0.08em;
-        font-size: clamp(34px, 6vw, 46px);
+        letter-spacing: 0.1em;
+        font-size: clamp(34px, 6vw, 48px);
         margin: 0;
-        color: #fff;
-        text-shadow: 0 0 26px rgba(247, 107, 34, 0.38);
+        color: var(--oxblood);
+        text-shadow: 0 1px 0 rgba(255, 250, 235, 0.6);
       }
       .tagline {
         font-style: italic;
         color: var(--gold);
         font-size: 20px;
-        margin: 16px auto 0;
+        margin: 14px auto 0;
         max-width: 640px;
       }
-      .sub { color: var(--muted); max-width: 660px; margin: 8px auto 0; }
+      .sub { color: var(--muted); max-width: 640px; margin: 8px auto 0; }
 
       .divider {
         display: flex;
         align-items: center;
         gap: 16px;
-        max-width: 380px;
-        margin: 36px auto 6px;
+        max-width: 420px;
+        margin: 30px auto 6px;
         color: var(--gold);
       }
       .divider::before,
       .divider::after {
         content: "";
-        height: 1px;
+        height: 2px;
         flex: 1;
         background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        opacity: 0.55;
       }
-      .divider .diamond { font-size: 14px; opacity: 0.85; }
 
       .demo {
-        margin: 40px 0;
+        position: relative;
+        margin: 38px 0;
         padding: 26px;
-        border-radius: 16px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
-        border: 1px solid var(--line);
-        box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        border-radius: 6px;
+        background: var(--paper-card);
+        border: 1px solid var(--gold);
+        outline: 1px solid rgba(122, 31, 43, 0.25);
+        outline-offset: 4px;
+        box-shadow: 0 18px 40px rgba(72, 45, 18, 0.22);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
       }
-      .demo:hover {
-        transform: translateY(-3px);
-        border-color: rgba(233, 196, 106, 0.35);
-        box-shadow: 0 34px 70px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-      }
+      .demo:hover { transform: translateY(-3px); box-shadow: 0 26px 54px rgba(72, 45, 18, 0.3); }
       .eyebrow {
         font-family: "Cinzel", serif;
         text-transform: uppercase;
-        letter-spacing: 0.2em;
+        letter-spacing: 0.22em;
         font-size: 12px;
+        font-weight: 700;
         margin-bottom: 6px;
       }
       .demo.lib .eyebrow { color: var(--gold); }
-      .demo.fd .eyebrow { color: var(--coral); }
+      .demo.fd .eyebrow { color: var(--oxblood); }
       .demo h2 {
         font-family: "Cinzel", serif;
         font-weight: 700;
-        letter-spacing: 0.04em;
-        font-size: 23px;
+        letter-spacing: 0.03em;
+        font-size: 24px;
         margin: 0 0 8px;
-        color: #fff;
+        color: var(--oxblood);
       }
       .demo p { color: var(--muted); margin: 0 0 16px; }
       .demo p em { color: var(--ink); font-style: italic; }
       video {
         width: 100%;
         display: block;
-        border-radius: 12px;
-        background: #000;
-        border: 1px solid var(--line);
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.55);
+        border-radius: 3px;
+        background: #1c140c;
+        border: 6px solid #4a3517;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(40, 24, 8, 0.4);
       }
 
       footer { text-align: center; color: var(--muted); padding: 40px 16px; font-style: italic; }
-      a { color: var(--coral); text-decoration: none; font-weight: 600; }
+      a { color: var(--oxblood); text-decoration: none; font-weight: 700; }
       a:hover { color: var(--gold); }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header>
-        <div class="brand">
-          <svg class="sigil" width="30" height="30" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="5" y1="19" x2="19" y2="5" />
-            <line x1="19" y1="19" x2="5" y2="5" />
-            <line x1="3" y1="17" x2="7" y2="21" />
-            <line x1="21" y1="17" x2="17" y2="21" />
-          </svg>
-          <h1>frontdesk</h1>
-        </div>
+        <!-- wax seal with crossed swords -->
+        <svg class="seal" width="80" height="80" viewBox="0 0 84 84" aria-hidden="true">
+          <defs>
+            <radialGradient id="wax" cx="40%" cy="34%" r="72%">
+              <stop offset="0%" stop-color="#a83144" />
+              <stop offset="58%" stop-color="#7a1f2b" />
+              <stop offset="100%" stop-color="#511019" />
+            </radialGradient>
+          </defs>
+          <circle cx="42" cy="42" r="37" fill="url(#wax)" stroke="#3f0c14" stroke-width="1.5" />
+          <circle cx="42" cy="42" r="30" fill="none" stroke="#9c2b3c" stroke-width="1.3" opacity="0.7" />
+          <g stroke="#eccaa6" stroke-width="2.4" stroke-linecap="round" fill="none" opacity="0.9">
+            <line x1="29" y1="55" x2="55" y2="29" />
+            <line x1="55" y1="55" x2="29" y2="29" />
+            <line x1="24" y1="50" x2="33" y2="59" />
+            <line x1="60" y1="50" x2="51" y2="59" />
+          </g>
+        </svg>
+        <h1 class="title">FRONTDESK</h1>
         <p class="tagline">Grounded answers — sworn to the source.</p>
         <p class="sub">
           A self-hosted, multi-tenant AI front desk: RAG-grounded answers over your own
           documents, with human-in-the-loop escalation. Two short walkthroughs.
         </p>
-        <div class="divider"><span class="diamond">◆</span></div>
+        <div class="divider"></div>
       </header>
 
       <section class="demo lib" id="library">
