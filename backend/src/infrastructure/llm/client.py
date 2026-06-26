@@ -23,10 +23,19 @@ from src.domain.llm.value_objects import (
     LLMToolCall,
     TokenUsage,
 )
+from src.domain.tenant_config.model_catalog import get_model_spec
 from src.infrastructure.llm.error_classifier import classify_llm_error
 
 _LLM_RETRY_ATTEMPTS = 3
 _ANTHROPIC = "anthropic"
+
+# Providers that speak the OpenAI chat/completions wire format but live at their own
+# endpoint. We drive them through the well-supported langchain-openai client (good
+# tool-calling) pointed at the vendor base URL, rather than a separate integration.
+_OPENAI_COMPATIBLE_BASE_URLS: dict[str, str] = {
+    "zhipu": "https://api.z.ai/api/paas/v4/",  # Zhipu / GLM (Z.ai)
+    "deepseek": "https://api.deepseek.com",  # DeepSeek
+}
 
 
 def _is_transient_llm_error(exc: BaseException) -> bool:
@@ -37,10 +46,17 @@ def _is_transient_llm_error(exc: BaseException) -> bool:
 class LangChainLLMClient(LLMClientPort):
     """One client = one (provider, model) pair. Build a new instance per tenant."""
 
-    def __init__(self, *, provider: str, model: str, api_key: str | None = None) -> None:
+    def __init__(self, *, provider: str, model: str, api_key: str | None = None, base_url: str | None = None) -> None:
         self._provider = provider
         self._model = model
-        kwargs: dict[str, Any] = {"model_provider": provider}
+        # An OpenAI-compatible provider (e.g. zhipu/GLM) is reached by pointing the
+        # OpenAI client at its base URL; an explicit base_url overrides the default.
+        compatible_base = _OPENAI_COMPATIBLE_BASE_URLS.get(provider)
+        model_provider = "openai" if compatible_base is not None else provider
+        kwargs: dict[str, Any] = {"model_provider": model_provider}
+        resolved_base = base_url or compatible_base
+        if resolved_base:
+            kwargs["base_url"] = resolved_base
         if api_key:
             kwargs["api_key"] = api_key
         self._chat = init_chat_model(model, **kwargs)
@@ -60,10 +76,14 @@ class LangChainLLMClient(LLMClientPort):
         temperature: float | None = None,
     ) -> LLMCallResult:
         chat = self._chat
+        spec = get_model_spec(self._model)
         bind_kwargs: dict[str, Any] = {}
         if max_tokens is not None:
-            bind_kwargs["max_tokens"] = max_tokens
-        if temperature is not None:
+            # Reasoning models (gpt-5.x, o-series) reject `max_tokens` and require
+            # `max_completion_tokens` — the catalog says which one this model takes.
+            token_param = spec.token_param if spec else "max_tokens"
+            bind_kwargs[token_param] = max_tokens
+        if temperature is not None and (spec is None or spec.supports_temperature):
             bind_kwargs["temperature"] = temperature
         if bind_kwargs:
             chat = chat.bind(**bind_kwargs)

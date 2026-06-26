@@ -28,7 +28,15 @@ import { useTranslation } from "react-i18next";
 
 import { useAuth } from "@auth/useAuth";
 
-import { getSettings, updateBot, updateEmbedding, updateLLM, updateTelegram, updateWhatsApp } from "./api";
+import {
+  getModelCatalog,
+  getSettings,
+  updateBot,
+  updateEmbedding,
+  updateLLM,
+  updateTelegram,
+  updateWhatsApp,
+} from "./api";
 
 function WebhookUrlCard({
   channel,
@@ -62,12 +70,6 @@ function WebhookUrlCard({
   );
 }
 
-const LLM_PROVIDERS = [
-  { value: "openai", label: "OpenAI" },
-  { value: "anthropic", label: "Anthropic" },
-  { value: "azure_openai", label: "Azure OpenAI" },
-  { value: "google", label: "Google" },
-];
 
 const BOT_LANGUAGES = [
   { value: "en", label: "English" },
@@ -95,6 +97,7 @@ export function SettingsPage() {
   const { user } = useAuth();
   const tenantId = user?.tenant.id ?? "{tenant_id}";
   const settingsQuery = useQuery({ queryKey: ["settings"], queryFn: getSettings });
+  const catalogQuery = useQuery({ queryKey: ["model-catalog"], queryFn: getModelCatalog });
 
   const llmMutation = useSectionMutation(updateLLM, t("settings.llmName"), t);
   const embeddingMutation = useSectionMutation(updateEmbedding, t("settings.embeddingName"), t);
@@ -171,6 +174,16 @@ export function SettingsPage() {
 
   const current = (masked: string | null | undefined) => `${t("settings.current")} ${masked}`;
 
+  // Provider/model options come from the backend catalog (single source of truth),
+  // so the UI never hardcodes a model list. Models are filtered to the selected provider.
+  const catalogProviders = catalogQuery.data?.providers ?? [];
+  const providerOptions = catalogProviders.map((p) => ({ value: p.provider, label: p.label }));
+  const selectedProvider = llmForm.values.provider || config.llm_provider;
+  const modelOptions =
+    catalogProviders
+      .find((p) => p.provider === selectedProvider)
+      ?.models.map((m) => ({ value: m.model, label: m.label })) ?? [];
+
   return (
     <Stack>
       <Group justify="space-between">
@@ -203,13 +216,22 @@ export function SettingsPage() {
               <Stack>
                 <Select
                   label={t("settings.provider")}
-                  data={LLM_PROVIDERS}
+                  data={providerOptions}
                   placeholder={config.llm_provider}
                   {...llmForm.getInputProps("provider")}
+                  onChange={(val) => {
+                    // Switching provider invalidates the chosen models — clear them
+                    // so the user picks from the new provider's list.
+                    llmForm.setFieldValue("provider", val ?? "");
+                    llmForm.setFieldValue("model", "");
+                    llmForm.setFieldValue("rerank_model", "");
+                  }}
                 />
-                <TextInput
+                <Select
                   label={t("settings.model")}
+                  data={modelOptions}
                   placeholder={config.llm_model}
+                  searchable
                   {...llmForm.getInputProps("model")}
                 />
                 <TextInput

@@ -7,6 +7,7 @@ import { MemoryRouter } from "react-router-dom";
 
 vi.mock("./api", () => ({
   getSettings: vi.fn(),
+  getModelCatalog: vi.fn(),
   updateLLM: vi.fn(),
   updateEmbedding: vi.fn(),
   updateWhatsApp: vi.fn(),
@@ -30,9 +31,17 @@ vi.mock("@auth/useAuth", () => ({
   }),
 }));
 
-import { getSettings, updateLLM, updateEmbedding, updateWhatsApp, updateTelegram, updateBot } from "./api";
+import {
+  getSettings,
+  getModelCatalog,
+  updateLLM,
+  updateEmbedding,
+  updateWhatsApp,
+  updateTelegram,
+  updateBot,
+} from "./api";
 import { SettingsPage } from "./SettingsPage";
-import type { TenantConfigResponse } from "./types";
+import type { ModelCatalogResponse, TenantConfigResponse } from "./types";
 
 function createWrapper() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -88,9 +97,33 @@ async function openSection(section: string, saveLabel: string) {
   await waitFor(() => expect(screen.getByText(saveLabel)).toBeInTheDocument());
 }
 
+const CATALOG: ModelCatalogResponse = {
+  providers: [
+    {
+      provider: "openai",
+      label: "OpenAI",
+      models: [
+        { model: "gpt-4o-mini", label: "GPT-4o mini" },
+        { model: "gpt-5.4-nano", label: "GPT-5.4 nano" },
+      ],
+    },
+    {
+      provider: "anthropic",
+      label: "Anthropic",
+      models: [{ model: "claude-haiku-4-5", label: "Claude Haiku 4.5" }],
+    },
+    {
+      provider: "zhipu",
+      label: "Zhipu / GLM",
+      models: [{ model: "glm-4.5-flash", label: "GLM-4.5 Flash (free)" }],
+    },
+  ],
+};
+
 describe("SettingsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getModelCatalog).mockResolvedValue(CATALOG);
   });
 
   it("shows loader while loading", () => {
@@ -304,20 +337,22 @@ describe("SettingsPage", () => {
     });
   });
 
-  it("submits LLM form with filled model field", async () => {
+  it("submits LLM form with a model picked from the catalog", async () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     vi.mocked(updateLLM).mockResolvedValue(CONFIG);
-    const { container } = render(<SettingsPage />, { wrapper: createWrapper() });
+    render(<SettingsPage />, { wrapper: createWrapper() });
     await waitFor(() => expect(screen.getByText("Save LLM config")).toBeInTheDocument());
 
-    const llmPanel = container.querySelector("[data-active='true'] .mantine-Accordion-panel");
-    const modelInput =
-      llmPanel?.querySelector("input[data-path='model']") ?? screen.getAllByLabelText("Model")[0]!;
-    fireEvent.change(modelInput, { target: { value: "gpt-4o" } });
+    fireEvent.click(screen.getAllByLabelText("Model")[0]!);
+    await waitFor(() => expect(screen.getByText("GPT-5.4 nano")).toBeInTheDocument());
+    fireEvent.click(screen.getByText("GPT-5.4 nano"));
     fireEvent.click(screen.getByText("Save LLM config"));
 
     await waitFor(() => {
-      expect(updateLLM).toHaveBeenCalledWith(expect.objectContaining({ model: "gpt-4o" }), expect.anything());
+      expect(updateLLM).toHaveBeenCalledWith(
+        expect.objectContaining({ model: "gpt-5.4-nano" }),
+        expect.anything(),
+      );
     });
   });
 

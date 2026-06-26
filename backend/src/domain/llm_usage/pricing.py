@@ -69,6 +69,51 @@ _PRICING: dict[str, ModelPricing] = {
         cache_read_per_million=Decimal("0.025"),
         output_per_million=Decimal("0.40"),
     ),
+    # ── Zhipu / GLM (OpenAI-compatible) ──────────────────────────
+    # The two -flash models are free; the rest are per-million list prices.
+    "glm-4.5-flash": ModelPricing(
+        provider="zhipu",
+        model="glm-4.5-flash",
+        input_per_million=Decimal("0"),
+        cache_read_per_million=Decimal("0"),
+        output_per_million=Decimal("0"),
+    ),
+    "glm-4.7-flash": ModelPricing(
+        provider="zhipu",
+        model="glm-4.7-flash",
+        input_per_million=Decimal("0"),
+        cache_read_per_million=Decimal("0"),
+        output_per_million=Decimal("0"),
+    ),
+    "glm-4.6": ModelPricing(
+        provider="zhipu",
+        model="glm-4.6",
+        input_per_million=Decimal("0.60"),
+        cache_read_per_million=Decimal("0.11"),
+        output_per_million=Decimal("2.20"),
+    ),
+    "glm-4.5-air": ModelPricing(
+        provider="zhipu",
+        model="glm-4.5-air",
+        input_per_million=Decimal("0.20"),
+        cache_read_per_million=Decimal("0.03"),
+        output_per_million=Decimal("1.10"),
+    ),
+    # ── DeepSeek (OpenAI-compatible) ─────────────────────────────
+    "deepseek-chat": ModelPricing(
+        provider="deepseek",
+        model="deepseek-chat",
+        input_per_million=Decimal("0.27"),
+        cache_read_per_million=Decimal("0.07"),
+        output_per_million=Decimal("1.10"),
+    ),
+    "deepseek-reasoner": ModelPricing(
+        provider="deepseek",
+        model="deepseek-reasoner",
+        input_per_million=Decimal("0.55"),
+        cache_read_per_million=Decimal("0.14"),
+        output_per_million=Decimal("2.19"),
+    ),
 }
 
 

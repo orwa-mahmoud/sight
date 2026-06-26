@@ -35,6 +35,23 @@ class TenantConfigResponse(BaseModel):
     bot_language: str
 
 
+class ModelOption(BaseModel):
+    model: str
+    label: str
+
+
+class ProviderModels(BaseModel):
+    provider: str
+    label: str
+    models: list[ModelOption]
+
+
+class ModelCatalogResponse(BaseModel):
+    """Provider/model options offered to the owner in the settings dropdowns."""
+
+    providers: list[ProviderModels]
+
+
 class UpdateLLMConfig(BaseModel):
     provider: LLMProvider | None = None
     model: str | None = Field(default=None, max_length=64)

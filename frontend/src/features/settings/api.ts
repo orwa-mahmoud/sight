@@ -1,5 +1,5 @@
 import { api } from "@core/api/client";
-import type { TenantConfigResponse } from "./types";
+import type { ModelCatalogResponse, TenantConfigResponse } from "./types";
 
 export interface UpdateLLMPayload {
   provider?: string;
@@ -36,6 +36,11 @@ export interface UpdateBotPayload {
 
 export async function getSettings(): Promise<TenantConfigResponse> {
   const { data } = await api.get<TenantConfigResponse>("/api/v1/settings");
+  return data;
+}
+
+export async function getModelCatalog(): Promise<ModelCatalogResponse> {
+  const { data } = await api.get<ModelCatalogResponse>("/api/v1/settings/models");
   return data;
 }
 

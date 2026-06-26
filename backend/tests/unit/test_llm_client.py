@@ -211,6 +211,29 @@ async def test_chat_with_tools_binds_params(mock_init: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @patch("src.infrastructure.llm.client.init_chat_model")
+async def test_reasoning_model_binds_max_completion_tokens(mock_init: MagicMock) -> None:
+    mock_chat = MagicMock()
+    bound_chat = AsyncMock()
+    response = MagicMock()
+    response.content = "Ok"
+    response.tool_calls = []
+    response.usage_metadata = {}
+    bound_chat.ainvoke = AsyncMock(return_value=response)
+    mock_chat.bind = MagicMock(return_value=bound_chat)
+    mock_init.return_value = mock_chat
+
+    from src.infrastructure.llm.client import LangChainLLMClient
+
+    # gpt-5.4-nano is a reasoning model in the catalog: max_tokens must become
+    # max_completion_tokens, while temperature is still accepted.
+    client = LangChainLLMClient(provider="openai", model="gpt-5.4-nano")
+    await client.chat_with_tools([LLMMessage(role=LLMMessageRole.USER, content="hi")], max_tokens=500, temperature=0.3)
+
+    mock_chat.bind.assert_called_once_with(max_completion_tokens=500, temperature=0.3)
+
+
+@pytest.mark.asyncio
+@patch("src.infrastructure.llm.client.init_chat_model")
 async def test_chat_with_tools_retries_transient_error(mock_init: MagicMock) -> None:
     ok = MagicMock()
     ok.content = "recovered"
@@ -243,3 +266,53 @@ async def test_chat_with_tools_does_not_retry_permanent_error(mock_init: MagicMo
         await client.chat_with_tools([LLMMessage(role=LLMMessageRole.USER, content="hi")])
 
     assert mock_chat.ainvoke.await_count == 1  # auth error is permanent — no retry
+
+
+# ── Provider routing (mock init_chat_model) ──────────────────────
+
+
+@patch("src.infrastructure.llm.client.init_chat_model")
+def test_zhipu_routes_through_openai_compatible_base_url(mock_init: MagicMock) -> None:
+    from src.infrastructure.llm.client import LangChainLLMClient
+
+    LangChainLLMClient(provider="zhipu", model="glm-4.5-flash", api_key="glm-key")
+
+    _, kwargs = mock_init.call_args
+    # zhipu speaks the OpenAI wire format, so it is driven via model_provider="openai"
+    # pointed at the vendor base URL — not a "zhipu" provider langchain doesn't know.
+    assert kwargs["model_provider"] == "openai"
+    assert kwargs["base_url"] == "https://api.z.ai/api/paas/v4/"
+    assert kwargs["api_key"] == "glm-key"
+
+
+@patch("src.infrastructure.llm.client.init_chat_model")
+def test_deepseek_routes_through_openai_compatible_base_url(mock_init: MagicMock) -> None:
+    from src.infrastructure.llm.client import LangChainLLMClient
+
+    LangChainLLMClient(provider="deepseek", model="deepseek-chat", api_key="ds-key")
+
+    _, kwargs = mock_init.call_args
+    assert kwargs["model_provider"] == "openai"
+    assert kwargs["base_url"] == "https://api.deepseek.com"
+    assert kwargs["api_key"] == "ds-key"
+
+
+@patch("src.infrastructure.llm.client.init_chat_model")
+def test_openai_provider_has_no_base_url(mock_init: MagicMock) -> None:
+    from src.infrastructure.llm.client import LangChainLLMClient
+
+    LangChainLLMClient(provider="openai", model="gpt-4o-mini", api_key="sk-test")
+
+    _, kwargs = mock_init.call_args
+    assert kwargs["model_provider"] == "openai"
+    assert "base_url" not in kwargs
+
+
+@patch("src.infrastructure.llm.client.init_chat_model")
+def test_explicit_base_url_overrides_default(mock_init: MagicMock) -> None:
+    from src.infrastructure.llm.client import LangChainLLMClient
+
+    LangChainLLMClient(provider="zhipu", model="glm-4.6", api_key="k", base_url="https://proxy.local/v1/")
+
+    _, kwargs = mock_init.call_args
+    assert kwargs["base_url"] == "https://proxy.local/v1/"

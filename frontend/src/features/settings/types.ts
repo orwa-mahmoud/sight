@@ -1,3 +1,18 @@
+export interface ModelOption {
+  model: string;
+  label: string;
+}
+
+export interface ProviderModels {
+  provider: string;
+  label: string;
+  models: ModelOption[];
+}
+
+export interface ModelCatalogResponse {
+  providers: ProviderModels[];
+}
+
 export interface TenantConfigResponse {
   llm_provider: string;
   llm_model: string;

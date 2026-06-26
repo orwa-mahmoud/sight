@@ -9,9 +9,13 @@ from fastapi import APIRouter
 from src.ai.gateway import invalidate_tenant_llm_client
 from src.domain.shared.exceptions import AuthenticationError, AuthorizationError, EntityNotFoundError
 from src.domain.tenant_config.entities import TenantConfig
+from src.domain.tenant_config.model_catalog import MODEL_CATALOG, PROVIDER_LABELS
 from src.domain.users.value_objects import UserTenantRole
 from src.drivers.api.dependencies import CurrentUser, UnitOfWorkDep
 from src.drivers.api.v1.settings.schemas import (
+    ModelCatalogResponse,
+    ModelOption,
+    ProviderModels,
     TenantConfigResponse,
     UpdateBotConfig,
     UpdateEmbeddingConfig,
@@ -66,6 +70,22 @@ def _to_response(config: TenantConfig) -> TenantConfigResponse:
 async def get_settings(current_user: CurrentUser, uow: UnitOfWorkDep) -> TenantConfigResponse:
     _, config = await _resolve_config(current_user, uow)
     return _to_response(config)
+
+
+@router.get("/models")
+async def list_models(current_user: CurrentUser) -> ModelCatalogResponse:
+    """Provider/model options for the settings dropdowns — static reference data
+    from the model catalog, so the UI never hardcodes a model list."""
+    providers = [
+        ProviderModels(
+            provider=provider.value,
+            label=label,
+            models=[ModelOption(model=s.model, label=s.label) for s in MODEL_CATALOG if s.provider == provider],
+        )
+        for provider, label in PROVIDER_LABELS.items()
+        if any(s.provider == provider for s in MODEL_CATALOG)
+    ]
+    return ModelCatalogResponse(providers=providers)
 
 
 @router.put("/llm")
