@@ -31,7 +31,7 @@ answering from its policy documents, and escalating to a human when it can't:
 |---|---|---|
 | ![Owner inbox with an escalated question](docs/screenshots/dashboard.png) | ![Knowledge base of uploaded documents](docs/screenshots/documents.png) | ![AI answering a question and citing the source document](docs/screenshots/chat.png) |
 
-▶ **[Watch the front-desk walkthrough](https://orwa-mahmoud.github.io/sight/demo/#frontdesk)** — a support desk answering from its own documents, with a live human escalation.
+[![Watch the support-desk demo — a bank answering from its own policy docs, with a live human escalation](docs/screenshots/bank-poster.png)](https://orwa-mahmoud.github.io/sight/demo/#bank-demo)
 
 ## Features
 
