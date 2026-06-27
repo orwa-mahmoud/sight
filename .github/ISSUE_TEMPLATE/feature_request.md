@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for frontdesk
+about: Suggest an idea for Sight
 title: "[feat] "
 labels: enhancement
 assignees: ''

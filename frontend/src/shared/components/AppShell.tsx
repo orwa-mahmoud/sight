@@ -86,7 +86,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
           <Group gap="xs">
             <Box
               role="img"
-              aria-label="Frontdesk logo"
+              aria-label="Sight logo"
               style={{
                 width: 30,
                 height: 30,
@@ -96,7 +96,7 @@ export function ProtectedShell({ children }: Readonly<{ children: ReactNode }>) 
               }}
             />
             <Text fw={700} size="lg">
-              frontdesk
+              Sight
             </Text>
           </Group>
           <Group gap="sm">

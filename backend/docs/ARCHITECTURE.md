@@ -1,4 +1,4 @@
-# Frontdesk Backend Architecture
+# Sight Backend Architecture
 
 Hexagonal DDD + CQRS. The AI agent is a cross-cutting orchestration layer that calls application use cases. Domain is pure; infrastructure implements domain ports. References: Cosmic Python, Eric Evans, Vaughn Vernon.
 
@@ -326,7 +326,7 @@ src/
 |
 tests/
 +-- unit/                          # domain, application, ai -- no IO; mock ports/repos
-+-- integration/                   # infrastructure -- real PostgreSQL (frontdesk_test DB)
++-- integration/                   # infrastructure -- real PostgreSQL (sight_test DB)
 ```
 
 ## Domain Module Files
@@ -439,7 +439,7 @@ class UpdateSomething:
 
 ## Unit of Work
 
-Frontdesk uses a single `UnitOfWork` class that wraps one `AsyncSession` and exposes all repositories as typed attributes. This is simpler than PropertyBot's per-context UoW approach because frontdesk has fewer cross-context writes.
+Sight uses a single `UnitOfWork` class that wraps one `AsyncSession` and exposes all repositories as typed attributes. This is simpler than PropertyBot's per-context UoW approach because Sight has fewer cross-context writes.
 
 ```python
 class UnitOfWork:
@@ -618,7 +618,7 @@ Application validation provides good UX; DB constraints enforce truth. Never rel
 | Layer | Scope | Approach |
 | ----- | ----- | -------- |
 | Unit | `domain/`, `application/`, `ai/` | No IO; mock ports and repositories. Tests cover entity factories, state machines, domain rules, agent loop behavior, checkpoint logic. |
-| Integration | `infrastructure/`, full flows | Real PostgreSQL (`frontdesk_test` database). Tests cover repo CRUD, use case flows end-to-end, API routes, webhook handling. |
+| Integration | `infrastructure/`, full flows | Real PostgreSQL (`sight_test` database). Tests cover repo CRUD, use case flows end-to-end, API routes, webhook handling. |
 
 Domain and application tests must not import infrastructure. Use cases accept commands/queries and return DTOs -- test via the use case interface.
 

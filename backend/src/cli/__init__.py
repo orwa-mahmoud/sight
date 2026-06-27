@@ -1,1 +1,1 @@
-"""Frontdesk command-line tools."""
+"""Sight command-line tools."""

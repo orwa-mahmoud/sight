@@ -1,6 +1,6 @@
 # Channel Integration
 
-Frontdesk supports three inbound channels: WhatsApp (Meta Cloud API), Telegram (Bot API), and a direct Chat API. All channels funnel into the same gateway (`chat_with_agent`), with channel adapters handling protocol-specific parsing and delivery.
+Sight supports three inbound channels: WhatsApp (Meta Cloud API), Telegram (Bot API), and a direct Chat API. All channels funnel into the same gateway (`chat_with_agent`), with channel adapters handling protocol-specific parsing and delivery.
 
 > **Source of truth:** The code. If this document disagrees with the code, the code wins -- update the doc in the same change.
 

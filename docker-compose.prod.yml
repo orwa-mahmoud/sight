@@ -7,7 +7,7 @@
 #     backend, so that's the single public surface. Put TLS in front of it.
 #   - restart: unless-stopped, healthchecks on every service, and memory limits.
 #   - For tenant-isolation defense-in-depth, point DATABASE_URL at the
-#     NOBYPASSRLS `frontdesk_app` role (see DEPLOYMENT.md → "Activate RLS").
+#     NOBYPASSRLS `sight_app` role (see DEPLOYMENT.md → "Activate RLS").
 services:
   postgres:
     image: pgvector/pgvector:pg17

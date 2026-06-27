@@ -13,7 +13,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: frontdesk_test
+          POSTGRES_DB: sight_test
         ports:
           - 5432:5432
         options: >-
@@ -37,7 +37,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Enable pgvector
-        run: PGPASSWORD=postgres psql -h localhost -U postgres -d frontdesk_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
+        run: PGPASSWORD=postgres psql -h localhost -U postgres -d sight_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
       - name: Lint
         run: uv run ruff check src/ tests/
@@ -50,16 +50,16 @@ jobs:
 
       - name: Run migrations
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/frontdesk_test
-          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/frontdesk_test
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sight_test
+          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/sight_test
           JWT_SECRET_KEY: ci-test-secret
           APP_ENV: test
         run: uv run alembic upgrade head
 
       - name: Tests with coverage
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/frontdesk_test
-          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/frontdesk_test
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sight_test
+          DATABASE_URL_SYNC: postgresql://postgres:postgres@localhost:5432/sight_test
           JWT_SECRET_KEY: ci-test-secret
           APP_ENV: test
         run: uv run pytest --tb=short -q --cov=src --cov-report=xml

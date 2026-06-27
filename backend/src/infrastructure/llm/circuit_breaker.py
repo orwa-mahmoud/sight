@@ -21,7 +21,7 @@ import structlog
 
 logger = structlog.get_logger()
 
-_KEY_PREFIX = "frontdesk:circuit:"
+_KEY_PREFIX = "sight:circuit:"
 _FAILURE_THRESHOLD = 5  # failures within the window to open
 _FAILURE_WINDOW_SECONDS = 60  # rolling window
 _OPEN_DURATION_SECONDS = 30  # how long the circuit stays open

@@ -1,4 +1,4 @@
-# Frontdesk Frontend — AI Assistant Guidelines
+# Sight Frontend — AI Assistant Guidelines
 
 ## STRICT RULES
 
@@ -84,7 +84,7 @@ A page builds a **`TableSource`** with `useFrontendData` (in-memory) or
 
 ## Auth Flow
 
-Cookie-based. The backend sets an httpOnly `frontdesk_token` cookie on
+Cookie-based. The backend sets an httpOnly `sight_token` cookie on
 login/register; the SPA never reads or stores the JWT (no localStorage = no XSS
 token theft). `axios` is configured with `withCredentials: true` so the cookie
 travels with every request.

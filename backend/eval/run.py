@@ -38,7 +38,7 @@ def load_golden(path: Path) -> list[GoldenItem]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="frontdesk RAG retrieval eval")
+    parser = argparse.ArgumentParser(description="Sight RAG retrieval eval")
     parser.add_argument("--k", type=int, default=5, help="top-k chunks to retrieve")
     parser.add_argument(
         "--escalate-threshold",

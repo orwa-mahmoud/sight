@@ -1,6 +1,6 @@
 # Deployment
 
-How to run frontdesk for real, beyond `docker compose up` on a laptop. For local
+How to run Sight for real, beyond `docker compose up` on a laptop. For local
 dev see the [README](README.md#quick-start); for backups see [BACKUP.md](BACKUP.md).
 
 ## What you're deploying
@@ -69,7 +69,7 @@ docker compose -f docker-compose.prod.yml exec -T postgres \
 
 # 2. Point the app at it (migrations still run as postgres via DATABASE_URL_SYNC):
 #    in .env.docker
-DATABASE_URL=postgresql+asyncpg://frontdesk_app:a-strong-password@postgres:5432/${POSTGRES_DB}
+DATABASE_URL=postgresql+asyncpg://sight_app:a-strong-password@postgres:5432/${POSTGRES_DB}
 ```
 
 Then `up -d` again. Validate each flow under the new role before going live — a

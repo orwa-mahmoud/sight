@@ -212,7 +212,7 @@ A simple lookup table for bot messages in multiple languages (English, Arabic, F
 
 ## Tiered Tool Compression
 
-Frontdesk preserves tool exchanges in their native format so the LLM sees them as `tool_use` / `tool_result` blocks:
+Sight preserves tool exchanges in their native format so the LLM sees them as `tool_use` / `tool_result` blocks:
 
 ```text
 Message fields for tool exchanges:

@@ -21,7 +21,7 @@ from src.config.settings import get_settings
 logger = structlog.get_logger()
 
 _TTL_SECONDS = 86_400  # 24h — comfortably longer than any provider retry window
-_PREFIX = "frontdesk:msg_seen:"
+_PREFIX = "sight:msg_seen:"
 
 
 class _RedisSingleton:

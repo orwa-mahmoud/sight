@@ -1,6 +1,6 @@
 # RAG Pipeline
 
-Frontdesk uses a hybrid retrieval-augmented generation pipeline to ground the AI agent's answers in the tenant's uploaded knowledge base. Every stage is tenant-isolated. The pipeline covers two phases: **document ingestion** (write path) and **query-time retrieval** (read path).
+Sight uses a hybrid retrieval-augmented generation pipeline to ground the AI agent's answers in the tenant's uploaded knowledge base. Every stage is tenant-isolated. The pipeline covers two phases: **document ingestion** (write path) and **query-time retrieval** (read path).
 
 > **Source of truth:** The code. If this document disagrees with the code, the code wins -- update the doc in the same change.
 

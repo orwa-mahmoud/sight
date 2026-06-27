@@ -1,8 +1,8 @@
-# Frontdesk — Business Overview
+# Sight — Business Overview
 
-## What Is Frontdesk?
+## What Is Sight?
 
-Frontdesk is a **multi-tenant AI front desk assistant** that answers questions on a business owner's behalf. Each tenant (business) uploads documents to a knowledge base, and an AI agent uses those documents to answer incoming questions from visitors on WhatsApp, Telegram, or a direct API. Anything the AI cannot answer is escalated to the business owner, who replies from a web dashboard.
+Sight is a **multi-tenant AI front desk assistant** that answers questions on a business owner's behalf. Each tenant (business) uploads documents to a knowledge base, and an AI agent uses those documents to answer incoming questions from visitors on WhatsApp, Telegram, or a direct API. Anything the AI cannot answer is escalated to the business owner, who replies from a web dashboard.
 
 Each business gets its own isolated assistant with independent LLM credentials, channel integrations, and knowledge base. The platform is built for **multi-tenant SaaS** — one deployment serves unlimited businesses.
 
@@ -19,7 +19,7 @@ Small businesses and service providers lose inquiries and waste time because:
 
 ## The Solution
 
-Frontdesk automates the first line of response:
+Sight automates the first line of response:
 
 1. **Visitor sends a question** (WhatsApp, Telegram, or web chat)
 2. **The AI searches the knowledge base** — uploaded documents are chunked, embedded, and indexed for hybrid retrieval (vector + BM25)

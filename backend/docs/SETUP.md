@@ -1,4 +1,4 @@
-# Frontdesk Backend — Setup Guide
+# Sight Backend — Setup Guide
 
 ## Prerequisites
 
@@ -29,17 +29,17 @@ This creates a `.venv` and installs all dependencies including dev/test extras.
 
 ```bash
 # Main database
-createdb frontdesk_db
+createdb sight_db
 
 # Test database (for integration tests)
-createdb frontdesk_test
+createdb sight_test
 ```
 
 ### Enable pgvector
 
 ```bash
-psql frontdesk_db -c 'CREATE EXTENSION IF NOT EXISTS vector;'
-psql frontdesk_test -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+psql sight_db -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+psql sight_test -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 ```
 
 The `vector` extension is required for the RAG embedding columns (HNSW index on `vector(1536)`).
@@ -56,9 +56,9 @@ Edit `.env` and fill in the required values:
 
 | Variable | Required | Description |
 | -------- | -------- | ----------- |
-| `DATABASE_URL` | Yes | Async connection string: `postgresql+asyncpg://user:pass@localhost:5432/frontdesk_db` |
-| `DATABASE_URL_SYNC` | Yes | Sync connection string (for Alembic): `postgresql://user:pass@localhost:5432/frontdesk_db` |
-| `DATABASE_URL_TEST` | Yes | Test database: `postgresql+asyncpg://user:pass@localhost:5432/frontdesk_test` |
+| `DATABASE_URL` | Yes | Async connection string: `postgresql+asyncpg://user:pass@localhost:5432/sight_db` |
+| `DATABASE_URL_SYNC` | Yes | Sync connection string (for Alembic): `postgresql://user:pass@localhost:5432/sight_db` |
+| `DATABASE_URL_TEST` | Yes | Test database: `postgresql+asyncpg://user:pass@localhost:5432/sight_test` |
 | `REDIS_URL` | Yes | Redis connection: `redis://localhost:6379/0` |
 | `JWT_SECRET_KEY` | Yes | Random 256-bit string for JWT signing |
 | `ENCRYPTION_KEY` | Prod | Fernet key for encrypting tenant secrets at rest. Generate with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
@@ -111,7 +111,7 @@ uv run pytest tests/ --tb=short -q
 # Unit tests only (no database required)
 uv run pytest tests/unit/
 
-# Integration tests only (requires frontdesk_test database)
+# Integration tests only (requires sight_test database)
 uv run pytest -m integration --tb=short -q
 
 # Single test file or test
@@ -119,7 +119,7 @@ uv run pytest tests/path/to/test_file.py
 uv run pytest tests/path/to/test_file.py::TestClass::test_method
 ```
 
-Integration tests run against a real PostgreSQL database (`frontdesk_test`). The test fixtures handle table creation and cleanup.
+Integration tests run against a real PostgreSQL database (`sight_test`). The test fixtures handle table creation and cleanup.
 
 ---
 
@@ -181,16 +181,16 @@ Common first-run failures and their fixes.
 enabled on that database. Enable it once per database — the Docker image does this
 automatically, local installs don't:
 ```bash
-psql frontdesk_db   -c 'CREATE EXTENSION IF NOT EXISTS vector;'
-psql frontdesk_test -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+psql sight_db   -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+psql sight_test -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 ```
 
 **`alembic upgrade` fails, or the schema looks wrong.** Confirm the database exists
 and `DATABASE_URL_SYNC` points at it, then re-run `uv run alembic upgrade head`. On a
 throwaway dev DB the fastest reset is to drop and recreate:
 ```bash
-dropdb frontdesk_db && createdb frontdesk_db
-psql frontdesk_db -c 'CREATE EXTENSION vector;'
+dropdb sight_db && createdb sight_db
+psql sight_db -c 'CREATE EXTENSION vector;'
 uv run alembic upgrade head
 ```
 

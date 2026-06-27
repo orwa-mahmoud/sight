@@ -1,4 +1,4 @@
-// k6 smoke / load script for the Frontdesk API.
+// k6 smoke / load script for the Sight API.
 // Run: k6 run loadtest/k6_smoke.js   (see loadtest/README.md for options)
 import http from "k6/http";
 import { check, sleep } from "k6";

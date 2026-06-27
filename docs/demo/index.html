@@ -3,14 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>frontdesk — one engine, two realms</title>
+    <title>Sight — one engine, two realms</title>
     <meta name="description" content="A multi-tenant AI front desk. The same RAG engine answering lore from A Song of Ice and Fire, and a real bank's support desk." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="assets/three-eyed-raven.png" />
     <style>
       /* ============================================================
-         frontdesk — demo2
+         Sight — demo
          one engine, two realms: the Three-Eyed Raven + a real bank
          ============================================================ */
       *, *::before, *::after { box-sizing: border-box; }
@@ -108,7 +109,9 @@
         display: inline-flex; align-items: center; gap: 9px;
         text-shadow: 0 1px 10px rgba(0,0,0,.6);
       }
-      .mark .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 12px var(--ember); }
+      .mark .logo { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+        border: 2px solid var(--gold); box-shadow: 0 0 14px rgba(247,107,34,.5), 0 2px 8px rgba(0,0,0,.6); }
+      .mark .logo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
       .mark .sep { opacity: .4; margin: 0 2px; }
       .mark .sub { font-family: "Inter", sans-serif; font-weight: 600; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; opacity: .7; }
 
@@ -122,7 +125,7 @@
           linear-gradient(180deg, #100c08 0%, #0b0a09 100%);
       }
       .hero .bg { position: absolute; inset: 0; z-index: 0;
-        background: url("assets/throne.webp") center 30%/cover no-repeat;
+        background: url("assets/iron-throne.webp") center 30%/cover no-repeat;
         filter: brightness(.32) saturate(.8) contrast(1.05); transform: scale(1.05); }
       .hero::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
         background: radial-gradient(46% 60% at 50% 55%, rgba(0,0,0,.55) 20%, transparent 78%); }
@@ -216,7 +219,7 @@
          ============================================================ */
       .realm { background: linear-gradient(180deg, var(--realm-1), var(--realm-2)); }
       .realm .bg { position: absolute; inset: -4% 0; z-index: 0;
-        background: url("assets/throne.webp") center 35%/cover no-repeat;
+        background: url("assets/iron-throne.webp") center 35%/cover no-repeat;
         filter: brightness(.42) saturate(.85) contrast(1.06) blur(.3px); transform: scale(1.06); }
       .realm::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
         background:
@@ -228,7 +231,7 @@
       .realm h2 { font-family: "Cinzel", serif; font-weight: 800; color: var(--parchment); letter-spacing: .015em; }
       .realm h2 .raven-ico { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -.16em; margin-right: .12em;
         border-radius: 50%; overflow: hidden; border: 2px solid var(--gold);
-        box-shadow: 0 0 18px rgba(247,107,34,.5); background: url("assets/raven.png") 50% 38%/cover; }
+        box-shadow: 0 0 18px rgba(247,107,34,.5); background: url("assets/three-eyed-raven.png") 50% 38%/cover; }
       .realm .deck { color: rgba(244,233,207,.78); }
 
       .realm .bubble.q { background: linear-gradient(180deg, rgba(244,233,207,.16), rgba(244,233,207,.08));
@@ -254,7 +257,7 @@
       }
 
       /* dragon silhouette accents in corners */
-      .dragon-acc { position: absolute; bottom: 0; z-index: 2; pointer-events: none; opacity: .5; width: 320px;
+      .dragon-acc { position: absolute; bottom: 0; z-index: 2; pointer-events: none; opacity: .55; width: 460px;
         filter: brightness(.7) contrast(1.1);
         -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
                 mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); }
@@ -271,7 +274,7 @@
       .bridge .crest { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center;
         font-family: "Cinzel", serif; font-weight: 800; font-size: 30px;
         border: 2px solid; box-shadow: 0 0 30px; }
-      .bridge .crest.raven { border-color: var(--gold); color: var(--parchment); background: url("assets/raven.png") 50% 35%/cover; box-shadow: 0 0 30px rgba(247,107,34,.4); }
+      .bridge .crest.raven { border-color: var(--gold); color: var(--parchment); background: url("assets/three-eyed-raven.png") 50% 35%/cover; box-shadow: 0 0 30px rgba(247,107,34,.4); }
       .bridge .crest.bank { border-color: var(--bank-teal); color: #eaf6ff; background: linear-gradient(160deg, var(--bank-1), var(--bank-2)); }
       .bridge .side .label { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.6); }
       .bridge .side .name { font-family: "Cinzel", serif; font-weight: 700; font-size: 19px; color: #fff; }
@@ -328,13 +331,13 @@
         .nav { right: 14px; gap: 11px; }
         .slide > .wrap { padding: 84px 20px 64px; }
         .hero .stats { gap: 8px; } .stat { min-width: 0; flex: 1 1 130px; padding: 12px 14px; }
-        .dragon-acc { width: 200px; }
+        .dragon-acc { width: 260px; }
       }
     </style>
   </head>
   <body>
     <a class="mark" href="#top">
-      <span class="dot"></span>frontdesk
+      <span class="logo"><img src="assets/three-eyed-raven.png" alt="Three-eyed raven" /></span>Sight
       <span class="sep">·</span>
       <span class="sub">demo</span>
     </a>
@@ -354,7 +357,7 @@
         <div class="kicker reveal">Multi-tenant AI front desk</div>
         <h1 class="reveal d1">One engine.<br/>Two <em>realms.</em></h1>
         <p class="lead reveal d2">
-          Point frontdesk at any knowledge base and it answers <b>grounded in your own documents</b> —
+          Point Sight at any knowledge base and it answers <b>grounded in your own documents</b> —
           citing the exact source every time, and escalating to a human when it can&rsquo;t.
           Below, the very same engine answers lore from <i>A Song of Ice and Fire</i>,
           then runs a real bank&rsquo;s support desk.
@@ -378,8 +381,8 @@
     <section class="slide demo realm" id="raven">
       <div class="bg" aria-hidden="true"></div>
       <div class="embers" aria-hidden="true"></div>
-      <img class="dragon-acc l" src="assets/dragon-guard.avif" alt="" aria-hidden="true" />
-      <img class="dragon-acc r" src="assets/dragon-guard.avif" alt="" aria-hidden="true" />
+      <img class="dragon-acc l" src="assets/dragon.avif" alt="" aria-hidden="true" />
+      <img class="dragon-acc r" src="assets/dragon.avif" alt="" aria-hidden="true" />
       <div class="wrap">
         <div class="copy">
           <div class="eyebrow reveal">Tale one · for the fans</div>
@@ -521,18 +524,18 @@
     <section class="slide foot" id="run">
       <div class="wrap">
         <div class="eyebrow reveal" style="color:var(--gold);font-family:'Cinzel',serif;letter-spacing:.34em;text-transform:uppercase;font-size:11.5px;margin-bottom:18px;">From the page to your machine</div>
-        <h2 class="reveal d1">Run the front desk yourself</h2>
+        <h2 class="reveal d1">Run your own Sight</h2>
         <p class="reveal d2">
           The whole stack &mdash; FastAPI + LangGraph backend, React 19 frontend, Postgres 17 with
           pgvector &mdash; comes up with one Docker command. Register an owner, upload your own
           documents, and your realm is live.
         </p>
         <div class="links reveal d3">
-          <a class="btn primary" href="https://github.com/orwa-mahmoud/frontdesk#quick-start" target="_blank" rel="noopener">Quick start <span class="arrow">→</span></a>
-          <a class="btn ghost" href="https://github.com/orwa-mahmoud/frontdesk/blob/main/backend/docs/ARCHITECTURE.md" target="_blank" rel="noopener">Architecture</a>
+          <a class="btn primary" href="https://github.com/orwa-mahmoud/sight#quick-start" target="_blank" rel="noopener">Quick start <span class="arrow">→</span></a>
+          <a class="btn ghost" href="https://github.com/orwa-mahmoud/sight#architecture" target="_blank" rel="noopener">Architecture</a>
         </div>
         <div class="sign reveal d4">
-          frontdesk &middot; MIT &middot; <a href="https://github.com/orwa-mahmoud/frontdesk" target="_blank" rel="noopener">github.com/orwa-mahmoud/frontdesk</a>
+          Sight &middot; MIT &middot; <a href="https://github.com/orwa-mahmoud/sight" target="_blank" rel="noopener">github.com/orwa-mahmoud/sight</a>
         </div>
       </div>
     </section>

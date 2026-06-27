@@ -1,4 +1,4 @@
-# Frontdesk Database ERD
+# Sight Database ERD
 
 Entity-relationship diagram for `src/infrastructure/persistence/postgres/models`,
 generated directly from the live schema.

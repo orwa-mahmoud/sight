@@ -24,7 +24,7 @@ class JwtService:
         secret_key: str,
         algorithm: str = "HS256",
         access_token_expire_minutes: int = 60,
-        issuer: str = "frontdesk",
+        issuer: str = "sight",
     ) -> None:
         self._secret_key = secret_key
         self._algorithm = algorithm

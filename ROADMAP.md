@@ -2,7 +2,7 @@
 
 Direction, not promises. This reflects what I think matters next; priorities
 shift with feedback and contributions. Want something here sooner, or something
-not listed? Open a [Discussion](https://github.com/orwa-mahmoud/frontdesk/discussions)
+not listed? Open a [Discussion](https://github.com/orwa-mahmoud/sight/discussions)
 or an issue.
 
 ## Shipped (v0.1)

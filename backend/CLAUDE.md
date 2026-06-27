@@ -1,4 +1,4 @@
-# Frontdesk Backend — AI Assistant Guidelines
+# Sight Backend — AI Assistant Guidelines
 
 ## STRICT RULES
 
@@ -16,7 +16,7 @@
 
 ## Project Overview
 
-**Frontdesk** is a multi-tenant AI front desk assistant. Stack: Python 3.13, FastAPI, LangGraph, PostgreSQL 17 + pgvector (HNSW + GIN), SQLAlchemy 2.0 (async), Alembic. Strict hexagonal DDD + CQRS. The AI agent handles visitor questions via WhatsApp, Telegram, and a direct Chat API, backed by a RAG knowledge base per tenant.
+**Sight** is a multi-tenant AI front desk assistant. Stack: Python 3.13, FastAPI, LangGraph, PostgreSQL 17 + pgvector (HNSW + GIN), SQLAlchemy 2.0 (async), Alembic. Strict hexagonal DDD + CQRS. The AI agent handles visitor questions via WhatsApp, Telegram, and a direct Chat API, backed by a RAG knowledge base per tenant.
 
 Architecture and reference docs:
 
@@ -24,7 +24,7 @@ Architecture and reference docs:
 - [`docs/RAG_PIPELINE.md`](docs/RAG_PIPELINE.md) -- document ingestion (parse/chunk/embed/persist), hybrid retrieval (vector HNSW + BM25 + RRF), tenant isolation, domain ports.
 - [`docs/AI_ORCHESTRATION.md`](docs/AI_ORCHESTRATION.md) -- gateway, agent loop, LangGraph isolation, tool definitions, system prompt, context loading, tiered compression, checkpoint summarization, concurrency.
 - [`docs/CHANNEL_INTEGRATION.md`](docs/CHANNEL_INTEGRATION.md) -- channel adapters (WhatsApp, Telegram, API), webhook endpoints, contact resolution, notification routing.
-- [`docs/BUSINESS_OVERVIEW.md`](docs/BUSINESS_OVERVIEW.md) -- what frontdesk does, user flows, core features.
+- [`docs/BUSINESS_OVERVIEW.md`](docs/BUSINESS_OVERVIEW.md) -- what Sight does, user flows, core features.
 - [`docs/ERD.md`](docs/ERD.md) -- entity relationship diagram, table overview, constraints.
 - [`docs/SETUP.md`](docs/SETUP.md) -- prerequisites, database creation, env vars, migrations, dev server, running tests.
 
@@ -110,7 +110,7 @@ src/
 
 tests/
 +-- unit/                   # domain, application, ai -- no IO; mock ports/repos
-+-- integration/            # infrastructure -- real PostgreSQL (frontdesk_test DB)
++-- integration/            # infrastructure -- real PostgreSQL (sight_test DB)
 ```
 
 ## Domain Entity Pattern

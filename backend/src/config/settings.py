@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # ── Application ────────────────────────────────────────────────
-    app_name: str = "frontdesk"
+    app_name: str = "sight"
     app_env: str = "development"
     log_level: str = "INFO"
 

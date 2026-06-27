@@ -4,7 +4,7 @@ No I/O -- just regex-based extraction of media blocks from text.
 Lives in domain/shared so both API and infrastructure layers can import it.
 
 Ported from PropertyBot with property-specific constructs (PropertyAlbum,
-PROPERTY_ALBUM blocks, inject_property_images) removed. Frontdesk keeps
+PROPERTY_ALBUM blocks, inject_property_images) removed. Sight keeps
 the general media extraction infrastructure for images, videos, and
 documents that the LLM may embed in responses.
 """

@@ -1,4 +1,4 @@
-# frontdesk — AI assistant guidelines
+# Sight — AI assistant guidelines
 
 ## Repo Layout
 

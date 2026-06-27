@@ -22,8 +22,8 @@ Copy it **off the host** (object storage / another machine). Keep a rotation
 (e.g. 7 daily + 4 weekly). Automate with cron:
 
 ```cron
-0 3 * * * cd /opt/frontdesk && docker compose -f docker-compose.prod.yml exec -T postgres \
-  pg_dump -U postgres -d frontdesk_db -Fc > /backups/frontdesk-$(date +\%F).dump
+0 3 * * * cd /opt/sight && docker compose -f docker-compose.prod.yml exec -T postgres \
+  pg_dump -U postgres -d sight_db -Fc > /backups/sight-$(date +\%F).dump
 ```
 
 ## Restore
@@ -43,7 +43,7 @@ For a physical copy of the whole volume (stop the DB first for consistency):
 
 ```bash
 docker compose -f docker-compose.prod.yml stop postgres
-docker run --rm -v frontdesk_pgdata:/data -v "$PWD":/out alpine \
+docker run --rm -v sight_pgdata:/data -v "$PWD":/out alpine \
   tar czf /out/pgdata-$(date +%F).tgz -C /data .
 docker compose -f docker-compose.prod.yml start postgres
 ```

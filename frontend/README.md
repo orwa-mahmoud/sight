@@ -1,6 +1,6 @@
-# frontdesk — frontend
+# Sight — frontend
 
-The web dashboard for [frontdesk](../README.md): owners manage their knowledge
+The web dashboard for [Sight](../README.md): owners manage their knowledge
 base, connect channels, review the AI's conversations, and answer escalated
 questions. React 19 + Mantine 9 + TypeScript + Vite, with full English/Arabic
 RTL support.

@@ -1,4 +1,4 @@
-# Contributing to frontdesk
+# Contributing to Sight
 
 Thank you for your interest in contributing. This guide covers how to get the
 project running locally, where to make changes, and what we expect in pull
@@ -12,7 +12,7 @@ requests.
 | Understand the backend design | [backend/docs/ARCHITECTURE.md](backend/docs/ARCHITECTURE.md) |
 | Understand the frontend design | [frontend/docs/ARCHITECTURE.md](frontend/docs/ARCHITECTURE.md) |
 | Add a backend feature | [Adding a feature](backend/docs/ARCHITECTURE.md#adding-a-feature) in the architecture doc |
-| Report a bug or request a feature | [Open an issue](https://github.com/orwa-mahmoud/frontdesk/issues/new/choose) |
+| Report a bug or request a feature | [Open an issue](https://github.com/orwa-mahmoud/sight/issues/new/choose) |
 
 Read the subproject guidelines before editing code inside them:
 
@@ -40,7 +40,7 @@ Migrations run on backend startup. No manual DB setup required.
 cd backend
 cp .env.example .env
 uv sync --extra dev
-createdb frontdesk_db && psql frontdesk_db -c 'CREATE EXTENSION vector;'
+createdb sight_db && psql sight_db -c 'CREATE EXTENSION vector;'
 uv run alembic upgrade head
 uv run uvicorn src.main:app --reload --port 8000
 ```
@@ -70,7 +70,7 @@ uv run mypy src/
 uv run pytest tests/ --tb=short -q
 ```
 
-Integration tests need a local `frontdesk_test` database (see
+Integration tests need a local `sight_test` database (see
 [backend/docs/SETUP.md](backend/docs/SETUP.md)):
 
 ```bash
@@ -177,7 +177,7 @@ Want to propose a new good-first issue? Open a feature request and suggest the
 
 ## Questions
 
-Open a [GitHub issue](https://github.com/orwa-mahmoud/frontdesk/issues/new/choose)
+Open a [GitHub issue](https://github.com/orwa-mahmoud/sight/issues/new/choose)
 for bugs, feature ideas, or questions. For security vulnerabilities, please
 report privately to the repository owner rather than opening a public issue.
 

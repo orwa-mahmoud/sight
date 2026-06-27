@@ -10,7 +10,7 @@ token unreadable by JS, with a simple session model for v1.
 
 ## Decision
 
-- **httpOnly cookie.** Login/register set `frontdesk_token` as an httpOnly cookie;
+- **httpOnly cookie.** Login/register set `sight_token` as an httpOnly cookie;
   the SPA never reads or stores the JWT. Axios uses `withCredentials: true` so the
   cookie travels automatically. A `Bearer` token is still accepted for scripts and
   the test suite.

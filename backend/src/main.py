@@ -65,7 +65,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title="frontdesk",
+        title="Sight",
         description="Multi-tenant AI front desk with RAG-grounded answers and human-in-the-loop escalation.",
         version="0.1.0",
         lifespan=lifespan,

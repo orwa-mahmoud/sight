@@ -41,7 +41,7 @@ describe("LoginPage", () => {
   it("renders sign in title", () => {
     render(wrap(<LoginPage />));
     expect(screen.getByText(/sign in to/i)).toBeInTheDocument();
-    expect(screen.getByText("frontdesk")).toBeInTheDocument();
+    expect(screen.getByText("Sight")).toBeInTheDocument();
   });
 
   it("renders email and password inputs", () => {

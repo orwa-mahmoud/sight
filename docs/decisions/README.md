@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-Short records of the non-obvious choices in frontdesk — the *why* behind the
+Short records of the non-obvious choices in Sight — the *why* behind the
 structure, and the trade-offs accepted. Format: Context → Decision →
 Consequences. Newest decisions supersede older ones explicitly.
 

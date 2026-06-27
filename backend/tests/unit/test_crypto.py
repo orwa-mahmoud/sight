@@ -11,7 +11,7 @@ from prometheus_client import REGISTRY
 from src.infrastructure.auth.crypto import _ENC_PREFIX, decrypt_value, encrypt_value, verify_encryption_keys
 
 _VALID_KEY = "mhINJi_JIPU2XO7ZD2idAhJM-0qLbPk2T2Js3ZuwSVQ="
-_DECRYPT_FAILURES = "frontdesk_crypto_decrypt_failures_total"
+_DECRYPT_FAILURES = "sight_crypto_decrypt_failures_total"
 
 
 def _reset_fernet() -> None:

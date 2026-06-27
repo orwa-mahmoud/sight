@@ -6,7 +6,7 @@ Please **do not** open a public issue for security problems.
 
 - Preferred: open a private report via **GitHub → Security → Report a
   vulnerability** (Private Vulnerability Reporting) on this repository.
-- Or email **orwa.mahmoud.uae@gmail.com** with `[frontdesk security]` in the
+- Or email **orwa.mahmoud.uae@gmail.com** with `[sight security]` in the
   subject.
 
 Include what you found, how to reproduce it, and the impact. I aim to acknowledge
@@ -27,7 +27,7 @@ tagged release.
   for how to activate it.
 - **`tenant_id` is never trusted from the client** — it is resolved from the
   authenticated JWT or the webhook URL path.
-- **Auth is cookie-based.** Login/register set an httpOnly `frontdesk_token`
+- **Auth is cookie-based.** Login/register set an httpOnly `sight_token`
   cookie; the SPA never stores the JWT in JS (no localStorage → no XSS token
   theft). A `Bearer` token is also accepted for programmatic clients.
 - **Secrets at rest are encrypted** (Fernet) — tenant LLM/embedding keys and
@@ -51,7 +51,7 @@ Recently addressed:
   until you re-encrypt and drop the fallback. A botched rotation is surfaced rather
   than silent: the app runs a **startup self-check** that refuses to boot if any
   configured key is malformed, and every failed decrypt at runtime increments the
-  `frontdesk_crypto_decrypt_failures_total` metric — alert on it, since each failure
+  `sight_crypto_decrypt_failures_total` metric — alert on it, since each failure
   means a secret read back as `""` (e.g. webhook signature 403s).
 - **Durable webhook idempotency** — inbound messages carry the provider id under a
   partial unique index `(conversation_id, provider_message_id)` and save via

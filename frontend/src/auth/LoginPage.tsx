@@ -47,7 +47,7 @@ export function LoginPage() {
         <Stack>
           <div>
             <Title order={2} mb={4}>
-              {t("auth.signInTo")} <span style={{ color: "var(--mantine-color-coral-6)" }}>frontdesk</span>
+              {t("auth.signInTo")} <span style={{ color: "var(--mantine-color-coral-6)" }}>Sight</span>
             </Title>
             <Text c="dimmed" size="sm">
               {t("auth.loginSubtitle")}

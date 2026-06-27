@@ -36,7 +36,7 @@ i18n
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],
-      lookupLocalStorage: "frontdesk_lang",
+      lookupLocalStorage: "sight_lang",
     },
   });
 

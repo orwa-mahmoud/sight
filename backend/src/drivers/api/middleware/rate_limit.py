@@ -16,7 +16,7 @@ from starlette.requests import Request
 
 from src.bootstrap.container import get_jwt_service
 
-_COOKIE_NAME = "frontdesk_token"
+_COOKIE_NAME = "sight_token"
 
 
 def _bearer_token(request: Request) -> str | None:

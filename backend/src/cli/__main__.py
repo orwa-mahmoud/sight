@@ -1,4 +1,4 @@
-"""Frontdesk admin CLI.
+"""Sight admin CLI.
 
 Usage:
     uv run python -m src.cli admin grant  <email>
@@ -36,7 +36,7 @@ async def _set_admin(email: str, *, granted: bool) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="src.cli", description="Frontdesk admin CLI")
+    parser = argparse.ArgumentParser(prog="src.cli", description="Sight admin CLI")
     sub = parser.add_subparsers(dest="group", required=True)
 
     admin = sub.add_parser("admin", help="Platform-admin management")

@@ -89,7 +89,7 @@ def verify_encryption_keys() -> None:
         ) from exc
     if cipher is None:
         return  # no key configured (dev mode) — nothing to verify
-    sentinel = b"frontdesk-encryption-self-check"
+    sentinel = b"sight-encryption-self-check"
     if cipher.decrypt(cipher.encrypt(sentinel)) != sentinel:  # pragma: no cover - belt-and-suspenders
         raise RuntimeError("ENCRYPTION_KEY self-check failed: the configured key did not round-trip.")
     logger.info("crypto.self_check_ok")

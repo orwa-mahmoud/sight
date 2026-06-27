@@ -13,7 +13,7 @@ ENV PYTHONPATH=/app
 RUN pip install uv
 
 COPY pyproject.toml uv.lock ./
-# Install dependencies only. --no-install-project skips building the `frontdesk`
+# Install dependencies only. --no-install-project skips building the `sight`
 # package itself, which references ../README.md (outside this build context) and
 # whose source (src/) isn't copied until the next layer.
 RUN uv sync --no-dev --frozen --no-install-project

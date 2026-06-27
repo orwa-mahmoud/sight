@@ -1,6 +1,6 @@
-# frontdesk
+# Sight
 
-[![CI](https://github.com/orwa-mahmoud/frontdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/orwa-mahmoud/frontdesk/actions/workflows/ci.yml)
+[![CI](https://github.com/orwa-mahmoud/sight/actions/workflows/ci.yml/badge.svg)](https://github.com/orwa-mahmoud/sight/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)
 ![React 19](https://img.shields.io/badge/React-19-61dafb.svg)
@@ -16,9 +16,9 @@ _Live demo: coming soon_ &nbsp;·&nbsp; [Demo](#demo) &nbsp;·&nbsp; [Quick star
 
 ## Demo
 
-[![Watch the demo — ask anything about Westeros, get a grounded, cited answer](docs/screenshots/library-poster.png)](https://orwa-mahmoud.github.io/frontdesk/demo/#library)
+[![Watch the demo — ask anything about Westeros, get a grounded, cited answer](docs/screenshots/library-poster.png)](https://orwa-mahmoud.github.io/sight/demo/#library)
 
-Point frontdesk at a library and ask anything — it answers grounded in the source
+Point Sight at a library and ask anything — it answers grounded in the source
 material and **cites the exact book** every time. Here it's reading the full
 _A Song of Ice and Fire_ saga (~5,000 pages). _Click to play (0:44)._
 
@@ -31,7 +31,7 @@ answering from its policy documents, and escalating to a human when it can't:
 |---|---|---|
 | ![Owner inbox with an escalated question](docs/screenshots/dashboard.png) | ![Knowledge base of uploaded documents](docs/screenshots/documents.png) | ![AI answering a question and citing the source document](docs/screenshots/chat.png) |
 
-▶ **[Watch the front-desk walkthrough](https://orwa-mahmoud.github.io/frontdesk/demo/#frontdesk)** — a support desk answering from its own documents, with a live human escalation.
+▶ **[Watch the front-desk walkthrough](https://orwa-mahmoud.github.io/sight/demo/#frontdesk)** — a support desk answering from its own documents, with a live human escalation.
 
 ## Features
 
@@ -56,7 +56,7 @@ answering from its policy documents, and escalating to a human when it can't:
 | **Backend design** | [backend/docs/ARCHITECTURE.md](backend/docs/ARCHITECTURE.md) — DDD layers, bounded contexts, adding a feature |
 | **Frontend design** | [frontend/docs/ARCHITECTURE.md](frontend/docs/ARCHITECTURE.md) — features, auth, DataTable, i18n |
 | **Data model** | [backend/docs/ERD.md](backend/docs/ERD.md) |
-| **Report a bug / request a feature** | [Open an issue](https://github.com/orwa-mahmoud/frontdesk/issues/new/choose) |
+| **Report a bug / request a feature** | [Open an issue](https://github.com/orwa-mahmoud/sight/issues/new/choose) |
 
 ## Architecture
 
@@ -185,7 +185,7 @@ Requires PostgreSQL 17 with pgvector, Python 3.13 with `uv`, Node 22+.
 cd backend
 cp .env.example .env
 uv sync --extra dev
-createdb frontdesk_db && psql frontdesk_db -c 'CREATE EXTENSION vector;'
+createdb sight_db && psql sight_db -c 'CREATE EXTENSION vector;'
 uv run alembic upgrade head
 uv run uvicorn src.main:app --reload --port 8000
 
@@ -214,7 +214,7 @@ npm run dev    # http://localhost:5173 (Vite proxies /api + /webhooks to :8000)
 ## Notes & current limitations
 
 - **Authentication is cookie-based.** Login/register set an httpOnly
-  `frontdesk_token` cookie (the SPA never stores the JWT in JS, so it is not
+  `sight_token` cookie (the SPA never stores the JWT in JS, so it is not
   exposed to XSS). The API also accepts a `Bearer` token for programmatic
   clients (curl, scripts, the test suite).
 - **One tenant per user (v1).** A user is currently resolved to their first

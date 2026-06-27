@@ -16,7 +16,7 @@ def test_create_app_returns_fastapi() -> None:
     """create_app() builds a FastAPI application with routes."""
     app = create_app()
     assert isinstance(app, FastAPI)
-    assert app.title == "frontdesk"
+    assert app.title == "Sight"
 
 
 def test_create_app_has_expected_routes() -> None:
@@ -45,4 +45,4 @@ async def test_metrics_endpoint() -> None:
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         resp = await client.get("/metrics")
     assert resp.status_code == 200
-    assert "frontdesk" in resp.text or "python" in resp.text.lower()
+    assert "sight" in resp.text or "python" in resp.text.lower()

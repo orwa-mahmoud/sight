@@ -1,6 +1,6 @@
 # Tenant Isolation
 
-Frontdesk is multi-tenant: every tenant's data (conversations, documents,
+Sight is multi-tenant: every tenant's data (conversations, documents,
 contacts, questions, key facts, usage, invitations, config) must be invisible to
 every other tenant. This document describes how isolation is enforced today and
 the roadmap to defense-in-depth.
@@ -50,7 +50,7 @@ What's in the codebase:
   `chat_with_agent` (chat API + channel webhooks), and per-tenant inside the
   platform-admin cross-tenant listing.
 - **Role script**: `scripts/create_app_role.sql` creates the least-privilege
-  `frontdesk_app` role (`NOSUPERUSER NOBYPASSRLS`).
+  `sight_app` role (`NOSUPERUSER NOBYPASSRLS`).
 - **Proof**: `tests/integration/test_rls_enforcement.py` connects as a real
   NOBYPASSRLS role and asserts a query only sees the scoped tenant's rows (and
   zero when unscoped). Treat its failure as a release blocker.
@@ -67,7 +67,7 @@ secrets are additionally encrypted at rest.
 
 1. Create the role: `psql -U postgres -d <db> -v app_password="'…'" -f
    scripts/create_app_role.sql` (run against every environment).
-2. Point `DATABASE_URL` / `DATABASE_URL_SYNC` at `frontdesk_app`.
+2. Point `DATABASE_URL` / `DATABASE_URL_SYNC` at `sight_app`.
 3. Keep running migrations as the owning superuser (`postgres`).
 4. Validate each flow end-to-end under the new role before production — the
    wiring covers the known paths, but a new flow that reads an RLS table without

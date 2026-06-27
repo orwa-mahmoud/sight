@@ -53,7 +53,7 @@ function renderShell(user: typeof USER_WITH_NAME | typeof USER_NO_NAME, path = "
 describe("ProtectedShell", () => {
   it("renders the brand name", () => {
     renderShell(USER_WITH_NAME);
-    expect(screen.getByText("frontdesk")).toBeInTheDocument();
+    expect(screen.getByText("Sight")).toBeInTheDocument();
   });
 
   it("renders all nav links", () => {

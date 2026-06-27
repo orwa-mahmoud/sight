@@ -27,7 +27,7 @@ Defense in depth:
 
 RLS ships **inert under the default `postgres` superuser** (which bypasses RLS),
 so local dev and the existing test suite are unaffected. Activation = create the
-`frontdesk_app` NOBYPASSRLS role (`scripts/create_app_role.sql`) and point
+`sight_app` NOBYPASSRLS role (`scripts/create_app_role.sql`) and point
 `DATABASE_URL` at it. Full detail in
 [backend/docs/TENANT_ISOLATION.md](../../backend/docs/TENANT_ISOLATION.md).
 

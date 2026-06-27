@@ -19,7 +19,7 @@ import structlog
 logger = structlog.get_logger()
 
 _LOCK_TTL_SECONDS = 300  # 5 minutes — safety cap
-_LOCK_PREFIX = "frontdesk:thread_lock:"
+_LOCK_PREFIX = "sight:thread_lock:"
 
 _RELEASE_LUA = """
 if redis.call("get", KEYS[1]) == ARGV[1] then

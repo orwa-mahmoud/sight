@@ -9,7 +9,7 @@
 set -euo pipefail
 
 COMPOSE_FILE="${1:-docker-compose.prod.yml}"
-DB="${POSTGRES_DB:-frontdesk_db}"
+DB="${POSTGRES_DB:-sight_db}"
 
 # Order/CASCADE handles FKs; RESTART IDENTITY resets sequences. alembic_version
 # is intentionally left untouched so the schema stays at head.

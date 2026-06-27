@@ -1,6 +1,6 @@
 # Load testing
 
-A [k6](https://k6.io) smoke/load harness for the Frontdesk API. These scripts
+A [k6](https://k6.io) smoke/load harness for the Sight API. These scripts
 exist so capacity and latency under concurrency can be measured against a
 **running** deployment — they are not run by CI and need a live target.
 

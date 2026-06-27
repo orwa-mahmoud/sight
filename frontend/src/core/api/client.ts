@@ -7,7 +7,7 @@ import { config } from "@core/config";
 // Set VITE_API_URL only when the API is served from a different origin.
 const BASE_URL = config.apiUrl;
 
-// Auth is cookie-based: the backend sets an httpOnly `frontdesk_token` cookie on
+// Auth is cookie-based: the backend sets an httpOnly `sight_token` cookie on
 // login/register, so the SPA never reads or stores the JWT (no localStorage =
 // no XSS token theft). `withCredentials` makes the browser send that cookie on
 // every request automatically.

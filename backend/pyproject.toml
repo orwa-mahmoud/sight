@@ -1,5 +1,5 @@
 [project]
-name = "frontdesk"
+name = "sight"
 version = "0.1.0"
 description = "Multi-tenant AI front desk — RAG-grounded answers with human-in-the-loop escalation"
 requires-python = ">=3.13"

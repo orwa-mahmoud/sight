@@ -1,7 +1,7 @@
 """Per-model pricing table + cost calculator.
 
 Prices are in USD per **1 million tokens**, current as of 2026-05. Adapted
-from PropertyBot's pricing module with frontdesk's narrower model surface.
+from PropertyBot's pricing module with Sight's narrower model surface.
 Cache pricing follows Anthropic's input cache semantics; OpenAI's prompt
 caching is automatic on input tokens, so we treat `cache_read` as a
 separately-billed input segment for both providers.

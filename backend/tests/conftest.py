@@ -8,16 +8,16 @@ import tempfile
 # ── Set test env BEFORE any `src.*` import so settings resolve to the test DB ─
 os.environ.setdefault(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres:postgres@localhost:5432/frontdesk_test",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/sight_test",
 )
 os.environ.setdefault(
     "DATABASE_URL_SYNC",
-    "postgresql://postgres:postgres@localhost:5432/frontdesk_test",
+    "postgresql://postgres:postgres@localhost:5432/sight_test",
 )
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-not-for-production")
 os.environ.setdefault("CORS_ORIGINS", "http://localhost:5173")
 # Stream uploaded files to a throwaway dir so the suite never touches the real one.
-os.environ.setdefault("UPLOAD_STORAGE_DIR", tempfile.mkdtemp(prefix="frontdesk-test-uploads-"))
+os.environ.setdefault("UPLOAD_STORAGE_DIR", tempfile.mkdtemp(prefix="sight-test-uploads-"))
 os.environ["APP_ENV"] = "test"  # forces NullPool in the engine factory
 
 from collections.abc import AsyncIterator

@@ -11,7 +11,7 @@ from fastapi import Response
 
 from src.config.settings import get_settings
 
-COOKIE_NAME = "frontdesk_token"
+COOKIE_NAME = "sight_token"
 
 
 def set_auth_cookie(response: Response, token: str) -> None:

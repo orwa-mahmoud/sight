@@ -34,9 +34,9 @@ pytestmark = pytest.mark.skipif(
 )
 
 _DOC = (
-    b"Frontdesk support hours are Monday to Friday, 9am to 5pm Gulf Standard Time. "
+    b"Sight support hours are Monday to Friday, 9am to 5pm Gulf Standard Time. "
     b"The office is closed on public holidays. For urgent issues outside these "
-    b"hours, email urgent@frontdesk.example."
+    b"hours, email urgent@sight.example."
 )
 
 

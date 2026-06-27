@@ -4,7 +4,7 @@
 
 ## Context
 
-frontdesk is an AI app, and AI apps rot fast: framework calls (LangChain,
+Sight is an AI app, and AI apps rot fast: framework calls (LangChain,
 HTTP clients, ORMs) leak into business logic until the "agent" is inseparable
 from the plumbing. I wanted the domain — tenants, conversations, escalation,
 documents, billing — to stay testable and framework-free as the AI stack churns.

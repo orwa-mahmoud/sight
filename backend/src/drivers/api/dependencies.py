@@ -48,7 +48,7 @@ def get_job_pool(request: Request) -> ArqRedis:
 JobPoolDep = Annotated[ArqRedis, Depends(get_job_pool)]
 
 
-_COOKIE_NAME = "frontdesk_token"
+_COOKIE_NAME = "sight_token"
 
 
 async def get_current_user(

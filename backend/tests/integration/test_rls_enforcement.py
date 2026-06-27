@@ -24,7 +24,7 @@ from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.tenants.entities import Tenant
 from src.infrastructure.persistence.postgres.database import async_session_factory
 
-_APP_ROLE = "frontdesk_rls_test"
+_APP_ROLE = "sight_rls_test"
 _APP_PASSWORD = "rls_test_pw"
 
 

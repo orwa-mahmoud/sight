@@ -158,7 +158,7 @@ the single source of truth for authentication state.
 
 ## 5. Auth Flow
 
-Cookie-based. The backend sets an httpOnly `frontdesk_token` cookie on
+Cookie-based. The backend sets an httpOnly `sight_token` cookie on
 login/register, so the SPA never reads or stores the JWT (no localStorage =
 no XSS token theft). `axios` runs with `withCredentials: true`, so the cookie
 is sent on every request automatically.
@@ -191,7 +191,7 @@ auth.logout()
 
 ### Token storage
 
-The JWT lives only in the httpOnly `frontdesk_token` cookie, managed by the
+The JWT lives only in the httpOnly `sight_token` cookie, managed by the
 backend and inaccessible to JavaScript. The SPA keeps no token in
 localStorage or memory.
 

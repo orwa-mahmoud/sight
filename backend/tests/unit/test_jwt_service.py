@@ -22,7 +22,7 @@ def test_issue_and_decode() -> None:
     payload = svc.decode(token)
     assert payload["sub"] == str(user_id)
     assert payload["tenant_id"] == str(tenant_id)
-    assert payload["iss"] == "frontdesk"
+    assert payload["iss"] == "sight"
 
 
 def test_decode_invalid_token_raises() -> None:

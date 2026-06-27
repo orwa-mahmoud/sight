@@ -1,6 +1,6 @@
-# Frontdesk Design System
+# Sight Design System
 
-Component patterns, naming conventions, color palette, and styling reference for the Frontdesk owner dashboard.
+Component patterns, naming conventions, color palette, and styling reference for the Sight owner dashboard.
 
 > **Source of truth:** The code. If this document disagrees with the code, the code wins -- update the doc in the same change.
 
