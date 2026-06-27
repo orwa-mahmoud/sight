@@ -26,9 +26,13 @@ The focus is making the "self-hosted, production-ready" claim fully true.
   idempotency, encryption-key rotation~~ — **done** (see [SECURITY.md](SECURITY.md))
 - Server-side token revocation on logout (jti blocklist or short-TTL + refresh)
 - RLS **on by default** + exercised in CI under a NOBYPASSRLS role
-- Deployment + backup/restore docs, healthchecks + resource limits
-- A hosted demo with a seeded demo tenant
-- RAG/agent **eval harness** with published quality numbers
+- ~~Deployment + backup/restore docs~~ — **done** ([DEPLOYMENT.md](DEPLOYMENT.md),
+  [BACKUP.md](BACKUP.md)); still to do: container healthchecks + resource limits
+- A hosted demo with a seeded demo tenant — tooling is in place
+  ([`scripts/reset_demo.sh`](scripts/reset_demo.sh) + [DEPLOYMENT.md §6](DEPLOYMENT.md));
+  still to do: stand up the live instance
+- **Publish** RAG/agent eval quality numbers in the README — the harness already
+  ships (`make eval` offline, `make eval-db` over the real retriever)
 
 ## Then — product depth (v0.3)
 

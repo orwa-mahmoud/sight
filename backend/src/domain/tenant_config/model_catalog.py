@@ -69,6 +69,7 @@ MODEL_CATALOG: tuple[ModelSpec, ...] = (
         model="gpt-5.5",
         label="GPT-5.5",
         token_param=MAX_COMPLETION_TOKENS,
+        supports_temperature=False,  # flagship reasoning model: only the default temperature (1) is allowed
     ),
     # ── Anthropic ────────────────────────────────────────────────
     ModelSpec(provider=LLMProvider.ANTHROPIC, model="claude-haiku-4-5", label="Claude Haiku 4.5"),

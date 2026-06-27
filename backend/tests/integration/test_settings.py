@@ -17,7 +17,7 @@ async def test_get_settings_returns_masked_keys(client: AsyncClient) -> None:
     body = resp.json()
     assert body["llm_provider"] == "openai"
     assert body["llm_model"] == "gpt-4o-mini"
-    assert body["rerank_model"] == "gpt-4o-mini"  # cheap default rerank model
+    assert body["rerank_model"] == "gpt-5.4-mini"  # default rerank model
     assert body["llm_api_key_masked"] == ""  # empty key masking
     assert body["bot_name"] == "Front Desk Assistant"
 

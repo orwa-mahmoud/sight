@@ -43,7 +43,9 @@ from src.infrastructure.rag.retriever import HybridRetriever
 _HERE = Path(__file__).parent
 _TOP_K = 8
 _ESCALATE_THRESHOLD = 0.25
-_EMBEDDING_MODEL = "text-embedding-3-large"
+# Must match the model the tenant's documents were embedded with, or the query
+# and stored vectors live in different spaces and vector search is meaningless.
+_EMBEDDING_MODEL = os.environ.get("EVAL_EMBEDDING_MODEL", "text-embedding-3-large")
 _RERANK_MODEL_FALLBACK = "gpt-4o-mini"
 _DEFAULT_GOLDEN = "golden_set.db.json"  # DB mode's own dataset (offline uses golden_set.json)
 
@@ -55,7 +57,9 @@ async def _run(*, embedding_key: str, llm_key: str, tenant_id: UUID, golden_path
     async with async_session_factory() as session:
         # Use the tenant's configured rerank model so eval matches production.
         config = await PostgresTenantConfigRepository(session).get_by_tenant_id(tenant_id)
-        rerank_model = config.rerank_model if config else _RERANK_MODEL_FALLBACK
+        rerank_model = os.environ.get("EVAL_RERANK_MODEL") or (
+            config.rerank_model if config else _RERANK_MODEL_FALLBACK
+        )
         llm = LangChainLLMClient(provider="openai", model=rerank_model, api_key=llm_key)
 
         rows = (

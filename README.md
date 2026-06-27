@@ -1,4 +1,8 @@
+<div align="center">
+
 # Sight
+
+**The multi-tenant AI front desk that answers on your behalf — grounded in your own documents, citing the exact source, and escalating to a human when it can't.**
 
 [![CI](https://github.com/orwa-mahmoud/sight/actions/workflows/ci.yml/badge.svg)](https://github.com/orwa-mahmoud/sight/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -7,31 +11,25 @@
 ![PostgreSQL 17 + pgvector](https://img.shields.io/badge/PostgreSQL-17%20%2B%20pgvector-336791.svg)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-Multi-tenant AI front desk that answers on your behalf. Tenants upload
-their knowledge base, connect WhatsApp and Telegram, and the AI handles
-incoming questions — grounded in the tenant's own documents. Anything the
-AI can't answer gets routed to the owner's inbox for a human reply.
+🎬&nbsp;<a href="https://github.com/orwa-mahmoud/sight/blob/main/docs/demo/westeros-demo.mp4">Watch the demo</a>
 
-_Live demo: coming soon_ &nbsp;·&nbsp; [Demo](#demo) &nbsp;·&nbsp; [Quick start](#quick-start) &nbsp;·&nbsp; [Architecture](backend/docs/ARCHITECTURE.md) &nbsp;·&nbsp; [Contributing](CONTRIBUTING.md)
+</div>
 
-## Demo
+<p align="center"><strong>Ask anything about Westeros.</strong> Sight reads the full <em>A Song of Ice and Fire</em> saga — roughly 3,400 pages across five books — and answers <strong>grounded in the actual books</strong>, citing the exact title behind every claim and admitting plainly when the text simply doesn't say.</p>
 
-[![Watch the demo — ask anything about Westeros, get a grounded, cited answer](docs/screenshots/westeros-poster.png)](https://orwa-mahmoud.github.io/sight/demo/#westeros)
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/f710149c-1f75-46ec-9adc-8c7d27618f33" controls preload="metadata" width="100%"></video>
+</div>
 
-Point Sight at a library and ask anything — it answers grounded in the source
-material and **cites the exact book** every time. Here it's reading the full
-_A Song of Ice and Fire_ saga (~5,000 pages). _Click to play (0:47)._
-
-### Built for real front desks
-
-The same engine pointed at a business's own knowledge base — a bank's support desk
-answering from its policy documents, and escalating to a human when it can't:
+<p align="center"><strong>The same engine on a real support desk.</strong> Point Sight at a business's own policy documents — here a bank's — and it answers customers straight from those docs, cites the source, and escalates to the owner's inbox the moment it can't, so a human steps in.</p>
 
 | Owner inbox (escalation) | Knowledge base | AI answering, with sources |
 |---|---|---|
 | ![Owner inbox with an escalated question](docs/screenshots/dashboard.png) | ![Knowledge base of uploaded documents](docs/screenshots/documents.png) | ![AI answering a question and citing the source document](docs/screenshots/chat.png) |
 
-[![Watch the support-desk demo — a bank answering from its own policy docs, with a live human escalation](docs/screenshots/bank-poster.png)](https://orwa-mahmoud.github.io/sight/demo/#bank-demo)
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/8edb4939-d7e8-417e-8bae-e98e5abf4668" controls preload="metadata" width="100%"></video>
+</div>
 
 ## Features
 

@@ -66,7 +66,7 @@ class TenantConfig(BaseEntity):
             llm_api_key="",
             llm_max_tokens=1024,
             llm_temperature=0.3,
-            rerank_model="gpt-4o-mini",
+            rerank_model="gpt-5.4-mini",
             embedding_provider="openai",
             embedding_model="text-embedding-3-large",
             embedding_api_key="",

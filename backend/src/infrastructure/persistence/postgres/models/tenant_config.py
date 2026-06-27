@@ -30,7 +30,7 @@ class TenantConfigModel(Base):
     llm_api_key: Mapped[str] = mapped_column(Text, nullable=False, default="")
     llm_max_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=1024)
     llm_temperature: Mapped[float] = mapped_column(Float, nullable=False, default=0.3)
-    rerank_model: Mapped[str] = mapped_column(String(64), nullable=False, default="gpt-4o-mini")
+    rerank_model: Mapped[str] = mapped_column(String(64), nullable=False, default="gpt-5.4-mini")
     # Embedding
     embedding_provider: Mapped[str] = mapped_column(String(32), nullable=False, default="openai")
     embedding_model: Mapped[str] = mapped_column(String(64), nullable=False, default="text-embedding-3-large")

@@ -45,7 +45,7 @@ def test_update_llm_partial() -> None:
 
 def test_rerank_model_defaults_and_updates() -> None:
     c = TenantConfig.create_default(tenant_id=uuid4())
-    assert c.rerank_model == "gpt-4o-mini"  # cheap default
+    assert c.rerank_model == "gpt-5.4-mini"  # default rerank model
     c.update_llm(rerank_model="gpt-4.1-nano")
     assert c.rerank_model == "gpt-4.1-nano"
     assert c.llm_model == "gpt-4o-mini"  # answer model independent of rerank model
