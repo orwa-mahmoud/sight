@@ -20,7 +20,7 @@ _Live demo: coming soon_ &nbsp;·&nbsp; [Demo](#demo) &nbsp;·&nbsp; [Quick star
 
 Point Sight at a library and ask anything — it answers grounded in the source
 material and **cites the exact book** every time. Here it's reading the full
-_A Song of Ice and Fire_ saga (~5,000 pages). _Click to play (0:44)._
+_A Song of Ice and Fire_ saga (~5,000 pages). _Click to play (0:47)._
 
 ### Built for real front desks
 
