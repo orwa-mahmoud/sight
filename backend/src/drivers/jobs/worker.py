@@ -22,6 +22,7 @@ from arq.connections import RedisSettings
 
 from src.application.shared.unit_of_work import UnitOfWork
 from src.config.settings import get_settings
+from src.domain.documents.entities import Document
 from src.drivers.jobs.ingestion import ingest_document
 from src.drivers.jobs.queue import PROCESS_DOCUMENT
 from src.infrastructure.persistence.postgres.database import async_session_factory
@@ -36,9 +37,16 @@ async def process_document(ctx: dict[str, Any], tenant_id: str, document_id: str
 async def reap_stuck_documents(ctx: dict[str, Any]) -> None:
     settings = get_settings()
     cutoff = datetime.now(UTC) - timedelta(seconds=settings.ingestion_stale_after_seconds)
+    # Iterate every tenant under its own RLS scope. A single global query would
+    # return zero rows under enforced RLS (the fail-closed policy matches nothing
+    # when no tenant is set), silently disabling crash recovery. Tenants are not
+    # RLS-scoped, so listing them needs no scope.
+    stuck: list[Document] = []
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        stuck = await uow.documents.list_stuck(older_than=cutoff)
+        for tenant in await uow.tenants.list_all():
+            await uow.set_tenant_scope(tenant.id)
+            stuck.extend(await uow.documents.list_stuck_for_tenant(tenant.id, older_than=cutoff))
     for doc in stuck:
         logger.warning("reaper.requeue", document_id=str(doc.id), status=doc.status.value)
         await ctx["redis"].enqueue_job(PROCESS_DOCUMENT, str(doc.tenant_id), str(doc.id), doc.filename)

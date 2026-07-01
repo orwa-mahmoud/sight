@@ -203,8 +203,43 @@ async def test_list_stuck_returns_only_stale_in_flight_documents(client: None) -
 
     async with async_session_factory() as session:
         uow = UnitOfWork(session)
-        stuck = await uow.documents.list_stuck(older_than=cutoff)
+        await uow.set_tenant_scope(tenant.id)
+        stuck = await uow.documents.list_stuck_for_tenant(tenant.id, older_than=cutoff)
         assert {d.filename for d in stuck} == {"stale-uploaded.md", "stale-ingesting.md"}
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_reaper_requeues_stuck_docs_across_all_tenants(client: None) -> None:
+    """The reaper iterates every tenant under its own RLS scope, so a stuck doc in
+    any tenant is re-enqueued — the fix for the fail-closed global query."""
+    from unittest.mock import AsyncMock
+
+    from src.drivers.jobs.worker import reap_stuck_documents
+
+    old = datetime.now(UTC) - timedelta(hours=1)
+    t1 = await _make_tenant()
+    t2 = await _make_tenant()
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        for t in (t1, t2):
+            doc = Document.upload(
+                tenant_id=t.id,
+                uploaded_by_user_id=None,
+                filename=f"stuck-{t.id}.md",
+                mime_type=DocumentMimeType.MARKDOWN,
+                size_bytes=10,
+            )
+            doc.updated_at = old
+            await uow.documents.save(doc)
+        await uow.commit()
+
+    redis = AsyncMock()
+    await reap_stuck_documents({"redis": redis})
+
+    requeued_tenants = {call.args[1] for call in redis.enqueue_job.await_args_list}
+    assert str(t1.id) in requeued_tenants
+    assert str(t2.id) in requeued_tenants
 
 
 @pytest.mark.integration

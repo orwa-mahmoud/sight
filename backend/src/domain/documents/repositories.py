@@ -23,10 +23,11 @@ class DocumentRepository(Protocol):
         are treated as stuck (the reaper's job), so the UI stops polling them."""
         ...
 
-    async def list_stuck(self, older_than: datetime) -> list[Document]:
+    async def list_stuck_for_tenant(self, tenant_id: UUID, *, older_than: datetime) -> list[Document]:
         """Documents stuck mid-ingest (uploaded/ingesting) and untouched since
-        ``older_than``, across ALL tenants — for the reaper. The caller must run
-        without a tenant scope so it sees every tenant's stragglers."""
+        ``older_than`` for one tenant — for the reaper, which iterates every tenant
+        under that tenant's RLS scope. A tenant-scoped query is required: a global
+        query returns zero rows under enforced RLS when no tenant scope is set."""
         ...
 
     async def count_for_tenant(self, tenant_id: UUID) -> int: ...
