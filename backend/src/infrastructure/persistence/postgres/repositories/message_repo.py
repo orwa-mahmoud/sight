@@ -64,9 +64,15 @@ class PostgresMessageRepository:
             stmt = stmt.where(MessageModel.hidden.is_(False))
         stmt = stmt.order_by(MessageModel.created_at.asc(), MessageModel.id.asc())
         if limit:
-            # Take the most recent N then reverse to chronological order.
-            sub = stmt.order_by(desc(MessageModel.created_at)).limit(limit).subquery()
-            stmt = select(MessageModel).join(sub, MessageModel.id == sub.c.id).order_by(MessageModel.created_at.asc())
+            # Take the most recent N then reverse to chronological order. The id
+            # tiebreaker makes the cut deterministic when rows share a created_at
+            # (same-tick inserts), so "the most recent N" is stable.
+            sub = stmt.order_by(desc(MessageModel.created_at), desc(MessageModel.id)).limit(limit).subquery()
+            stmt = (
+                select(MessageModel)
+                .join(sub, MessageModel.id == sub.c.id)
+                .order_by(MessageModel.created_at.asc(), MessageModel.id.asc())
+            )
         result = await self._session.execute(stmt)
         return [self._to_entity(m) for m in result.scalars().all()]
 

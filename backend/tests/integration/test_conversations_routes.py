@@ -128,6 +128,28 @@ async def test_get_messages_for_conversation(client: AsyncClient) -> None:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+async def test_get_messages_respects_limit(client: AsyncClient) -> None:
+    token, _, tenant_id = await register_and_token(client)
+    conv_id, _ = await _seed_conversation_with_messages(UUID(tenant_id))
+
+    resp = await client.get(
+        f"/api/v1/conversations/{conv_id}/messages?limit=1",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 200
+    messages = resp.json()
+    assert len(messages) == 1  # capped (the conversation has 2 visible messages)
+
+    # Out-of-range limits are rejected by validation.
+    too_big = await client.get(
+        f"/api/v1/conversations/{conv_id}/messages?limit=9999",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert too_big.status_code == 422
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_get_messages_not_found(client: AsyncClient) -> None:
     token, _, _ = await register_and_token(client)
     fake_id = "00000000-0000-0000-0000-000000000000"

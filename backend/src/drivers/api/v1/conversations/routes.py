@@ -59,6 +59,7 @@ async def get_messages(
     conversation_id: UUID,
     current_user: CurrentUser,
     uow: UnitOfWorkDep,
+    limit: Annotated[int, Query(ge=1, le=500)] = 200,
 ) -> list[MessageResponse]:
     tenant_id = await resolve_tenant_id(current_user, uow)
     conv = await uow.conversations.get_by_id(conversation_id)
@@ -67,7 +68,9 @@ async def get_messages(
     if conv.tenant_id != tenant_id:
         raise AuthorizationError("Conversation does not belong to this tenant")
 
-    messages = await uow.messages.list_for_conversation(conversation_id, include_hidden=False)
+    # Long-lived threads accumulate unbounded turns; cap the dashboard read to the
+    # most recent `limit` (chronological) so the payload + response time stay bounded.
+    messages = await uow.messages.list_for_conversation(conversation_id, include_hidden=False, limit=limit)
     return [
         MessageResponse(
             id=m.id,
