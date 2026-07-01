@@ -22,7 +22,7 @@ from src.domain.tenant_config.entities import TenantConfig
 from src.domain.tenants.value_objects import TenantStatus
 from src.drivers.api.dependencies import get_session
 from src.infrastructure.channels.cache import get_telegram_adapter
-from src.infrastructure.channels.idempotency import is_duplicate_message
+from src.infrastructure.channels.idempotency import mark_message_processed, was_message_processed
 
 logger = structlog.get_logger()
 
@@ -69,8 +69,10 @@ def _parse_telegram_message(body: dict[str, Any]) -> tuple[str, str, str | None,
 _TELEGRAM_CONTENT_KEYS = ("voice", "audio", "photo", "video", "document", "sticker", "location")
 
 
-def _nontext_chat_id(body: dict[str, Any]) -> str | None:
-    """Chat id of an inbound message carrying non-text *content* (voice/photo/…).
+def _nontext_ids(body: dict[str, Any]) -> tuple[str, str] | None:
+    """(chat_id, message_id) of an inbound message carrying non-text *content*
+    (voice/photo/…). The message_id lets the non-text auto-reply be de-duplicated
+    just like the text path, so a redelivered media update isn't answered twice.
 
     Only fires for real media — empty text and service messages return None so we
     don't reply to them.
@@ -80,7 +82,12 @@ def _nontext_chat_id(body: dict[str, Any]) -> str | None:
         return None
     if not any(key in message for key in _TELEGRAM_CONTENT_KEYS):
         return None
-    return str(message.get("chat", {}).get("id", "")) or None
+    chat_id = str(message.get("chat", {}).get("id", ""))
+    if not chat_id:
+        return None
+    raw_msg_id = message.get("message_id")
+    message_id = f"{chat_id}:{raw_msg_id}" if raw_msg_id is not None else ""
+    return chat_id, message_id
 
 
 async def _validate_telegram_request(
@@ -111,8 +118,10 @@ async def _process_telegram_text(
 ) -> None:
     """Run the agent for a text message and send the reply back."""
     text, telegram_user_id, sender_name, chat_id, message_id = parsed
-    # Telegram re-delivers updates until acked — skip duplicates.
-    if await is_duplicate_message(tenant_id=tid, channel="telegram", message_id=message_id):
+    # Telegram re-delivers updates until acked — skip a message we've already fully
+    # processed. The marker is set only on success below, so a failed turn stays
+    # re-deliverable rather than dropped.
+    if await was_message_processed(tenant_id=tid, channel="telegram", message_id=message_id):
         logger.info("telegram.webhook.duplicate", tenant_id=tenant_id_raw, message_id=message_id)
         return
     result = await chat_with_agent(
@@ -130,12 +139,27 @@ async def _process_telegram_text(
     if not result.duplicate and config.telegram_bot_token and chat_id:
         adapter = await get_telegram_adapter(str(tid), tenant_config=config)
         await adapter.send_text(chat_id, result.response)
+    await mark_message_processed(tenant_id=tid, channel="telegram", message_id=message_id)
+
+
+async def _handle_telegram_nontext(
+    tid: UUID, config: TenantConfig, nontext_ids: tuple[str, str], tenant_id_raw: str
+) -> None:
+    """Reply to a non-text (media) message once, de-duplicated like the text path."""
+    nontext_chat_id, nontext_message_id = nontext_ids
+    if await was_message_processed(tenant_id=tid, channel="telegram", message_id=nontext_message_id):
+        logger.info("telegram.webhook.duplicate", tenant_id=tenant_id_raw, message_id=nontext_message_id)
+        return
+    if config.telegram_bot_token and nontext_chat_id:
+        adapter = await get_telegram_adapter(str(tid), tenant_config=config)
+        await adapter.send_text(nontext_chat_id, _TEXT_ONLY_REPLY)
+        await mark_message_processed(tenant_id=tid, channel="telegram", message_id=nontext_message_id)
 
 
 async def _handle_telegram_post(tid: UUID, body: dict[str, Any], secret_header: str | None, tenant_id_raw: str) -> int:
     parsed = _parse_telegram_message(body)
-    nontext_chat_id = _nontext_chat_id(body) if parsed is None else None
-    if parsed is None and nontext_chat_id is None:
+    nontext_ids = _nontext_ids(body) if parsed is None else None
+    if parsed is None and nontext_ids is None:
         return 200
 
     async for session in get_session():
@@ -147,15 +171,17 @@ async def _handle_telegram_post(tid: UUID, body: dict[str, Any], secret_header: 
             config = validated
 
             if parsed is None:
-                # Non-text message — acknowledge instead of silently ignoring.
-                if config.telegram_bot_token and nontext_chat_id:
-                    adapter = await get_telegram_adapter(str(tid), tenant_config=config)
-                    await adapter.send_text(nontext_chat_id, _TEXT_ONLY_REPLY)
+                assert nontext_ids is not None  # parsed is None ⇒ nontext_ids was resolved above
+                await _handle_telegram_nontext(tid, config, nontext_ids, tenant_id_raw)
                 return 200
 
             await _process_telegram_text(tid, uow, config, parsed, tenant_id_raw)
         except Exception:
+            # Ask Telegram to redeliver (503) rather than acking a lost reply. The
+            # message was not marked processed, so the retry reprocesses it; an
+            # already-saved inbound is short-circuited by the gateway's DB de-dup.
             await uow.rollback()
             logger.error("telegram.webhook.failed", tenant_id=tenant_id_raw, exc_info=True)
+            return 503
 
     return 200

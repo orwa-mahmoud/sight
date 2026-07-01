@@ -9,23 +9,23 @@ import pytest
 
 from src.ai.types import ChatResult
 from src.domain.tenant_config.entities import TenantConfig
-from src.drivers.api.webhooks.telegram import _nontext_chat_id, telegram_webhook
+from src.drivers.api.webhooks.telegram import _nontext_ids, telegram_webhook
 
 
-def test_nontext_chat_id_returns_chat_for_media() -> None:
-    body = {"message": {"from": {"id": 1}, "chat": {"id": 99}, "voice": {"file_id": "x"}}}
-    assert _nontext_chat_id(body) == "99"
+def test_nontext_ids_returns_chat_and_message_id_for_media() -> None:
+    body = {"message": {"message_id": 5, "from": {"id": 1}, "chat": {"id": 99}, "voice": {"file_id": "x"}}}
+    assert _nontext_ids(body) == ("99", "99:5")
 
 
-def test_nontext_chat_id_none_for_text_message() -> None:
-    assert _nontext_chat_id({"message": {"chat": {"id": 99}, "text": "hi"}}) is None
+def test_nontext_ids_none_for_text_message() -> None:
+    assert _nontext_ids({"message": {"chat": {"id": 99}, "text": "hi"}}) is None
 
 
-def test_nontext_chat_id_none_for_empty_or_service_message() -> None:
+def test_nontext_ids_none_for_empty_or_service_message() -> None:
     # Empty text / no recognized content (e.g. a service message) — don't reply.
-    assert _nontext_chat_id({"message": {"chat": {"id": 99}, "text": ""}}) is None
-    assert _nontext_chat_id({"message": {"chat": {"id": 99}, "new_chat_member": {}}}) is None
-    assert _nontext_chat_id({}) is None
+    assert _nontext_ids({"message": {"chat": {"id": 99}, "text": ""}}) is None
+    assert _nontext_ids({"message": {"chat": {"id": 99}, "new_chat_member": {}}}) is None
+    assert _nontext_ids({}) is None
 
 
 def _make_config(
@@ -203,7 +203,7 @@ async def test_telegram_webhook_skips_duplicate_delivery() -> None:
         patch("src.drivers.api.webhooks.telegram.get_session", fake_get_session),
         patch("src.drivers.api.webhooks.telegram.UnitOfWork", return_value=mock_uow),
         patch(
-            "src.drivers.api.webhooks.telegram.is_duplicate_message",
+            "src.drivers.api.webhooks.telegram.was_message_processed",
             new_callable=AsyncMock,
             return_value=True,
         ),
@@ -236,7 +236,7 @@ async def test_telegram_webhook_acknowledges_non_text_message() -> None:
     request = MagicMock()
     # A voice message — no text.
     request.json = AsyncMock(
-        return_value={"message": {"from": {"id": 1}, "chat": {"id": 99}, "voice": {"file_id": "x"}}}
+        return_value={"message": {"message_id": 7, "from": {"id": 1}, "chat": {"id": 99}, "voice": {"file_id": "x"}}}
     )
 
     async def fake_get_session():  # type: ignore[no-untyped-def]
@@ -246,6 +246,12 @@ async def test_telegram_webhook_acknowledges_non_text_message() -> None:
         patch("src.drivers.api.webhooks.telegram.get_session", fake_get_session),
         patch("src.drivers.api.webhooks.telegram.UnitOfWork", return_value=mock_uow),
         patch("src.drivers.api.webhooks.telegram.chat_with_agent", new_callable=AsyncMock) as mock_chat,
+        patch(
+            "src.drivers.api.webhooks.telegram.was_message_processed",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+        patch("src.drivers.api.webhooks.telegram.mark_message_processed", new_callable=AsyncMock) as mock_mark,
         patch(
             "src.infrastructure.channels.telegram.TelegramAdapter.send_text",
             new_callable=AsyncMock,
@@ -257,13 +263,15 @@ async def test_telegram_webhook_acknowledges_non_text_message() -> None:
             x_telegram_bot_api_secret_token="sec",
         )
 
-    # Non-text content is acknowledged with a text-only notice, not run through the agent.
+    # Non-text content is acknowledged with a text-only notice, not run through the
+    # agent, and de-duplicated (marked processed) so a redelivery isn't answered twice.
     assert resp.status_code == 200
     mock_chat.assert_not_called()
     mock_send.assert_awaited_once()
     call = mock_send.await_args
     assert call is not None
     assert "text" in call.args[1].lower()
+    mock_mark.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -288,6 +296,7 @@ async def test_telegram_webhook_exception_rolls_back() -> None:
     with (
         patch("src.drivers.api.webhooks.telegram.get_session", fake_get_session),
         patch("src.drivers.api.webhooks.telegram.UnitOfWork", return_value=mock_uow),
+        patch("src.drivers.api.webhooks.telegram.was_message_processed", new_callable=AsyncMock, return_value=False),
         patch(
             "src.drivers.api.webhooks.telegram.chat_with_agent",
             new_callable=AsyncMock,
@@ -299,7 +308,9 @@ async def test_telegram_webhook_exception_rolls_back() -> None:
             request=request,
             x_telegram_bot_api_secret_token="test-sec",
         )
-    assert resp.status_code == 200
+    # A processing failure asks Telegram to redeliver (503) rather than acking a
+    # lost reply, and the transaction is rolled back.
+    assert resp.status_code == 503
     mock_uow.rollback.assert_awaited_once()
 
 

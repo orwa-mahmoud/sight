@@ -23,7 +23,7 @@ from src.domain.tenant_config.entities import TenantConfig
 from src.domain.tenants.value_objects import TenantStatus
 from src.drivers.api.dependencies import get_session
 from src.infrastructure.channels.cache import get_whatsapp_adapter
-from src.infrastructure.channels.idempotency import is_duplicate_message
+from src.infrastructure.channels.idempotency import mark_message_processed, was_message_processed
 from src.infrastructure.channels.whatsapp import WhatsAppAdapter
 
 logger = structlog.get_logger()
@@ -127,8 +127,10 @@ async def _handle_whatsapp_post(
                 return 200  # status update / non-message webhook — nothing to do
 
             # Meta delivers webhooks at least once — skip a message we've already
-            # processed so the asker isn't answered (and billed) twice.
-            if await is_duplicate_message(tenant_id=tid, channel="whatsapp", message_id=incoming.message_id):
+            # fully processed so the asker isn't answered (and billed) twice. The
+            # marker is only set on success below, so a failed turn is left
+            # re-deliverable rather than dropped for 24h.
+            if await was_message_processed(tenant_id=tid, channel="whatsapp", message_id=incoming.message_id):
                 logger.info("whatsapp.webhook.duplicate", tenant_id=tenant_id_raw, message_id=incoming.message_id)
                 return 200
 
@@ -136,6 +138,7 @@ async def _handle_whatsapp_post(
                 # Non-text message (voice/image/etc.) — acknowledge instead of
                 # silently ignoring, so the asker isn't left wondering.
                 await adapter.send_text(incoming.sender_phone, _TEXT_ONLY_REPLY)
+                await mark_message_processed(tenant_id=tid, channel="whatsapp", message_id=incoming.message_id)
                 return 200
 
             result = await chat_with_agent(
@@ -152,9 +155,17 @@ async def _handle_whatsapp_post(
             await uow.commit()
             if not result.duplicate:
                 await adapter.send_text(incoming.sender_phone, result.response)
+            # Reached only after a clean turn + dispatched reply; a failure raised
+            # above and skipped this, so the message stays re-deliverable.
+            await mark_message_processed(tenant_id=tid, channel="whatsapp", message_id=incoming.message_id)
         except Exception:
+            # Ask the provider to redeliver (503) instead of acking a lost reply.
+            # The message was not marked processed, so the retry reprocesses it;
+            # if the inbound was already durably saved, the gateway's DB de-dup
+            # short-circuits the retry harmlessly.
             await uow.rollback()
             logger.error("whatsapp.webhook.failed", tenant_id=tenant_id_raw, exc_info=True)
+            return 503
 
     return 200
 
