@@ -103,3 +103,41 @@ describe("DataTable facade", () => {
     await waitFor(() => expect(screen.getByText("Apply filters")).toBeInTheDocument());
   });
 });
+
+const ONBOARDING = "No items yet — add your first";
+
+function EmptyHarness({ data }: Readonly<{ data: Row[] }>) {
+  const source = useFrontendData<Row>({ data, columns: COLUMNS });
+  return (
+    <DataTable
+      source={source}
+      columns={COLUMNS}
+      rowKey={(r) => r.id}
+      tableLabel="Items"
+      emptyState={<div>{ONBOARDING}</div>}
+    />
+  );
+}
+
+describe("DataTable empty states", () => {
+  it("shows the onboarding empty-state when there is genuinely no data", () => {
+    render(
+      <TestWrapper>
+        <EmptyHarness data={[]} />
+      </TestWrapper>,
+    );
+    expect(screen.getByText(ONBOARDING)).toBeInTheDocument();
+  });
+
+  it("shows 'Clear all' recovery — not the onboarding message — when a search matches nothing", async () => {
+    render(
+      <TestWrapper>
+        <EmptyHarness data={DATA} />
+      </TestWrapper>,
+    );
+    fireEvent.change(screen.getByLabelText("Search"), { target: { value: "no-such-item-xyz" } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Clear all" })).toBeInTheDocument());
+    // The onboarding message must NOT appear for a filtered-empty result.
+    expect(screen.queryByText(ONBOARDING)).not.toBeInTheDocument();
+  });
+});

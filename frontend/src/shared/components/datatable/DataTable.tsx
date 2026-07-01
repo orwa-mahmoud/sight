@@ -47,6 +47,14 @@ export function DataTable<TRow>({
   const { t } = useTranslation();
   const { dir: languageDir, language } = useLanguage();
 
+  // Only override the genuinely-empty ("no data") state with the caller's
+  // onboarding empty-state. When a search/filter is active but matched nothing,
+  // leave the library's "no results" variant — with its "Clear all" recovery
+  // button — intact, instead of showing a misleading "nothing here yet" message.
+  const hasActiveQuery =
+    (props.source?.search?.length ?? 0) > 0 || Object.keys(props.source?.extra ?? {}).length > 0;
+  const emptySlot = emptyState && !hasActiveQuery ? emptyState : undefined;
+
   const resolvedLabels = {
     ...getLabels(locale ?? language),
     ...labels,
@@ -73,7 +81,7 @@ export function DataTable<TRow>({
       hideSearch={!searchable}
       filtersMode="drawer"
       animate
-      slots={emptyState ? { empty: emptyState } : undefined}
+      slots={emptySlot ? { empty: emptySlot } : undefined}
     />
   );
 }
