@@ -19,6 +19,7 @@ import {
   DataTable,
   SelectFilter,
   useFrontendData,
+  type BulkAction,
   type CellProps,
   type ColumnDef,
   type RowAction,
@@ -163,6 +164,22 @@ export function DocumentsPage() {
     invalidateKeys: [["documents"]],
   });
 
+  const bulkDeleteMutation = useMutationWithNotification({
+    // Delete each selected doc via the existing per-doc endpoint. allSettled so one
+    // failure doesn't abort the rest; report if any failed.
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => deleteDocument(id)));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      if (failed > 0) throw new Error(`${failed} failed`);
+    },
+    successMessage: t("documents.bulkDeleted"),
+    errorMessage: t("documents.bulkDeleteFailed"),
+    invalidateKeys: [["documents"]],
+    // Even a partial failure changed server state — refetch so the table reflects
+    // what actually got deleted.
+    invalidateOnError: true,
+  });
+
   const columns = useMemo<ColumnDef<DocumentSummary>[]>(
     () => [
       {
@@ -217,6 +234,25 @@ export function DocumentsPage() {
     [t, deleteMutation],
   );
 
+  const bulkActions = useMemo<BulkAction[]>(
+    () => [
+      {
+        key: "delete",
+        label: t("documents.deleteSelected"),
+        color: "red",
+        icon: <IconTrash size={16} />,
+        onClick: (ids) => bulkDeleteMutation.mutate(ids),
+        confirm: {
+          title: t("documents.confirmBulkDeleteTitle"),
+          message: () => t("documents.confirmBulkDelete"),
+          confirmLabel: t("common.delete"),
+          danger: true,
+        },
+      },
+    ],
+    [t, bulkDeleteMutation],
+  );
+
   const source = useFrontendData<DocumentSummary>({
     data: documentsQuery.data ?? [],
     columns,
@@ -242,6 +278,7 @@ export function DocumentsPage() {
         columns={columns}
         rowKey={(d) => d.id}
         rowActions={rowActions}
+        bulkActions={bulkActions}
         tableLabel={t("documents.title")}
         searchPlaceholder={t("documents.searchPlaceholder")}
         toolbar={

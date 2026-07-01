@@ -1,10 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
-import { Notifications } from "@mantine/notifications";
+import { Notifications, notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@core/api/client", () => ({
   api: {
@@ -65,6 +65,13 @@ const DOC_LIST = [
 describe("DocumentsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  // Unmount + clear portal-rendered toasts between tests so a modal/notification
+  // from one test can't leak into the next.
+  afterEach(() => {
+    cleanup();
+    notifications.clean();
   });
 
   it("renders title and description", () => {
@@ -170,6 +177,28 @@ describe("DocumentsPage", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
     expect(api.delete).not.toHaveBeenCalled();
+  });
+
+  it("bulk-deletes the selected documents behind one confirm", async () => {
+    vi.mocked(api.get).mockResolvedValue({ data: DOC_LIST });
+    vi.mocked(api.delete).mockResolvedValue({});
+    render(<DocumentsPage />, { wrapper: createWrapper() });
+
+    await waitFor(() => expect(screen.getByText("guide.pdf")).toBeInTheDocument());
+
+    // Select every row via the header "select all" checkbox.
+    fireEvent.click(screen.getAllByRole("checkbox")[0]!);
+
+    // The bulk toolbar exposes the "Delete selected" action.
+    fireEvent.click(await screen.findByRole("button", { name: "Delete selected" }));
+
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    await waitFor(() => {
+      expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d1");
+      expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d2");
+    });
   });
 
   it("formats MB size correctly", async () => {
