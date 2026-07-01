@@ -39,10 +39,12 @@ class TenantConfigModel(Base):
     whatsapp_phone_number_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     whatsapp_access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     whatsapp_verify_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    whatsapp_app_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Encrypted at rest → Fernet ciphertext far exceeds the plaintext length, so Text
+    # (not String(255)) — a 255-char plaintext secret encrypts to ~424 chars.
+    whatsapp_app_secret: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Telegram
     telegram_bot_token: Mapped[str | None] = mapped_column(Text, nullable=True)
-    telegram_webhook_secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    telegram_webhook_secret: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Bot personality
     bot_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Front Desk Assistant")
     bot_welcome_message: Mapped[str] = mapped_column(Text, nullable=False, default="Hello! How can I help you today?")

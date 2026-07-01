@@ -127,6 +127,30 @@ async def test_tenant_config_update(client: None) -> None:
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+async def test_tenant_config_long_encrypted_secrets_round_trip(client: None) -> None:
+    """Max-length (255-char) app_secret / webhook_secret encrypt to ~424 chars — the
+    columns must be Text, not varchar(255), or the save 500s on overflow."""
+    _, _, _, config = await _make_tenant_and_user()
+    long_app_secret = "a" * 255
+    long_webhook_secret = "b" * 255
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        loaded = await uow.tenant_configs.get_by_tenant_id(config.tenant_id)
+        assert loaded is not None
+        loaded.update_whatsapp(app_secret=long_app_secret)
+        loaded.update_telegram(webhook_secret=long_webhook_secret)
+        await uow.tenant_configs.save(loaded)
+        await uow.commit()  # would raise StringDataRightTruncation on varchar(255)
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        reloaded = await uow.tenant_configs.get_by_tenant_id(config.tenant_id)
+        assert reloaded is not None
+        assert reloaded.whatsapp_app_secret == long_app_secret  # decrypts back intact
+        assert reloaded.telegram_webhook_secret == long_webhook_secret
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
 async def test_token_usage_list_and_aggregate(client: None) -> None:
     tenant, _, _, _ = await _make_tenant_and_user()
     async with async_session_factory() as session:
