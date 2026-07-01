@@ -2,15 +2,88 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-from uuid import uuid4
+from typing import Any
+from unittest.mock import AsyncMock, patch
+from uuid import UUID, uuid4
 
 import pytest
 
 from src.ai.tools.search_documents import SEARCH_DOCUMENTS_DEF
+from src.ai.types import AgentLoopResult
 from src.domain.conversations.value_objects import ConversationChannel
 from src.domain.llm.value_objects import LLMCallResult, LLMMessage, LLMMessageRole, LLMToolCall, TokenUsage
 from src.infrastructure.ai.graph import build_agent_graph, run_graph
+from src.infrastructure.llm.circuit_breaker import CircuitBreakerError
+
+
+async def _run(graph: Any, tenant_id: UUID) -> AgentLoopResult:
+    return await run_graph(
+        graph,
+        messages=[LLMMessage(role=LLMMessageRole.USER, content="Hi")],
+        tenant_id=tenant_id,
+        channel=ConversationChannel.WEB,
+        conversation_id=None,
+        contact_id=None,
+    )
+
+
+@pytest.mark.asyncio
+async def test_circuit_breaker_records_success() -> None:
+    mock_llm = AsyncMock()
+    mock_llm.chat_with_tools = AsyncMock(
+        return_value=LLMCallResult(text="Hi", usage=TokenUsage(input_tokens=1, output_tokens=1))
+    )
+    breaker = AsyncMock()
+    with patch("src.infrastructure.ai.graph.RedisCircuitBreaker", return_value=breaker):
+        graph = build_agent_graph(
+            llm=mock_llm, tools=[SEARCH_DOCUMENTS_DEF], retriever=AsyncMock(), uow=AsyncMock(), redis_client=object()
+        )
+        await _run(graph, uuid4())
+    breaker.check.assert_awaited()
+    breaker.record_success.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_circuit_breaker_open_fast_fails_without_calling_llm() -> None:
+    tid = uuid4()
+    mock_llm = AsyncMock()
+    breaker = AsyncMock()
+    breaker.check = AsyncMock(side_effect=CircuitBreakerError(str(tid)))
+    with patch("src.infrastructure.ai.graph.RedisCircuitBreaker", return_value=breaker):
+        graph = build_agent_graph(
+            llm=mock_llm, tools=[SEARCH_DOCUMENTS_DEF], retriever=AsyncMock(), uow=AsyncMock(), redis_client=object()
+        )
+        with pytest.raises(CircuitBreakerError):
+            await _run(graph, tid)
+    mock_llm.chat_with_tools.assert_not_called()  # fast-failed before the provider call
+
+
+@pytest.mark.asyncio
+async def test_circuit_breaker_records_failure_and_reraises() -> None:
+    mock_llm = AsyncMock()
+    mock_llm.chat_with_tools = AsyncMock(side_effect=RuntimeError("provider down"))
+    breaker = AsyncMock()
+    with patch("src.infrastructure.ai.graph.RedisCircuitBreaker", return_value=breaker):
+        graph = build_agent_graph(
+            llm=mock_llm, tools=[SEARCH_DOCUMENTS_DEF], retriever=AsyncMock(), uow=AsyncMock(), redis_client=object()
+        )
+        with pytest.raises(RuntimeError):
+            await _run(graph, uuid4())
+    breaker.record_failure.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_no_breaker_when_redis_absent() -> None:
+    """redis_client=None (default) → no breaker constructed, call still works."""
+    mock_llm = AsyncMock()
+    mock_llm.chat_with_tools = AsyncMock(
+        return_value=LLMCallResult(text="Hi", usage=TokenUsage(input_tokens=1, output_tokens=1))
+    )
+    with patch("src.infrastructure.ai.graph.RedisCircuitBreaker") as breaker_cls:
+        graph = build_agent_graph(llm=mock_llm, tools=[SEARCH_DOCUMENTS_DEF], retriever=AsyncMock(), uow=AsyncMock())
+        result = await _run(graph, uuid4())
+    assert result.text == "Hi"
+    breaker_cls.assert_not_called()
 
 
 @pytest.mark.asyncio

@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -27,6 +28,7 @@ from src.drivers.api.webhooks.telegram import router as telegram_webhook_router
 from src.drivers.api.webhooks.whatsapp import router as whatsapp_webhook_router
 from src.drivers.jobs.queue import create_job_pool
 from src.infrastructure.auth.crypto import verify_encryption_keys
+from src.infrastructure.llm.circuit_breaker import CircuitBreakerError
 
 logger = structlog.get_logger()
 
@@ -92,9 +94,16 @@ def create_app() -> FastAPI:
         assert isinstance(exc, RateLimitExceeded)
         return _rate_limit_exceeded_handler(request, exc)
 
+    def _handle_circuit_open(request: Request, exc: Exception) -> Response:
+        # Circuit breaker open → the tenant's LLM provider is failing; ask the
+        # client to retry later rather than surfacing an opaque 500.
+        assert isinstance(exc, CircuitBreakerError)
+        return JSONResponse(status_code=503, content={"detail": str(exc)})
+
     app.add_exception_handler(DomainError, domain_error_handler)
     app.add_exception_handler(RateLimitExceeded, _handle_rate_limit)
     app.add_exception_handler(IntegrityError, integrity_error_handler)
+    app.add_exception_handler(CircuitBreakerError, _handle_circuit_open)
 
     @app.get("/metrics", tags=["health"], include_in_schema=False)
     async def metrics() -> StarletteResponse:

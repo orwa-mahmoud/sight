@@ -32,6 +32,7 @@ from src.domain.conversations.value_objects import ConversationChannel
 from src.domain.llm.ports import LLMClientPort
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole, LLMToolCall
 from src.domain.rag.ports import RetrieverPort
+from src.infrastructure.llm.circuit_breaker import RedisCircuitBreaker
 
 logger = structlog.get_logger()
 
@@ -146,18 +147,33 @@ def build_agent_graph(
     uow: UnitOfWork,
     max_tokens: int = 1024,
     temperature: float | None = None,
+    redis_client: Any | None = None,
 ) -> StateGraph[AgentState]:
     """Build a fresh (stateless) LangGraph for one agent turn."""
 
     tool_schemas = [_to_openai_schema(t) for t in tools]
+    # Per-tenant LLM circuit breaker: fast-fail after repeated provider failures
+    # instead of hammering a struggling provider. Degrades to always-closed when
+    # Redis is absent (breaker is None).
+    breaker = RedisCircuitBreaker(redis_client) if redis_client is not None else None
 
     async def call_llm(state: AgentState) -> dict[str, Any]:
-        response = await llm.chat_with_tools(
-            _from_lc_messages(state["messages"]),
-            tools=tool_schemas if tool_schemas else None,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
+        tenant_id = state["tenant_id"]
+        if breaker is not None:
+            await breaker.check(tenant_id)  # raises CircuitBreakerError if OPEN
+        try:
+            response = await llm.chat_with_tools(
+                _from_lc_messages(state["messages"]),
+                tools=tool_schemas if tool_schemas else None,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+        except Exception:
+            if breaker is not None:
+                await breaker.record_failure(tenant_id)
+            raise
+        if breaker is not None:
+            await breaker.record_success(tenant_id)
         ai_msg = _to_ai_message(response.text, response.tool_calls)
         return {
             "messages": [*state["messages"], ai_msg],
