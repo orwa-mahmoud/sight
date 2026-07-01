@@ -59,6 +59,7 @@ async def test_deliver_reply_whatsapp_sends() -> None:
 
     contact = MagicMock()
     contact.phone = "+971501234567"
+    contact.tenant_id = tid
     config = MagicMock()
     config.whatsapp_access_token = "token"
     config.telegram_bot_token = None
@@ -83,6 +84,7 @@ async def test_deliver_reply_telegram_sends() -> None:
     contact = MagicMock()
     contact.phone = "+971501234567"
     contact.telegram_user_id = "123456789"
+    contact.tenant_id = tid
     config = MagicMock()
     config.whatsapp_access_token = None
     config.telegram_bot_token = "bot-token"
@@ -108,3 +110,21 @@ async def test_deliver_reply_exception_caught() -> None:
     uow.contacts.get_by_id = AsyncMock(side_effect=RuntimeError("db down"))
 
     await _deliver_reply(dto, uow)
+
+
+@pytest.mark.asyncio
+async def test_deliver_reply_foreign_tenant_contact_not_delivered() -> None:
+    """A reply must never be sent to a contact owned by a different tenant."""
+    dto = _make_dto(contact_id=uuid4(), channel="whatsapp", tenant_id=uuid4())
+
+    contact = MagicMock()
+    contact.phone = "+971501234567"
+    contact.tenant_id = uuid4()  # belongs to a DIFFERENT tenant than the DTO
+
+    uow = MagicMock()
+    uow.contacts.get_by_id = AsyncMock(return_value=contact)
+    uow.tenant_configs.get_by_tenant_id = AsyncMock()
+
+    with patch("src.drivers.api.v1.questions.routes.get_whatsapp_adapter") as mock_get_wa:
+        await _deliver_reply(dto, uow)
+        mock_get_wa.assert_not_called()  # returned early — no cross-tenant delivery

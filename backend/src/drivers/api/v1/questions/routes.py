@@ -48,7 +48,9 @@ async def _deliver_reply(dto: object, uow: UnitOfWorkDep) -> None:
 
     try:
         contact = await uow.contacts.get_by_id(dto.contact_id)
-        if not contact or not contact.phone:
+        # Defense in depth: never deliver a reply to a contact owned by another
+        # tenant, even if a legacy row references one.
+        if not contact or contact.tenant_id != dto.tenant_id or not contact.phone:
             return
         config = await uow.tenant_configs.get_by_tenant_id(dto.tenant_id)
         if not config:
