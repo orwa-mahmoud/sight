@@ -11,6 +11,7 @@ with a warning) — better to risk a race than to block all messages.
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from typing import Any
 
@@ -53,6 +54,18 @@ class ThreadLock:
             logger.warning("thread_lock.acquire_failed", key=self._key, exc_info=True)
             self._acquired = True  # degrade: allow through
             return True
+
+    async def acquire_blocking(self, *, attempts: int, interval_seconds: float) -> bool:
+        """Poll ``acquire`` until it succeeds or ``attempts`` are exhausted, so a
+        concurrent turn on the same thread waits for the holder to finish rather
+        than running in parallel. Returns True once held, False if it timed out
+        (the holder is stuck longer than the whole window — the caller degrades)."""
+        for attempt in range(attempts):
+            if await self.acquire():
+                return True
+            if attempt < attempts - 1:
+                await asyncio.sleep(interval_seconds)
+        return False
 
     async def release(self) -> None:
         if not self._acquired:
