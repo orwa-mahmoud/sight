@@ -53,7 +53,15 @@ async def telegram_webhook(
     except ValueError:
         return Response(status_code=400)
 
-    body: dict[str, Any] = await request.json()
+    try:
+        body = await request.json()
+    except Exception:
+        # Malformed / non-JSON body — reject cleanly instead of surfacing a 500
+        # (matches the WhatsApp webhook).
+        return Response(status_code=400)
+    if not isinstance(body, dict):
+        return Response(status_code=400)
+
     status = await _handle_telegram_post(tid, body, x_telegram_bot_api_secret_token, tenant_id)
     return Response(status_code=status)
 

@@ -99,6 +99,22 @@ async def test_telegram_webhook_no_message() -> None:
 
 
 @pytest.mark.asyncio
+async def test_telegram_webhook_malformed_body_returns_400() -> None:
+    request = MagicMock()
+    request.json = AsyncMock(side_effect=ValueError("not json"))  # malformed body
+    resp = await telegram_webhook(tenant_id=str(uuid4()), request=request)
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_telegram_webhook_non_dict_body_returns_400() -> None:
+    request = MagicMock()
+    request.json = AsyncMock(return_value=["not", "a", "dict"])  # valid JSON, wrong shape
+    resp = await telegram_webhook(tenant_id=str(uuid4()), request=request)
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
 async def test_telegram_webhook_empty_text() -> None:
     body = _telegram_body(text="")
     request = MagicMock()
