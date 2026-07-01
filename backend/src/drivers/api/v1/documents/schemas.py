@@ -20,6 +20,15 @@ class DocumentSummary(BaseModel):
     updated_at: datetime
 
 
+class BulkDeleteRequest(BaseModel):
+    # Capped so one request can't build an unbounded IN (...) list.
+    ids: list[UUID] = Field(min_length=1, max_length=500)
+
+
+class BulkDeleteResponse(BaseModel):
+    deleted: int
+
+
 class RetrieveRequest(BaseModel):
     query: str = Field(min_length=1, max_length=2000)
     top_k: int = Field(default=8, ge=1, le=50)

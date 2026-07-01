@@ -34,6 +34,11 @@ class DocumentRepository(Protocol):
 
     async def delete(self, document_id: UUID) -> None: ...
 
+    async def delete_many_for_tenant(self, tenant_id: UUID, document_ids: list[UUID]) -> int:
+        """Delete the given tenant's documents in one statement; returns the count
+        actually deleted (ids from another tenant or missing are ignored)."""
+        ...
+
 
 class ChunkRepository(Protocol):
     # Sync — add_all is sync. Upgrade to async if batch insert is needed.

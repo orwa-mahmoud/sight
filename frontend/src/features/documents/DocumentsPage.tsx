@@ -71,6 +71,10 @@ async function deleteDocument(id: string): Promise<void> {
   await api.delete(`/api/v1/documents/${id}`);
 }
 
+async function bulkDeleteDocuments(ids: string[]): Promise<void> {
+  await api.post("/api/v1/documents/bulk-delete", { ids });
+}
+
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -165,19 +169,10 @@ export function DocumentsPage() {
   });
 
   const bulkDeleteMutation = useMutationWithNotification({
-    // Delete each selected doc via the existing per-doc endpoint. allSettled so one
-    // failure doesn't abort the rest; report if any failed.
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteDocument(id)));
-      const failed = results.filter((r) => r.status === "rejected").length;
-      if (failed > 0) throw new Error(`${failed} failed`);
-    },
+    mutationFn: bulkDeleteDocuments,
     successMessage: t("documents.bulkDeleted"),
     errorMessage: t("documents.bulkDeleteFailed"),
     invalidateKeys: [["documents"]],
-    // Even a partial failure changed server state — refetch so the table reflects
-    // what actually got deleted.
-    invalidateOnError: true,
   });
 
   const columns = useMemo<ColumnDef<DocumentSummary>[]>(

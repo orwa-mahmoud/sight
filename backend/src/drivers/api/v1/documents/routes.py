@@ -12,6 +12,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from src.application.documents.commands import RegisterDocument
 from src.application.documents.dtos import DocumentDTO
 from src.application.documents.queries import ListDocuments, ListProcessingDocuments, RetrieveForQuery
+from src.application.documents.use_cases.bulk_delete_documents import BulkDeleteDocumentsUseCase
 from src.application.documents.use_cases.delete_document import DeleteDocumentUseCase
 from src.application.documents.use_cases.list_documents import ListDocumentsUseCase
 from src.application.documents.use_cases.list_processing_documents import ListProcessingDocumentsUseCase
@@ -26,6 +27,8 @@ from src.domain.shared.exceptions import EntityNotFoundError
 from src.domain.tenant_config.entities import TenantConfig
 from src.drivers.api.dependencies import CurrentUser, JobPoolDep, UnitOfWorkDep, resolve_tenant_id
 from src.drivers.api.v1.documents.schemas import (
+    BulkDeleteRequest,
+    BulkDeleteResponse,
     DocumentSummary,
     RetrievedChunkResponse,
     RetrieveRequest,
@@ -193,6 +196,23 @@ async def delete_document(
     tenant_id = await resolve_tenant_id(current_user, uow)
     await DeleteDocumentUseCase(uow=uow).execute(tenant_id=tenant_id, document_id=document_id)
     await document_storage().delete(tenant_id=tenant_id, document_id=document_id)
+
+
+@router.post("/bulk-delete")
+async def bulk_delete_documents(
+    req: BulkDeleteRequest,
+    current_user: CurrentUser,
+    uow: UnitOfWorkDep,
+) -> BulkDeleteResponse:
+    """Delete many documents in a single tenant-scoped statement (chunks cascade)
+    — one request, not one per document."""
+    tenant_id = await resolve_tenant_id(current_user, uow)
+    deleted = await BulkDeleteDocumentsUseCase(uow=uow).execute(tenant_id=tenant_id, document_ids=req.ids)
+    # Remove the stored files too. The path is tenant-scoped and unlink is missing_ok,
+    # so ids the tenant doesn't own (or already-gone files) are harmless no-ops.
+    for document_id in req.ids:
+        await document_storage().delete(tenant_id=tenant_id, document_id=document_id)
+    return BulkDeleteResponse(deleted=deleted)
 
 
 @router.post("/retrieve")

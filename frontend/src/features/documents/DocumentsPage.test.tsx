@@ -179,9 +179,9 @@ describe("DocumentsPage", () => {
     expect(api.delete).not.toHaveBeenCalled();
   });
 
-  it("bulk-deletes the selected documents behind one confirm", async () => {
+  it("bulk-deletes the selected documents in one request behind one confirm", async () => {
     vi.mocked(api.get).mockResolvedValue({ data: DOC_LIST });
-    vi.mocked(api.delete).mockResolvedValue({});
+    vi.mocked(api.post).mockResolvedValue({ data: { deleted: 2 } });
     render(<DocumentsPage />, { wrapper: createWrapper() });
 
     await waitFor(() => expect(screen.getByText("guide.pdf")).toBeInTheDocument());
@@ -195,10 +195,11 @@ describe("DocumentsPage", () => {
     const dialog = await screen.findByRole("dialog");
     fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
 
-    await waitFor(() => {
-      expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d1");
-      expect(api.delete).toHaveBeenCalledWith("/api/v1/documents/d2");
-    });
+    // One request carrying all ids — not one DELETE per document.
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith("/api/v1/documents/bulk-delete", { ids: ["d1", "d2"] }),
+    );
+    expect(api.delete).not.toHaveBeenCalled();
   });
 
   it("formats MB size correctly", async () => {

@@ -81,6 +81,19 @@ class PostgresDocumentRepository:
     async def delete(self, document_id: UUID) -> None:
         await self._session.execute(delete(DocumentModel).where(DocumentModel.id == document_id))
 
+    async def delete_many_for_tenant(self, tenant_id: UUID, document_ids: list[UUID]) -> int:
+        """Delete the given documents that belong to `tenant_id` (chunks cascade).
+        The tenant filter is part of the WHERE, so ids belonging to another tenant
+        (or that don't exist) are simply not matched. Returns the number of rows
+        actually deleted."""
+        if not document_ids:
+            return 0
+        scope = (DocumentModel.tenant_id == tenant_id, DocumentModel.id.in_(document_ids))
+        deleted = int((await self._session.execute(select(func.count(DocumentModel.id)).where(*scope))).scalar_one())
+        if deleted:
+            await self._session.execute(delete(DocumentModel).where(*scope))
+        return deleted
+
     @staticmethod
     def _to_model(d: Document) -> DocumentModel:
         return DocumentModel(
