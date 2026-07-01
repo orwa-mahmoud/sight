@@ -38,12 +38,30 @@ def test_anthropic_cache_read_is_cheaper() -> None:
     assert pricing.cache_read_per_million < pricing.input_per_million
 
 
-def test_total_includes_all_three_segments() -> None:
+def test_cache_read_is_a_subset_of_input_not_double_billed() -> None:
+    # input_tokens is the TOTAL prompt (cached + uncached); cache_read is the cached
+    # subset. Only the uncached remainder is billed at the full input rate.
     cost = calculate_cost(
         model="claude-sonnet-4-5",
-        input_tokens=1_000_000,
-        cache_read_tokens=1_000_000,
+        input_tokens=1_000_000,  # total prompt tokens
+        cache_read_tokens=400_000,  # of which 400k were cache hits
         output_tokens=1_000_000,
     )
-    # input 3.00 + cache 0.30 + output 15.00 = 18.30
-    assert cost.total == Decimal("18.30000000")
+    # non-cached input 600k @ $3/M = 1.80 ; cache 400k @ $0.30/M = 0.12 ; output 15.00
+    assert cost.input_cost == Decimal("1.80000000")
+    assert cost.cache_read_cost == Decimal("0.12000000")
+    assert cost.output_cost == Decimal("15.00000000")
+    assert cost.total == Decimal("16.92000000")
+
+
+def test_fully_cached_prompt_bills_no_full_rate_input() -> None:
+    # Every input token was a cache hit → nothing charged at the full input rate.
+    cost = calculate_cost(
+        model="claude-sonnet-4-5",
+        input_tokens=500_000,
+        cache_read_tokens=500_000,
+        output_tokens=0,
+    )
+    assert cost.input_cost == Decimal("0")  # not double-billed
+    assert cost.cache_read_cost == Decimal("0.15000000")  # 500k @ $0.30/M
+    assert cost.total == Decimal("0.15000000")

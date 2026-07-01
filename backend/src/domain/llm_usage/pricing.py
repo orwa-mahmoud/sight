@@ -3,8 +3,10 @@
 Prices are in USD per **1 million tokens**, current as of 2026-05. Adapted
 from PropertyBot's pricing module with Sight's narrower model surface.
 Cache pricing follows Anthropic's input cache semantics; OpenAI's prompt
-caching is automatic on input tokens, so we treat `cache_read` as a
-separately-billed input segment for both providers.
+caching is automatic on input tokens. The provider's `input_tokens` is the
+TOTAL prompt count and `cache_read` is the cached SUBSET of it — so cached
+tokens are billed once at the cheaper cache-read rate and only the remaining
+`input_tokens - cache_read` at the full input rate (never both).
 """
 
 from __future__ import annotations
@@ -157,8 +159,12 @@ def calculate_cost(
         # Round to 8 decimal places — sub-cent precision keeps long-running aggregates accurate.
         return amount.quantize(Decimal("0.00000001"), rounding=ROUND_HALF_UP)
 
+    # `input_tokens` is the provider's TOTAL prompt count (cached + uncached); the
+    # cached portion is billed at the cheaper cache-read rate, so only the remainder
+    # is charged at the full input rate — otherwise cached tokens are billed twice.
+    non_cached_input = max(0, input_tokens - cache_read_tokens)
     return ComputedCost(
-        input_cost=_round(Decimal(input_tokens) * pricing.input_per_million / one_million),
+        input_cost=_round(Decimal(non_cached_input) * pricing.input_per_million / one_million),
         cache_read_cost=_round(Decimal(cache_read_tokens) * pricing.cache_read_per_million / one_million),
         output_cost=_round(Decimal(output_tokens) * pricing.output_per_million / one_million),
     )
