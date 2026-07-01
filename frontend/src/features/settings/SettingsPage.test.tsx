@@ -153,6 +153,16 @@ describe("SettingsPage", () => {
     });
   });
 
+  it("surfaces a catalog error with retry when the model list fails to load", async () => {
+    vi.mocked(getSettings).mockResolvedValue(CONFIG);
+    vi.mocked(getModelCatalog).mockRejectedValue(new Error("catalog down"));
+    render(<SettingsPage />, { wrapper: createWrapper() });
+    await waitFor(() => {
+      expect(screen.getByText("Model list unavailable")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+  });
+
   it("shows webhook URLs with the real tenant id", async () => {
     vi.mocked(getSettings).mockResolvedValue(CONFIG);
     render(<SettingsPage />, { wrapper: createWrapper() });

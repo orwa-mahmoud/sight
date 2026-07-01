@@ -20,7 +20,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconCopy, IconSettings } from "@tabler/icons-react";
+import { IconAlertCircle, IconCheck, IconCopy, IconSettings } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useEffect, useRef } from "react";
@@ -204,6 +204,22 @@ export function SettingsPage() {
         <IconSettings size={24} stroke={1.4} />
       </Group>
 
+      {catalogQuery.isError && (
+        <Alert color="red" icon={<IconAlertCircle size={18} />} title={t("settings.catalogErrorTitle")}>
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Text size="sm">{t("settings.catalogError")}</Text>
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() => catalogQuery.refetch()}
+              loading={catalogQuery.isFetching}
+            >
+              {t("table.retryAction")}
+            </Button>
+          </Group>
+        </Alert>
+      )}
+
       <Accordion variant="separated" radius="md" defaultValue="llm">
         {/* ── LLM ─────────────────────────────────────────────── */}
         <Accordion.Item value="llm">
@@ -225,7 +241,8 @@ export function SettingsPage() {
                 <Select
                   label={t("settings.provider")}
                   data={providerOptions}
-                  placeholder={config.llm_provider}
+                  placeholder={catalogQuery.isLoading ? t("settings.loadingModels") : config.llm_provider}
+                  disabled={catalogQuery.isLoading}
                   {...llmForm.getInputProps("provider")}
                   onChange={(val) => {
                     // Switching provider invalidates the chosen models — clear them
@@ -238,7 +255,8 @@ export function SettingsPage() {
                 <Select
                   label={t("settings.model")}
                   data={modelOptions}
-                  placeholder={config.llm_model}
+                  placeholder={catalogQuery.isLoading ? t("settings.loadingModels") : config.llm_model}
+                  disabled={catalogQuery.isLoading}
                   searchable
                   {...llmForm.getInputProps("model")}
                 />
@@ -299,7 +317,8 @@ export function SettingsPage() {
                   label={t("settings.model")}
                   description={t("settings.embeddingModelHint")}
                   data={embeddingModelOptions}
-                  placeholder={config.embedding_model}
+                  placeholder={catalogQuery.isLoading ? t("settings.loadingModels") : config.embedding_model}
+                  disabled={catalogQuery.isLoading}
                   searchable
                   {...embForm.getInputProps("model")}
                 />
