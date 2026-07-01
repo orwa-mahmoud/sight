@@ -84,6 +84,9 @@ class ProcessDocumentUseCase:
                 )
                 for i, chunk in enumerate(text_chunks)
             ]
+            # Idempotent re-ingestion: a retry or a reaper re-run must not stack a
+            # second set of chunks on top of a previous (partial or complete) run.
+            await self._uow.chunks.delete_for_document(doc.id)
             self._uow.chunks.save_many(chunks)
             doc.mark_ready(chunk_count=len(chunks))
             await self._uow.documents.save(doc)
@@ -107,6 +110,10 @@ class ProcessDocumentUseCase:
                 return
             doc.force_failed(reason=reason)
             await self._uow.documents.save(doc)
+            # A failed document must never keep retrievable chunks: an ambiguous
+            # work-commit may have persisted a set before the error surfaced, and
+            # RAG must not return chunks from a document the owner sees as FAILED.
+            await self._uow.chunks.delete_for_document(cmd.document_id)
             self._uow.track(doc)  # dispatch DocumentIngestionFailed after commit
             await self._uow.commit()
         except Exception:

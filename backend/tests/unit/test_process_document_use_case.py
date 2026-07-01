@@ -29,6 +29,7 @@ def _uow(doc: Document | None) -> MagicMock:
     uow.documents.save = AsyncMock()
     uow.chunks = MagicMock()
     uow.chunks.save_many = MagicMock()
+    uow.chunks.delete_for_document = AsyncMock()
     uow.commit = AsyncMock()
     uow.rollback = AsyncMock()
     uow.set_tenant_scope = AsyncMock()
@@ -76,6 +77,7 @@ async def test_process_marks_ready_and_saves_chunks() -> None:
     assert doc.chunk_count == 2
     uow.chunks.save_many.assert_called_once()
     assert len(uow.chunks.save_many.call_args[0][0]) == 2
+    uow.chunks.delete_for_document.assert_awaited_once()  # idempotent: prior chunks cleared before re-save
     uow.track.assert_called_with(doc)  # DocumentIngested is dispatched after commit
 
 
@@ -108,6 +110,23 @@ async def test_process_embedder_failure_marks_failed() -> None:
     assert doc.status == DocumentStatus.FAILED
     assert "OpenAI down" in (doc.error or "")
     uow.commit.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_failed_document_has_its_chunks_deleted() -> None:
+    """A failure (even an ambiguous work-commit) must leave no retrievable chunks."""
+    doc = _doc()
+    uow = _uow(doc)
+    embedder = AsyncMock()
+    embedder.embed_documents.side_effect = RuntimeError("boom")
+    uc = ProcessDocumentUseCase(
+        uow=uow, parser=_parser("text"), chunker=_chunker([TextChunk(index=0, content="text")]), embedder=embedder
+    )
+
+    await uc.execute(_cmd(doc))
+
+    assert doc.status == DocumentStatus.FAILED
+    uow.chunks.delete_for_document.assert_awaited_with(doc.id)  # chunks cleaned in the failure path
 
 
 @pytest.mark.asyncio
