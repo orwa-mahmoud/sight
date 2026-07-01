@@ -7,8 +7,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from src.ai.gateway import chat_with_agent
-from src.ai.types import AgentLoopResult, ChatInput
+from src.ai.gateway import _was_escalated, chat_with_agent
+from src.ai.types import AgentLoopResult, ChatInput, ToolCallResult
 from src.application.shared.unit_of_work import UnitOfWork
 from src.domain.conversations.value_objects import ConversationChannel
 from src.domain.tenant_config.entities import TenantConfig
@@ -92,7 +92,6 @@ async def test_gateway_full_flow_with_mocked_graph(client: None) -> None:
 @pytest.mark.asyncio
 async def test_gateway_with_tool_calls(client: None) -> None:
     """Gateway with escalation tool call — verifies tool exchanges are saved."""
-    from src.ai.types import ToolCallResult
     from src.domain.tenants.entities import Tenant
 
     async with async_session_factory() as session:
@@ -258,3 +257,22 @@ async def test_gateway_applies_temperature_and_bot_personality() -> None:
     system_text = mock_run.call_args.kwargs["messages"][0].content
     assert "Aria" in system_text
     assert "Arabic" in system_text
+
+
+def _tc(name: str, result: object) -> ToolCallResult:
+    return ToolCallResult(tool_name=name, arguments={}, result=result)
+
+
+def test_was_escalated_true_only_on_successful_escalation() -> None:
+    ok = AgentLoopResult(text="", tool_calls=[_tc("escalate_question", {"status": "escalated", "question_id": "x"})])
+    assert _was_escalated(ok) is True
+
+
+def test_was_escalated_false_when_escalate_tool_errored() -> None:
+    failed = AgentLoopResult(text="", tool_calls=[_tc("escalate_question", {"error": "Question text cannot be empty"})])
+    assert _was_escalated(failed) is False
+
+
+def test_was_escalated_false_without_escalation() -> None:
+    other = AgentLoopResult(text="", tool_calls=[_tc("search_documents", [])])
+    assert _was_escalated(other) is False

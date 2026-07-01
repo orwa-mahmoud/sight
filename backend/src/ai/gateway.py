@@ -215,12 +215,10 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
             request_id=request_id,
         )
 
-        escalated = any(tc.tool_name == "escalate_question" for tc in result.tool_calls)
-
         return ChatResult(
             response=result.text,
             thread_id=thread_id,
-            escalated=escalated,
+            escalated=_was_escalated(result),
             request_id=request_id,
             sources=_extract_sources(result),
             input_tokens=result.input_tokens,
@@ -303,6 +301,17 @@ async def _save_agent_messages(
             content=result.text,
             request_id=request_id,
         )
+    )
+
+
+def _was_escalated(result: AgentLoopResult) -> bool:
+    """True only when an escalate_question tool call actually created a Question. A
+    failed call (e.g. the model omitted question_text) is caught in the graph and
+    left an ``{"error": ...}`` result with no Question — it must not be reported as
+    escalated to the caller/UI."""
+    return any(
+        tc.tool_name == "escalate_question" and not (isinstance(tc.result, dict) and "error" in tc.result)
+        for tc in result.tool_calls
     )
 
 
