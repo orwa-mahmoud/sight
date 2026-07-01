@@ -17,8 +17,11 @@ from src.application.documents.use_cases.list_documents import ListDocumentsUseC
 from src.application.documents.use_cases.list_processing_documents import ListProcessingDocumentsUseCase
 from src.application.documents.use_cases.register_document import RegisterDocumentUseCase
 from src.application.documents.use_cases.retrieve_for_query import RetrieveForQueryUseCase
+from src.application.llm_usage.commands import RecordTokenUsage
+from src.application.llm_usage.use_cases.record_token_usage import RecordTokenUsageUseCase
 from src.application.shared.unit_of_work import UnitOfWork
 from src.config.settings import get_settings
+from src.domain.llm.usage_sink import LLMUsageSink
 from src.domain.shared.exceptions import EntityNotFoundError
 from src.domain.tenant_config.entities import TenantConfig
 from src.drivers.api.dependencies import CurrentUser, JobPoolDep, UnitOfWorkDep, resolve_tenant_id
@@ -74,16 +77,18 @@ def _build_embedder(config: TenantConfig) -> OpenAIEmbedder:
     )
 
 
-def _build_reranker(config: TenantConfig) -> LLMReranker:
+def _build_reranker(config: TenantConfig, usage_sink: LLMUsageSink) -> LLMReranker:
     """The same reranker the gateway wires in production — a cheap dedicated rerank
     model reusing the tenant's LLM provider + key — so the trace reflects what the
-    agent actually retrieves, not an un-reranked approximation."""
+    agent actually retrieves, not an un-reranked approximation. The trace call is
+    billable, so its usage is collected in the sink and recorded by the caller."""
     return LLMReranker(
         LangChainLLMClient(
             provider=config.llm_provider.value,
             model=config.rerank_model,
             api_key=config.llm_api_key,
-        )
+        ),
+        usage_sink=usage_sink,
     )
 
 
@@ -201,14 +206,31 @@ async def retrieve(
     Useful for tuning the index and for the future "trace" UI."""
     tenant_id = await resolve_tenant_id(current_user, uow)
     config = await _load_tenant_config(tenant_id, uow)
+    rerank_usage = LLMUsageSink()
     retriever = HybridRetriever(
         session=uow._session,
         embedder=_build_embedder(config),
-        reranker=_build_reranker(config),
+        reranker=_build_reranker(config, rerank_usage),
     )
     dtos = await RetrieveForQueryUseCase(retriever=retriever).execute(
         RetrieveForQuery(tenant_id=tenant_id, query=req.query, top_k=req.top_k)
     )
+    # The trace runs the real reranker (a billable LLM call) — record it like any
+    # other so this debugging tool doesn't spend tokens off the books.
+    record_uc = RecordTokenUsageUseCase(uow=uow)
+    for call in rerank_usage.drain():
+        await record_uc.execute(
+            RecordTokenUsage(
+                tenant_id=tenant_id,
+                provider=call.provider or config.llm_provider.value,
+                model=call.model or config.rerank_model,
+                input_tokens=call.usage.input_tokens,
+                output_tokens=call.usage.output_tokens,
+                cache_read_tokens=call.usage.cache_read_tokens,
+                source="reranker",
+                channel="api",
+            )
+        )
     return RetrieveResponse(
         results=[
             RetrievedChunkResponse(

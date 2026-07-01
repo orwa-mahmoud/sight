@@ -17,6 +17,7 @@ import re
 import structlog
 
 from src.domain.llm.ports import LLMClientPort
+from src.domain.llm.usage_sink import LLMUsageSink
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole
 from src.domain.rag.value_objects import RetrievedChunk
 
@@ -34,8 +35,9 @@ class LLMReranker:
     and any candidate the model omits is appended rather than dropped.
     """
 
-    def __init__(self, llm: LLMClientPort) -> None:
+    def __init__(self, llm: LLMClientPort, *, usage_sink: LLMUsageSink | None = None) -> None:
         self._llm = llm
+        self._usage_sink = usage_sink
 
     async def rerank(self, query: str, chunks: list[RetrievedChunk], *, top_k: int = 8) -> list[RetrievedChunk]:
         # Nothing to gain when we'd keep everything anyway — skip the call.
@@ -62,10 +64,17 @@ class LLMReranker:
 
         try:
             result = await self._llm.chat_with_tools(messages, max_tokens=_RERANK_MAX_TOKENS, temperature=0.0)
-            order = _parse_indices(result.text, count=len(chunks))
         except Exception:
             logger.warning("reranker.llm_failed", exc_info=True)
             return chunks[:top_k]
+
+        # The rerank call is billable — hand its usage to the sink so the turn's
+        # orchestrator records it. Done before parsing so it counts even when the
+        # reply is unparseable and we fall back to the hybrid order.
+        if self._usage_sink is not None:
+            self._usage_sink.add(result)
+
+        order = _parse_indices(result.text, count=len(chunks))
 
         if not order:
             return chunks[:top_k]

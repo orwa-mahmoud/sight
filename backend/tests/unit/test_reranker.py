@@ -7,6 +7,8 @@ from uuid import uuid4
 
 import pytest
 
+from src.domain.llm.usage_sink import LLMUsageSink
+from src.domain.llm.value_objects import LLMCallResult, TokenUsage
 from src.domain.rag.value_objects import RetrievedChunk
 from src.infrastructure.rag.reranker import LLMReranker, _parse_indices
 from src.infrastructure.rag.retriever import reorder_lost_in_the_middle
@@ -93,3 +95,55 @@ async def test_reranker_falls_back_on_unparseable_reply() -> None:
 def test_parse_indices_dedupes_and_bounds() -> None:
     assert _parse_indices("[2, 0, 2, 9, 1]", count=3) == [2, 0, 1]  # drops 9 (out of range) + dup 2
     assert _parse_indices("garbage", count=5) == []
+
+
+# ── usage sink (per-search billing) ───────────────────────────────
+
+
+def _llm_with_usage(text: str, *, input_tokens: int, output_tokens: int) -> MagicMock:
+    llm = MagicMock()
+    llm.chat_with_tools = AsyncMock(
+        return_value=LLMCallResult(
+            text=text,
+            usage=TokenUsage(input_tokens=input_tokens, output_tokens=output_tokens),
+            provider="openai",
+            model="gpt-5.4-mini",
+        )
+    )
+    return llm
+
+
+@pytest.mark.asyncio
+async def test_reranker_records_usage_into_sink() -> None:
+    chunks = [_chunk(f"c{i}") for i in range(6)]
+    sink = LLMUsageSink()
+    llm = _llm_with_usage("[4, 1, 0]", input_tokens=320, output_tokens=40)
+
+    await LLMReranker(llm, usage_sink=sink).rerank("q", chunks, top_k=3)
+
+    drained = sink.drain()
+    assert len(drained) == 1
+    assert drained[0].usage.input_tokens == 320
+    assert drained[0].model == "gpt-5.4-mini"
+
+
+@pytest.mark.asyncio
+async def test_reranker_records_usage_even_when_reply_unparseable() -> None:
+    chunks = [_chunk(f"c{i}") for i in range(6)]
+    sink = LLMUsageSink()
+    llm = _llm_with_usage("no numbers", input_tokens=300, output_tokens=5)
+
+    out = await LLMReranker(llm, usage_sink=sink).rerank("q", chunks, top_k=3)
+
+    assert [c.content for c in out] == ["c0", "c1", "c2"]  # fell back to hybrid order
+    assert len(sink.drain()) == 1  # but the billable call was still recorded
+
+
+@pytest.mark.asyncio
+async def test_reranker_records_nothing_when_llm_skipped() -> None:
+    chunks = [_chunk("a"), _chunk("b")]
+    sink = LLMUsageSink()
+    await LLMReranker(_llm_with_usage("[0]", input_tokens=1, output_tokens=1), usage_sink=sink).rerank(
+        "q", chunks, top_k=3
+    )
+    assert sink.drain() == []  # candidates fit → no call → no usage

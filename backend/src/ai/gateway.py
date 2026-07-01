@@ -42,6 +42,7 @@ from src.application.shared.unit_of_work import UnitOfWork
 from src.config.settings import get_settings
 from src.domain.conversations.value_objects import ConversationRole
 from src.domain.llm.ports import LLMClientPort
+from src.domain.llm.usage_sink import LLMUsageSink
 from src.domain.llm.value_objects import LLMMessage, LLMMessageRole
 from src.domain.shared.exceptions import InvalidOperationError
 from src.domain.tenant_config.entities import TenantConfig
@@ -142,7 +143,7 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
 
     # ── 4. Build LLM client + retriever from tenant config ────────
 
-    llm, retriever = _build_llm_and_retriever(inp.tenant_id, tenant_config, uow)
+    llm, retriever, rerank_usage = _build_llm_and_retriever(inp.tenant_id, tenant_config, uow)
 
     # ── 5. Acquire thread lock + run LangGraph agent ───────────────
     lock = await _acquire_thread_lock(thread_id)
@@ -187,8 +188,16 @@ async def chat_with_agent(inp: ChatInput, *, uow: UnitOfWork) -> ChatResult:
     # ── 6. Save tool exchanges + assistant reply ──────────────────
     await _save_agent_messages(save_uc, inp, thread_id, result, request_id)
 
-    # ── 7. Record token usage ─────────────────────────────────────
-    await _record_usage(inp, tenant_config, result, thread_id=thread_id, request_id=request_id, uow=uow)
+    # ── 7. Record token usage (agent loop + reranker side calls) ──
+    await _record_usage(
+        inp,
+        tenant_config,
+        result,
+        rerank_usage=rerank_usage,
+        thread_id=thread_id,
+        request_id=request_id,
+        uow=uow,
+    )
 
     # ── 8. Maybe create checkpoint (structured summary) ─────────
     await maybe_create_checkpoint(
@@ -299,27 +308,49 @@ async def _record_usage(
     tenant_config: TenantConfig,
     result: AgentLoopResult,
     *,
+    rerank_usage: LLMUsageSink,
     thread_id: str,
     request_id: str,
     uow: UnitOfWork,
 ) -> None:
-    """Persist token usage for the turn (skipped when nothing was consumed)."""
-    if result.input_tokens <= 0 and result.output_tokens <= 0:
-        return
-    await RecordTokenUsageUseCase(uow=uow).execute(
-        RecordTokenUsage(
-            tenant_id=inp.tenant_id,
-            provider=tenant_config.llm_provider.value,
-            model=tenant_config.llm_model,
-            input_tokens=result.input_tokens,
-            output_tokens=result.output_tokens,
-            cache_read_tokens=result.cache_read_tokens,
-            thread_id=thread_id,
-            request_id=request_id,
-            source="asker",
-            channel=inp.channel.value,
+    """Persist token usage for the turn: the agent-loop reply plus any billable
+    reranker side calls (skipping segments that consumed nothing)."""
+    commands: list[RecordTokenUsage] = []
+    if result.input_tokens > 0 or result.output_tokens > 0:
+        commands.append(
+            RecordTokenUsage(
+                tenant_id=inp.tenant_id,
+                provider=tenant_config.llm_provider.value,
+                model=tenant_config.llm_model,
+                input_tokens=result.input_tokens,
+                output_tokens=result.output_tokens,
+                cache_read_tokens=result.cache_read_tokens,
+                thread_id=thread_id,
+                request_id=request_id,
+                source="asker",
+                channel=inp.channel.value,
+            )
         )
-    )
+    for call in rerank_usage.drain():
+        commands.append(
+            RecordTokenUsage(
+                tenant_id=inp.tenant_id,
+                provider=call.provider or tenant_config.llm_provider.value,
+                model=call.model or tenant_config.rerank_model,
+                input_tokens=call.usage.input_tokens,
+                output_tokens=call.usage.output_tokens,
+                cache_read_tokens=call.usage.cache_read_tokens,
+                thread_id=thread_id,
+                request_id=request_id,
+                source="reranker",
+                channel=inp.channel.value,
+            )
+        )
+    if not commands:
+        return
+    record_uc = RecordTokenUsageUseCase(uow=uow)
+    for cmd in commands:
+        await record_uc.execute(cmd)
 
 
 class _Singletons:
@@ -335,20 +366,26 @@ def _get_llm_factory() -> TenantLLMClientFactory:
 
 def _build_llm_and_retriever(
     tenant_id: uuid.UUID, config: TenantConfig, uow: UnitOfWork
-) -> tuple[LLMClientPort, HybridRetriever]:
-    """Answer-model client + the hybrid retriever. Reranking runs on a cheap,
-    dedicated model so each turn pays answer-model rates for one call (the reply),
-    not two."""
+) -> tuple[LLMClientPort, HybridRetriever, LLMUsageSink]:
+    """Answer-model client + the hybrid retriever + a usage sink for the reranker's
+    side calls. Reranking runs on a cheap, dedicated model so each turn pays
+    answer-model rates for one call (the reply), not two — but that cheap call is
+    still billable, so its usage is collected in the sink and recorded after the turn."""
     factory = _get_llm_factory()
     llm = factory.get_or_build(tenant_id, config)
     rerank_llm = factory.get_or_build_reranker(tenant_id, config)
+    rerank_usage = LLMUsageSink()
     embedder = OpenAIEmbedder(
         api_key=config.embedding_api_key or config.llm_api_key,
         model=config.embedding_model,
         dimensions=1536,
     )
-    retriever = HybridRetriever(session=uow._session, embedder=embedder, reranker=LLMReranker(rerank_llm))
-    return llm, retriever
+    retriever = HybridRetriever(
+        session=uow._session,
+        embedder=embedder,
+        reranker=LLMReranker(rerank_llm, usage_sink=rerank_usage),
+    )
+    return llm, retriever, rerank_usage
 
 
 def invalidate_tenant_llm_client(tenant_id: uuid.UUID) -> None:
