@@ -2,11 +2,597 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="refresh" content="0; url=demo/" />
-    <link rel="canonical" href="demo/" />
-    <title>Sight — demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sight — one engine, two realms</title>
+    <meta name="description" content="Sight — the same RAG engine answering lore from A Song of Ice and Fire, and a real bank's support desk, grounded in each tenant's own documents." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="assets/three-eyed-raven.png" />
+    <style>
+      /* ============================================================
+         Sight — demo
+         one engine, two realms: the Three-Eyed Raven + a real bank
+         ============================================================ */
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --ember: #f76b22;
+        --ember-soft: #f4a259;
+        --gold: #e9c46a;
+        --parchment: #f4e9cf;
+        --steel: #cdd6e0;
+
+        --ink: #0b0a09;
+        --realm-1: #1a1410;
+        --realm-2: #0c0a08;
+
+        --bank-bg: #0a1730;
+        --bank-1: #16315a;
+        --bank-2: #0e1f3d;
+        --bank-teal: #5fd0d8;
+        --bank-mist: #9fb2d4;
+      }
+
+      html { scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        color: #fff;
+        background: var(--ink);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      ::selection { background: var(--ember); color: #fff; }
+
+      .slide {
+        min-height: 100vh;
+        scroll-snap-align: start;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: safe center;
+        justify-content: center;
+      }
+      .slide > .wrap {
+        position: relative;
+        z-index: 4;
+        width: 100%;
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 96px 32px 80px;
+      }
+
+      /* ---------- reveal-on-scroll ---------- */
+      .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
+      .reveal.in { opacity: 1; transform: none; }
+      .reveal.d1 { transition-delay: .08s; }
+      .reveal.d2 { transition-delay: .18s; }
+      .reveal.d3 { transition-delay: .30s; }
+      .reveal.d4 { transition-delay: .44s; }
+      .reveal.d5 { transition-delay: .58s; }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-snap-type: none; }
+        .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+        .ember, .ember::after { animation: none !important; }
+      }
+
+      /* ---------- side dot nav ---------- */
+      .nav {
+        position: fixed; top: 50%; right: 22px; transform: translateY(-50%);
+        z-index: 50; display: flex; flex-direction: column; gap: 14px;
+      }
+      .nav a {
+        position: relative; width: 11px; height: 11px; border-radius: 50%;
+        background: rgba(255,255,255,.28); transition: background .3s, transform .3s, box-shadow .3s;
+        display: block;
+      }
+      .nav a:hover { transform: scale(1.25); }
+      .nav a.active { background: var(--ember); box-shadow: 0 0 0 4px rgba(247,107,34,.22); }
+      .nav a[data-realm="bank"].active { background: var(--bank-teal); box-shadow: 0 0 0 4px rgba(95,208,216,.22); }
+      .nav a span {
+        position: absolute; right: 22px; top: 50%; transform: translateY(-50%) translateX(6px);
+        white-space: nowrap; font: 600 11px/1 "Inter", sans-serif; letter-spacing: .14em; text-transform: uppercase;
+        color: rgba(255,255,255,.8); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none;
+        background: rgba(0,0,0,.55); padding: 5px 9px; border-radius: 6px; backdrop-filter: blur(4px);
+      }
+      .nav a:hover span { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+      /* ---------- top wordmark ---------- */
+      .mark {
+        position: fixed; top: 22px; left: 26px; z-index: 50;
+        font-family: "Cinzel", serif; font-weight: 800; letter-spacing: .04em;
+        font-size: 15px; color: rgba(255,255,255,.9); text-decoration: none;
+        display: inline-flex; align-items: center; gap: 9px;
+        text-shadow: 0 1px 10px rgba(0,0,0,.6);
+      }
+      .mark .logo { width: 34px; height: 34px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+        border: 2px solid var(--gold); box-shadow: 0 0 14px rgba(247,107,34,.5), 0 2px 8px rgba(0,0,0,.6); }
+      .mark .logo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; display: block; }
+      .mark .sep { opacity: .4; margin: 0 2px; }
+      .mark .sub { font-family: "Inter", sans-serif; font-weight: 600; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; opacity: .7; }
+
+      /* ============================================================
+         SLIDE 1 — HERO
+         ============================================================ */
+      .hero {
+        background:
+          radial-gradient(120% 90% at 50% 8%, rgba(247,107,34,.12), transparent 60%),
+          radial-gradient(80% 60% at 50% 100%, rgba(0,0,0,.7), transparent 70%),
+          linear-gradient(180deg, #100c08 0%, #0b0a09 100%);
+      }
+      .hero .bg { position: absolute; inset: 0; z-index: 0;
+        background: url("assets/iron-throne.webp") center 30%/cover no-repeat;
+        filter: brightness(.32) saturate(.8) contrast(1.05); transform: scale(1.05); }
+      .hero::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+        background: radial-gradient(46% 60% at 50% 55%, rgba(0,0,0,.55) 20%, transparent 78%); }
+
+      .hero .wrap { text-align: center; }
+      .hero .kicker {
+        font-family: "Cinzel", serif; letter-spacing: .42em; text-transform: uppercase;
+        font-size: 12px; color: var(--gold); margin-bottom: 26px;
+      }
+      .hero h1 {
+        font-family: "Cinzel", serif; font-weight: 800; margin: 0 auto;
+        font-size: clamp(34px, 6.4vw, 86px); line-height: 1.02; letter-spacing: .01em;
+        color: var(--parchment); max-width: 16ch;
+        text-shadow: 0 4px 40px rgba(0,0,0,.85);
+      }
+      .hero h1 em {
+        font-style: normal; color: var(--ember-soft);
+        text-shadow: 0 0 28px rgba(247,107,34,.45);
+      }
+      .hero p.lead {
+        margin: 30px auto 0; max-width: 60ch; font-size: clamp(15px, 1.5vw, 19px);
+        color: rgba(244,233,207,.82); font-weight: 400;
+      }
+      .hero .cta { margin-top: 40px; display: inline-flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+      .btn {
+        display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+        font-weight: 700; font-size: 14px; letter-spacing: .02em; padding: 14px 22px; border-radius: 999px;
+        transition: transform .2s, box-shadow .3s, background .3s, color .3s; cursor: pointer; border: 0;
+      }
+      .btn.primary { background: linear-gradient(180deg, var(--ember), #d8530f); color: #fff; box-shadow: 0 10px 30px rgba(247,107,34,.35); }
+      .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(247,107,34,.5); }
+      .btn.ghost { background: rgba(255,255,255,.06); color: var(--parchment); border: 1px solid rgba(244,233,207,.28); backdrop-filter: blur(6px); }
+      .btn.ghost:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
+      .btn .arrow { transition: transform .2s; }
+      .btn:hover .arrow { transform: translateX(3px); }
+
+      .hero .stats { margin-top: 64px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      .stat { padding: 16px 22px; border: 1px solid rgba(244,233,207,.14); border-radius: 14px;
+        background: rgba(0,0,0,.28); backdrop-filter: blur(6px); min-width: 168px; }
+      .stat b { display:block; font-family: "Cinzel", serif; font-weight: 800; font-size: 24px; color: var(--gold); }
+      .stat span { font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(244,233,207,.6); }
+
+      .scrollcue { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 5;
+        font-family: "Cinzel", serif; letter-spacing: .3em; font-size: 10.5px; text-transform: uppercase;
+        color: var(--gold); opacity: .8; text-align: center; }
+      .scrollcue .v { display:block; font-size: 16px; margin-top: 4px; animation: bob 1.7s ease-in-out infinite; }
+      @keyframes bob { 0%,100%{ transform: translateY(0)} 50%{ transform: translateY(7px)} }
+
+      /* ============================================================
+         SHARED DEMO SECTION LAYOUT (GOT + bank reuse)
+         ============================================================ */
+      .demo .wrap { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; }
+      @media (max-width: 980px) {
+        .demo .wrap { grid-template-columns: 1fr; gap: 36px; }
+        .demo .copy { order: 2; } .demo .player { order: 1; }
+      }
+
+      .demo .eyebrow { font-family: "Cinzel", serif; letter-spacing: .34em; text-transform: uppercase; font-size: 11.5px; margin-bottom: 18px; }
+      .demo h2 { font-weight: 800; line-height: 1.06; margin: 0 0 18px; letter-spacing: -.01em; font-size: clamp(26px, 3.4vw, 44px); }
+      .demo .deck { font-size: clamp(15px, 1.4vw, 17.5px); color: rgba(255,255,255,.78); max-width: 52ch; margin: 0 0 28px; }
+
+      .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+      .chip { font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 999px;
+        border: 1px solid rgba(255,255,255,.18); color: rgba(255,255,255,.82); background: rgba(255,255,255,.04); }
+      .chip b { color: #fff; }
+
+      /* the transcript — animated Q&A from the video */
+      .transcript { display: flex; flex-direction: column; gap: 12px; }
+      .bubble { max-width: 100%; padding: 14px 17px; border-radius: 16px; font-size: 14.5px; line-height: 1.5;
+        position: relative; }
+      .bubble .who { font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; opacity: .6; margin-bottom: 6px; font-weight: 700; }
+      .bubble.q { align-self: flex-end; border-bottom-right-radius: 5px; text-align: left; }
+      .bubble.a { align-self: flex-start; border-bottom-left-radius: 5px; }
+      .bubble.a .src { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+      .bubble.a .src span { font-size: 10.5px; font-family: "Inter", monospace; padding: 3px 8px; border-radius: 6px;
+        background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.7); }
+      .bubble.a .meta { margin-top: 9px; font-size: 11px; opacity: .55; font-variant-numeric: tabular-nums; }
+
+      /* the video player frame */
+      .player { position: relative; }
+      .frame { border-radius: 14px; overflow: hidden; box-shadow: 0 40px 90px rgba(0,0,0,.6);
+        border: 1px solid rgba(255,255,255,.10); background: #000; position: relative; }
+      .frame video { display: block; width: 100%; height: auto; aspect-ratio: 1440/900; }
+      .duration { position: absolute; top: 14px; right: 14px; z-index: 3;
+        font: 700 12px/1 "Inter", sans-serif; letter-spacing: .04em; color: #fff;
+        background: rgba(0,0,0,.6); padding: 6px 10px; border-radius: 999px; backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,.16); }
+
+      /* ============================================================
+         SLIDE 2 — THE REALM (GOT / Three-Eyed Raven)
+         ============================================================ */
+      .realm { background: linear-gradient(180deg, var(--realm-1), var(--realm-2)); }
+      .realm .bg { position: absolute; inset: -4% 0; z-index: 0;
+        background: url("assets/iron-throne.webp") center 35%/cover no-repeat;
+        filter: brightness(.42) saturate(.85) contrast(1.06) blur(.3px); transform: scale(1.06); }
+      .realm::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+        background:
+          radial-gradient(40% 60% at 22% 50%, rgba(0,0,0,.7) 18%, transparent 72%),
+          radial-gradient(60% 70% at 50% 50%, rgba(0,0,0,.35) 0%, transparent 70%),
+          linear-gradient(90deg, rgba(12,10,8,.92) 0%, rgba(12,10,8,.4) 38%, rgba(12,10,8,.2) 60%, rgba(12,10,8,.5) 100%); }
+
+      .realm .eyebrow { color: var(--ember-soft); }
+      .realm h2 { font-family: "Cinzel", serif; font-weight: 800; color: var(--parchment); letter-spacing: .015em; }
+      .realm h2 .raven-ico { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -.16em; margin-right: .12em;
+        border-radius: 50%; overflow: hidden; border: 2px solid var(--gold);
+        box-shadow: 0 0 18px rgba(247,107,34,.5); background: url("assets/three-eyed-raven.png") 50% 38%/cover; }
+      .realm .deck { color: rgba(244,233,207,.78); }
+
+      .realm .bubble.q { background: linear-gradient(180deg, rgba(244,233,207,.16), rgba(244,233,207,.08));
+        border: 1px solid rgba(233,196,106,.32); color: var(--parchment); }
+      .realm .bubble.a { background: linear-gradient(180deg, rgba(247,107,34,.18), rgba(247,107,34,.08));
+        border: 1px solid rgba(247,107,34,.34); color: #fbeede; }
+      .realm .bubble.a .src span { color: var(--gold); border-color: rgba(233,196,106,.3); background: rgba(233,196,106,.08); }
+
+      .realm .frame { border-color: rgba(233,196,106,.18); box-shadow: 0 40px 90px rgba(0,0,0,.7), 0 0 0 1px rgba(247,107,34,.1); }
+
+      /* ember particles */
+      .embers { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+      .ember {
+        position: absolute; bottom: -10px; width: 4px; height: 4px; border-radius: 50%;
+        background: var(--ember-soft); box-shadow: 0 0 8px var(--ember);
+        opacity: 0; animation: rise linear infinite;
+      }
+      @keyframes rise {
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+        10% { opacity: .9; }
+        50% { transform: translateY(-50vh) translateX(14px) scale(.8); }
+        100% { transform: translateY(-105vh) translateX(-10px) scale(.3); opacity: 0; }
+      }
+
+      /* dragon silhouette accents in corners */
+      .dragon-acc { position: absolute; bottom: 0; z-index: 2; pointer-events: none; opacity: .55; width: 460px;
+        filter: brightness(.7) contrast(1.1);
+        -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+                mask-image: radial-gradient(closest-side, #000 55%, transparent 100%); }
+      .dragon-acc.l { left: -40px; }
+      .dragon-acc.r { right: -40px; transform: scaleX(-1); }
+
+      /* ============================================================
+         SLIDE 3 — THE BRIDGE
+         ============================================================ */
+      .bridge { background: radial-gradient(120% 120% at 50% 50%, #14110d 0%, #0a0908 100%); }
+      .bridge .wrap { text-align: center; }
+      .bridge .vs { display: flex; align-items: center; justify-content: center; gap: clamp(20px, 5vw, 64px); flex-wrap: wrap; }
+      .bridge .side { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      .bridge .crest { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center;
+        font-family: "Cinzel", serif; font-weight: 800; font-size: 30px;
+        border: 2px solid; box-shadow: 0 0 30px; }
+      .bridge .crest.raven { border-color: var(--gold); color: var(--parchment); background: url("assets/three-eyed-raven.png") 50% 35%/cover; box-shadow: 0 0 30px rgba(247,107,34,.4); }
+      .bridge .crest.bank { border-color: var(--bank-teal); color: #eaf6ff; background: linear-gradient(160deg, var(--bank-1), var(--bank-2)); }
+      .bridge .side .label { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+      .bridge .side .name { font-family: "Cinzel", serif; font-weight: 700; font-size: 19px; color: #fff; }
+      .bridge .center { font-family: "Fraunces", serif; font-style: italic; font-size: clamp(20px, 2.4vw, 30px); color: var(--gold);
+        max-width: 22ch; line-height: 1.3; }
+      .bridge .center small { display:block; font-family:"Inter",sans-serif; font-style: normal; font-weight: 600;
+        font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.5); margin-top: 12px; }
+      .bridge .feats { margin-top: 56px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; max-width: 880px; margin-left: auto; margin-right: auto; }
+      .feat { padding: 18px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(255,255,255,.03); text-align: left; }
+      .feat b { display: block; font-size: 13.5px; margin-bottom: 5px; color: var(--gold); }
+      .feat span { font-size: 12.5px; color: rgba(255,255,255,.62); line-height: 1.45; }
+
+      /* ============================================================
+         SLIDE 4 — THE REAL WORLD (bank / Meridian Crest)
+         ============================================================ */
+      .bank { background: radial-gradient(120% 120% at 50% 0%, var(--bank-1) 0%, var(--bank-2) 55%, var(--bank-bg) 100%); }
+      .bank::before { content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+        background-image:
+          linear-gradient(rgba(95,208,216,.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(95,208,216,.05) 1px, transparent 1px);
+        background-size: 46px 46px;
+        -webkit-mask-image: radial-gradient(70% 70% at 50% 40%, #000, transparent 80%);
+                mask-image: radial-gradient(70% 70% at 50% 40%, #000, transparent 80%); }
+      .bank .eyebrow { color: var(--bank-teal); }
+      .bank h2 { color: #fff; }
+      .bank h2 .fin { font-family: "Fraunces", serif; font-weight: 500; font-style: italic; color: var(--bank-teal); }
+      .bank .deck { color: rgba(223,232,245,.78); }
+
+      .bank .bubble.q { background: linear-gradient(180deg, rgba(95,208,216,.14), rgba(95,208,216,.06));
+        border: 1px solid rgba(95,208,216,.28); color: #eaf6ff; }
+      .bank .bubble.a { background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+        border: 1px solid rgba(255,255,255,.18); color: #f2f7ff; }
+      .bank .bubble.a.escalate { background: linear-gradient(180deg, rgba(247,107,34,.18), rgba(247,107,34,.07));
+        border-color: rgba(247,107,34,.4); }
+      .bank .bubble.a .src span { color: var(--bank-teal); border-color: rgba(95,208,216,.28); background: rgba(95,208,216,.08); }
+      .bank .bubble.a .badge { display:inline-flex; align-items:center; gap:6px; margin-top:10px; font-size:11px; font-weight:700;
+        color: var(--ember-soft); letter-spacing:.06em; }
+      .bank .frame { border-color: rgba(95,208,216,.18); box-shadow: 0 40px 90px rgba(0,0,0,.55); }
+
+      /* ============================================================
+         SLIDE 5 — FOOTER
+         ============================================================ */
+      .foot { background: linear-gradient(180deg, #0a0908, #060504); }
+      .foot .wrap { text-align: center; }
+      .foot h2 { font-family: "Cinzel", serif; font-weight: 800; font-size: clamp(26px, 3.4vw, 44px); margin: 0 0 14px; color: var(--parchment); }
+      .foot p { color: rgba(244,233,207,.7); max-width: 56ch; margin: 0 auto 32px; font-size: 15px; }
+      .foot .links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      .foot .sign { margin-top: 56px; font-size: 12px; color: rgba(255,255,255,.4); letter-spacing: .12em; text-transform: uppercase; }
+      .foot .sign a { color: var(--gold); text-decoration: none; }
+      .foot .sign a:hover { text-decoration: underline; }
+
+      /* small screens: shrink side nav, hide labels always */
+      @media (max-width: 640px) {
+        .nav { right: 14px; gap: 11px; }
+        .slide > .wrap { padding: 84px 20px 64px; }
+        .hero .stats { gap: 8px; } .stat { min-width: 0; flex: 1 1 130px; padding: 12px 14px; }
+        .dragon-acc { width: 260px; }
+      }
+    </style>
   </head>
   <body>
-    <p>Redirecting to the <a href="demo/">Sight demo</a>…</p>
+    <a class="mark" href="#top">
+      <span class="logo"><img src="assets/three-eyed-raven.png" alt="Three-eyed raven" /></span>Sight
+      <span class="sep">·</span>
+      <span class="sub">demo</span>
+    </a>
+
+    <nav class="nav" aria-label="Section navigation">
+      <a href="#top" data-realm="raven" class="active"><span>Intro</span></a>
+      <a href="#raven" data-realm="raven"><span>The Realm</span></a>
+      <a href="#bridge" data-realm="raven"><span>One Engine</span></a>
+      <a href="#bank" data-realm="bank"><span>The Bank</span></a>
+      <a href="#run" data-realm="raven"><span>Run it</span></a>
+    </nav>
+
+    <!-- ===================== SLIDE 1 — HERO ===================== -->
+    <section class="slide hero" id="top">
+      <div class="bg" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="kicker reveal">Sight</div>
+        <h1 class="reveal d1">One engine.<br/>Two <em>realms.</em></h1>
+        <p class="lead reveal d2">
+          Point Sight at any knowledge base and it answers <b>grounded in your own documents</b> —
+          citing the exact source every time, and escalating to a human when it can&rsquo;t.
+          Below, the very same engine answers lore from <i>A Song of Ice and Fire</i>,
+          then runs a real bank&rsquo;s support desk.
+        </p>
+        <div class="cta reveal d3">
+          <a class="btn primary" href="#raven">Enter the realm <span class="arrow">→</span></a>
+          <a class="btn ghost" href="#bank">See the bank desk</a>
+        </div>
+        <div class="stats reveal d4">
+          <div class="stat"><b>~5,000</b><span>pages of lore</span></div>
+          <div class="stat"><b>Omnichannel</b><span>WhatsApp + Telegram + chat API</span></div>
+          <div class="stat"><b>Hybrid RAG</b><span>vector + BM25 + RRF</span></div>
+          <div class="stat"><b>Per-tenant</b><span>LLM · keys · isolation</span></div>
+        </div>
+      </div>
+      <div class="scrollcue">Scroll to begin the tale<span class="v">⌄</span></div>
+    </section>
+
+    <!-- ===================== SLIDE 2 — THE REALM (GOT) ===================== -->
+    <div id="westeros" aria-hidden="true" style="height:0;overflow:hidden"></div>
+    <section class="slide demo realm" id="raven">
+      <div class="bg" aria-hidden="true"></div>
+      <div class="embers" aria-hidden="true"></div>
+      <img class="dragon-acc l" src="assets/dragon.avif" alt="" aria-hidden="true" />
+      <img class="dragon-acc r" src="assets/dragon.avif" alt="" aria-hidden="true" />
+      <div class="wrap">
+        <div class="copy">
+          <div class="eyebrow reveal">Tale one · for the fans</div>
+          <h2 class="reveal d1"><span class="raven-ico" aria-hidden="true"></span>Ask the Three-Eyed Raven</h2>
+          <p class="deck reveal d2">
+            The whole <i>A Song of Ice and Fire</i> saga — roughly five thousand pages across five
+            books — uploaded as the knowledge base. Ask anything about Westeros and the agent
+            answers from the text, <b>citing the exact book</b> it drew each answer from.
+          </p>
+          <div class="meta-row reveal d3">
+            <span class="chip"><b>5</b> books indexed</span>
+            <span class="chip"><b>Hybrid</b> retrieval</span>
+            <span class="chip"><b>Cited</b> sources</span>
+          </div>
+
+          <div class="transcript">
+            <div class="bubble q reveal d3">
+              <div class="who">An asker</div>
+              What happens to Eddard Stark?
+            </div>
+            <div class="bubble a reveal d4">
+              <div class="who">Three-Eyed Raven · grounded</div>
+              Eddard Stark was executed by King Joffrey. His death led the northmen to forsake
+              their loyalty to the Iron Throne and proclaim his son, Robb Stark, as King in the
+              North &mdash; setting off the War of the Five Kings.
+              <div class="src">
+                <span>A Game of Thrones</span>
+                <span>A Storm of Swords</span>
+                <span>A Dance with Dragons</span>
+              </div>
+              <div class="meta">13.4s · 6,827 tokens · 3 sources</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="player reveal d2">
+          <div class="frame">
+            <span class="duration">0:44</span>
+            <video controls preload="metadata" playsinline poster="../screenshots/westeros-poster.png" aria-label="Sight demo — asking about A Song of Ice and Fire">
+              <source src="westeros-demo.mp4" type="video/mp4" />
+              <track kind="descriptions" src="westeros-demo.vtt" srclang="en" label="English description" default />
+            </video>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SLIDE 3 — THE BRIDGE ===================== -->
+    <section class="slide bridge" id="bridge">
+      <div class="wrap">
+        <div class="vs">
+          <div class="side reveal">
+            <div class="crest raven" aria-hidden="true"></div>
+            <div class="name">Westeros Archives</div>
+            <div class="label">A knowledge base of lore</div>
+          </div>
+          <div class="center reveal d2">
+            &ldquo;The throne changes.<br/>The raven stays the same.&rdquo;
+            <small>Same engine, different bookshelf</small>
+          </div>
+          <div class="side reveal d3">
+            <div class="crest bank" aria-hidden="true">MC</div>
+            <div class="name">Meridian Crest Bank</div>
+            <div class="label">A knowledge base of policy</div>
+          </div>
+        </div>
+
+        <div class="feats">
+          <div class="feat reveal d1"><b>RAG-grounded</b><span>Hybrid vector + BM25 retrieval with reciprocal-rank fusion over each tenant&rsquo;s own documents.</span></div>
+          <div class="feat reveal d2"><b>Cited answers</b><span>Every reply names the source document it came from &mdash; no hallucinated lore, no invented policy.</span></div>
+          <div class="feat reveal d3"><b>Human escalation</b><span>Anything it can&rsquo;t answer lands in the owner&rsquo;s inbox with the AI&rsquo;s attempt for context.</span></div>
+          <div class="feat reveal d4"><b>Multi-tenant</b><span>Strict per-tenant isolation at the app layer plus Postgres Row-Level Security. One deployment, many realms.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SLIDE 4 — THE BANK ===================== -->
+    <div id="bank-demo" aria-hidden="true" style="height:0;overflow:hidden"></div>
+    <section class="slide demo bank" id="bank">
+      <div class="wrap">
+        <div class="copy">
+          <div class="eyebrow reveal">Tale two · for the boardroom</div>
+          <h2 class="reveal d1">The same raven, on a <span class="fin">support desk</span></h2>
+          <p class="deck reveal d2">
+            Meridian Crest Bank uploads its policy PDFs. Customers ask through the chat
+            dashboard &mdash; or WhatsApp, or Telegram &mdash; and the agent answers from those
+            documents, citing each one. When a question needs a human, it escalates to the
+            owner&rsquo;s inbox with its own attempt attached.
+          </p>
+          <div class="meta-row reveal d3">
+            <span class="chip"><b>Omnichannel</b> chat · WA · TG</span>
+            <span class="chip"><b>Cited</b> policy</span>
+            <span class="chip"><b>Human</b> escalation</span>
+          </div>
+
+          <div class="transcript">
+            <div class="bubble q reveal d3">
+              <div class="who">A customer</div>
+              What does an international wire transfer cost, and what&rsquo;s the cutoff?
+            </div>
+            <div class="bubble a reveal d4">
+              <div class="who">Meridian desk · grounded</div>
+              An international wire costs $45.00 USD (or $40.00 in foreign currency); the
+              cutoff is 2:00 PM MT for same-day processing.
+              <div class="src">
+                <span>Personal Accounts &amp; Fees</span>
+                <span>Wire Transfers &amp; International</span>
+              </div>
+              <div class="meta">5.4s · 6,325 tokens · 4 sources</div>
+            </div>
+
+            <div class="bubble q reveal d4">
+              <div class="who">A customer</div>
+              My debit card was just stolen &mdash; what should I do?
+            </div>
+            <div class="bubble a escalate reveal d5">
+              <div class="who">Meridian desk · escalated to a human</div>
+              Lock the card in the Meridian Crest app, then call 1-800-627-3911 immediately and
+              review recent transactions for anything unauthorized. &mdash; <b>I&rsquo;ve also
+              routed this to the owner&rsquo;s inbox with my draft reply attached.</b>
+              <div class="badge">↗ Escalated to owner inbox</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="player reveal d2">
+          <div class="frame">
+            <span class="duration">0:53</span>
+            <video controls preload="metadata" playsinline poster="../screenshots/chat.png" aria-label="Sight demo — a bank support desk answering from policy documents">
+              <source src="bank-demo.mp4" type="video/mp4" />
+              <track kind="descriptions" src="bank-demo.vtt" srclang="en" label="English description" default />
+            </video>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SLIDE 5 — RUN IT / FOOTER ===================== -->
+    <section class="slide foot" id="run">
+      <div class="wrap">
+        <div class="eyebrow reveal" style="color:var(--gold);font-family:'Cinzel',serif;letter-spacing:.34em;text-transform:uppercase;font-size:11.5px;margin-bottom:18px;">From the page to your machine</div>
+        <h2 class="reveal d1">Run your own Sight</h2>
+        <p class="reveal d2">
+          The whole stack &mdash; FastAPI + LangGraph backend, React 19 frontend, Postgres 17 with
+          pgvector &mdash; comes up with one Docker command. Register an owner, upload your own
+          documents, and your realm is live.
+        </p>
+        <div class="links reveal d3">
+          <a class="btn primary" href="https://github.com/orwa-mahmoud/sight#quick-start" target="_blank" rel="noopener">Quick start <span class="arrow">→</span></a>
+          <a class="btn ghost" href="https://github.com/orwa-mahmoud/sight#architecture" target="_blank" rel="noopener">Architecture</a>
+        </div>
+        <div class="sign reveal d4">
+          Sight &middot; MIT &middot; <a href="https://github.com/orwa-mahmoud/sight" target="_blank" rel="noopener">github.com/orwa-mahmoud/sight</a>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      /* ---- reveal on scroll ---- */
+      (function () {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.16, rootMargin: "0px 0px -8% 0px" });
+        document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+      })();
+
+      /* ---- ember particles ---- */
+      (function () {
+        var host = document.querySelector(".realm .embers");
+        if (!host || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var N = 26;
+        for (var i = 0; i < N; i++) {
+          var s = host.appendChild(document.createElement("span"));
+          s.className = "ember";
+          var dur = 6 + Math.random() * 7;
+          var delay = Math.random() * dur;
+          var left = Math.random() * 100;
+          var size = 2 + Math.random() * 4;
+          s.style.left = left + "%";
+          s.style.width = size + "px";
+          s.style.height = size + "px";
+          s.style.animationDuration = dur + "s";
+          s.style.animationDelay = "-" + delay + "s";
+          s.style.opacity = 0.5 + Math.random() * 0.4;
+        }
+      })();
+
+      /* ---- active nav dot ---- */
+      (function () {
+        var links = Array.prototype.slice.call(document.querySelectorAll(".nav a"));
+        var sections = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+        var nav = document.querySelector(".nav");
+        function setActive() {
+          var fromTop = window.scrollY + window.innerHeight * 0.4;
+          var idx = 0;
+          for (var i = 0; i < sections.length; i++) {
+            if (sections[i] && sections[i].offsetTop <= fromTop) idx = i;
+          }
+          links.forEach(function (a, i) {
+            a.classList.toggle("active", i === idx);
+            var realm = a.getAttribute("data-realm");
+            nav.setAttribute("data-realm", realm);
+          });
+        }
+        window.addEventListener("scroll", setActive, { passive: true });
+        window.addEventListener("resize", setActive);
+        setActive();
+      })();
+    </script>
   </body>
 </html>

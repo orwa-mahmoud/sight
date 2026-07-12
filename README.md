@@ -11,7 +11,7 @@
 ![PostgreSQL 17 + pgvector](https://img.shields.io/badge/PostgreSQL-17%20%2B%20pgvector-336791.svg)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-🎬&nbsp;<a href="https://orwa-mahmoud.github.io/sight/demo/">Watch the demo</a>
+🎬&nbsp;<a href="https://orwa-mahmoud.github.io/sight/">Watch the demo</a>
 
 </div>
 
